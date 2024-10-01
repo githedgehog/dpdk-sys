@@ -1,0 +1,23 @@
+{
+  nix = {
+    branch = "$NIXPKGS_BRANCH";
+    date = "$NIXPKGS_DATE";
+    commit = "$NIXPKGS_COMMIT";
+    source_url = "$NIXPKGS_SOURCE_URL";
+    hash = {
+      nar = {
+        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive";
+        sha256 = "$NIXPKGS_NIX_HASH";
+      };
+      tar = {
+        comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";
+        sha256 = "$NIXPKGS_TAR_SHA256";
+        sha384 = "$NIXPKGS_TAR_SHA384";
+        sha512 = "$NIXPKGS_TAR_SHA512";
+        sha3_256 = "$NIXPKGS_TAR_SHA3_256";
+        sha3_384 = "$NIXPKGS_TAR_SHA3_384";
+        sha3_512 = "$NIXPKGS_TAR_SHA3_512";
+      };
+    };
+  };
+}

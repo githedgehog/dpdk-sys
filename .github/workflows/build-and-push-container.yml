@@ -1,0 +1,34 @@
+name: test suite
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: build-container
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile:
+          - debug
+          - release
+    steps:
+      - uses: actions/checkout@v4
+      - name: install nix
+        uses: cachix/install-nix-action@v27
+      - name: setup nix cache
+        id: nix-package-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/work/nix-store
+          key: nix-package-chache-${{ runner.os }}-${{ hashFiles('./nix/versions.nix') }}
+      - name: install just
+        uses: extractions/setup-just@v2
+      - name: login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build ${{ matrix.profile }} container
+        run: just build-container ${{ matrix.profile }}
+      - name: push ${{ matrix.profile }} container
+        run: just push-container ${{ matrix.profile }}
