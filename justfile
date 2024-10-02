@@ -3,10 +3,9 @@ default_toolchain := "stable"
 default_profile := "debug"
 container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
 default_llvm_version := "18"
-max_cores := "24"
 max_jobs := "1"
-date := "$(date --utc --iso-8601=date)"
-commit := "$(git rev-parse HEAD)"
+date := `date --utc --iso-8601=date`
+commit := `git rev-parse HEAD`
 
 default: build-container
 
@@ -23,8 +22,7 @@ build-container profile=default_profile llvm_version=default_llvm_version:
     --out-link container.dev-env \
     --argstr profile "{{profile}}" \
     --argstr llvm-version "{{llvm_version}}" \
-    "-j{{max_jobs}}" \
-    --cores "{{max_cores}}"
+    "-j{{max_jobs}}"
   docker load --input ./container.dev-env
   docker tag \
     "{{container_name}}:{{profile}}-llvm{{llvm_version}}" \
