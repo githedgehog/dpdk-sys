@@ -7,7 +7,7 @@ jobs:
     runs-on: [lab]
     timeout-minutes: 2000
     strategy:
-      max-parallel: 1
+      max-parallel: 4
       matrix:
         profile:
           - debug
@@ -38,6 +38,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build ${{ matrix.profile }} container on llvm "${{ matrix.llvm_version }}"
-        run: just build-container ${{ matrix.profile }} 1 "${{ matrix.llvm_version }}"
+        run: just build-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
       - name: push ${{ matrix.profile }} container
-        run: just push-container ${{ matrix.profile }} 1 "${{ matrix.llvm_version }}"
+        run: just push-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
