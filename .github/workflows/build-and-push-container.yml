@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: build-container
-    runs-on: [lab]
+    runs-on: [vlab]
     timeout-minutes: 2000
     strategy:
       max-parallel: 1
