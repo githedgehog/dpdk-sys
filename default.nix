@@ -220,6 +220,7 @@
       cp -r ${env.toolchain}/* $out/
       mkdir -p $out/sysroot
       ln -s ${env.sysroot.musl64} $out/sysroot/x86_64-unknown-linux-musl;
+      ln -s ${env.sysroot.gnu64} $out/sysroot/x86_64-unknown-linux-gnu;
       mkdir $out/tmp
     '';
   };
