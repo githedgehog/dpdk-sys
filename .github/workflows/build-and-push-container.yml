@@ -19,12 +19,12 @@ jobs:
           # Update when you re-run ./update-version-pinning.sh
           nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/1839883cd0068572aed75fb9442b508bbd9ef09c.tar.gz
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: setup nix cache
-        id: nix-package-cache
-        uses: actions/cache@v4
-        with:
-          path: /nix
-          key: nix-chache-${{ runner.os }}-${{ matrix.profile }}-${{ hashFiles('./nix/versions.nix') }}
+#      - name: setup nix cache
+#        id: nix-package-cache
+#        uses: actions/cache@v4
+#        with:
+#          path: /nix
+#          key: nix-chache-${{ runner.os }}-${{ matrix.profile }}-${{ hashFiles('./nix/versions.nix') }}
       - name: install just
         uses: extractions/setup-just@v2
       - name: login to ghcr.io
@@ -34,7 +34,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build ${{ matrix.profile }} container
-        run: |
-          just build-container ${{ matrix.profile }} || true
+        run: just build-container ${{ matrix.profile }} -j1
       - name: push ${{ matrix.profile }} container
         run: just push-container ${{ matrix.profile }}
