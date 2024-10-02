@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: build-container
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, lab]
     strategy:
       matrix:
         profile:
