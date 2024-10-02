@@ -25,7 +25,7 @@ build-container-with-core-limit profile=default_profile llvm_version=default_llv
     --argstr profile "{{profile}}" \
     --argstr llvm-version "{{llvm_version}}" \
     "-j{{max_jobs}}" \
-    `if [[ ! -z "{{cores}}" ]]; then echo --cores "{{cores}}"; fi`
+    `if [ ! -z "{{cores}}" ]; then echo --cores "{{cores}}"; fi`
   docker load --input ./container.dev-env
   docker tag \
     "{{container_name}}:{{profile}}-llvm{{llvm_version}}" \
