@@ -4,7 +4,8 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: build-container
-    runs-on: [self-hosted, lab]
+    runs-on: [self-hosted]
+    timeout-minutes: 300
     strategy:
       matrix:
         profile:
