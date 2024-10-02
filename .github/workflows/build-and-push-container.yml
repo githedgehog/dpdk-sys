@@ -5,7 +5,7 @@ jobs:
   build:
     name: build-container
     runs-on: [lab]
-    timeout-minutes: 2000
+    timeout-minutes: 180
     strategy:
       max-parallel: 4
       matrix:
