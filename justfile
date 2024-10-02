@@ -5,7 +5,7 @@ container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
 default_llvm_version := "18"
 max_jobs := "1"
 # if unspecified, number of cores will be determined by nix
-default_max_cores := "24"
+default_max_cores := "16"
 date := `date --utc --iso-8601=date`
 commit := `git rev-parse HEAD`
 
@@ -14,6 +14,9 @@ default: build-container
 install-nix:
   sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
+# I expect this command is mostly useful for CI
+# In CI we have machines with a huge number of cores and not a lot of memory.
+# It is easy to drive the system OOM if you let nix have all the cores.
 build-container-with-core-limit profile=default_profile llvm_version=default_llvm_version cores=default_max_cores:
   nix build  \
     --keep-failed  \

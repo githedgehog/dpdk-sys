@@ -38,7 +38,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build ${{ matrix.profile }} container on llvm "${{ matrix.llvm_version }}"
-        run: just build-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
+        run: just build-container-with-cores ${{ matrix.profile }} "${{ matrix.llvm_version }}"
       - name: push ${{ matrix.profile }} container
         run: just push-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
       - name: clean up nix
