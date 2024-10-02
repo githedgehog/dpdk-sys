@@ -10,14 +10,14 @@ jobs:
       matrix:
         profile:
           - debug
-          # - release
+          - release
     steps:
       - uses: actions/checkout@v4
       - name: install nix
         uses: cachix/install-nix-action@v27
         with:
           # Update when you re-run ./update-version-pinning.sh
-          nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/eabc38219184cc3e04a974fe31857d8e0eac098d.tar.gz
+          nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/1839883cd0068572aed75fb9442b508bbd9ef09c.tar.gz
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: setup nix cache
         id: nix-package-cache
@@ -36,5 +36,5 @@ jobs:
       - name: build ${{ matrix.profile }} container
         run: |
           just build-container ${{ matrix.profile }} || true
-      # - name: push ${{ matrix.profile }} container
-      #   run: just push-container ${{ matrix.profile }}
+      - name: push ${{ matrix.profile }} container
+        run: just push-container ${{ matrix.profile }}

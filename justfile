@@ -9,7 +9,7 @@ install-nix:
   sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
 build-container profile=default_profile *args="":
-  nix build  --keep-failed  --print-build-logs --show-trace -f default.nix container.dev-env --out-link container.dev-env {{args}}
+  nix build  --keep-failed  --print-build-logs --show-trace -f default.nix container.dev-env --out-link container.dev-env --argstr profile "{{profile}}" {{args}}
   docker load --input ./container.dev-env
   docker tag "{{container_name}}:{{profile}}" "{{container_name}}:{{profile}}-$(git rev-parse HEAD)"
 
