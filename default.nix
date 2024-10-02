@@ -232,7 +232,7 @@
   container = {
     toolchain = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/toolchain";
-      tag = "latest";
+      tag = "${profile}-llvm${llvm-version}";
       contents = [ env.toolchain ];
       maxLayers = 120;
       config = {
@@ -244,7 +244,7 @@
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
-      tag = profile;
+      tag = "${profile}-llvm${llvm-version}";
       contents = [ build ];
       config = {
         Cmd = [ "/bin/bash" ];

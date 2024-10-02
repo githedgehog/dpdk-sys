@@ -7,10 +7,14 @@ jobs:
     runs-on: [lab]
     timeout-minutes: 2000
     strategy:
+      max-parallel: 1
       matrix:
         profile:
           - debug
           - release
+        llvm_version:
+          - 18
+          - 19
     steps:
       - uses: actions/checkout@v4
       - name: install nix
@@ -33,7 +37,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: build ${{ matrix.profile }} container
-        run: just build-container ${{ matrix.profile }} -j1
+      - name: build ${{ matrix.profile }} container on llvm "${{ matrix.llvm_version }}"
+        run: just build-container ${{ matrix.profile }} 1 "${{ matrix.llvm_version }}"
       - name: push ${{ matrix.profile }} container
-        run: just push-container ${{ matrix.profile }}
+        run: just push-container ${{ matrix.profile }} 1 "${{ matrix.llvm_version }}"
