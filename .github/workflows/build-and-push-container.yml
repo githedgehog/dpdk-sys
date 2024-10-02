@@ -4,8 +4,8 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: build-container
-    runs-on: ubuntu-latest
-    timeout-minutes: 500
+    runs-on: [lab]
+    timeout-minutes: 2000
     strategy:
       matrix:
         profile:
