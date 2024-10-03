@@ -165,6 +165,8 @@
     llvmPackages.compiler-rt
     llvmPackages.libclang.lib
     llvmPackages.libcxx
+    llvmPackages.libllvm
+    llvmPackages.libllvm.lib
     llvmPackages.lld
     llvmPackages.llvm
     mold
