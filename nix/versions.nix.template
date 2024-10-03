@@ -1,8 +1,8 @@
 {
-  nix = {
+  nixpkgs = {
     branch = "$NIXPKGS_BRANCH";
-    date = "$NIXPKGS_DATE";
     commit = "$NIXPKGS_COMMIT";
+    commit_date = "$NIXPKGS_COMMIT_DATE";
     source_url = "$NIXPKGS_SOURCE_URL";
     hash = {
       nar = {

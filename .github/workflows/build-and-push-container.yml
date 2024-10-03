@@ -7,11 +7,7 @@ jobs:
     runs-on: [lab]
     timeout-minutes: 180
     strategy:
-      max-parallel: 4
       matrix:
-        profile:
-          - debug
-          - release
         llvm_version:
           - 18
           - 19
@@ -24,7 +20,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: nix-${{ runner.os }}-${{ matrix.profile }}-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
+          key: nix-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
       - name: install just
         uses: extractions/setup-just@v2
       - name: login to ghcr.io
@@ -33,10 +29,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: build ${{ matrix.profile }} container on llvm "${{ matrix.llvm_version }}"
-        run: just build-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
-      - name: push ${{ matrix.profile }} container
-        run: just push-container ${{ matrix.profile }} "${{ matrix.llvm_version }}"
+      - name: build on llvm "${{ matrix.llvm_version }}"
+        run: just build-container "${{ matrix.llvm_version }}"
+      - name: push containers
+        run: just push-container "${{ matrix.llvm_version }}"
       - name: clean up nix
         run: |
           nix-env --delete-generations old
