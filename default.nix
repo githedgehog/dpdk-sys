@@ -153,8 +153,8 @@
     in [
       # mdbook-alerts
       # mdbook-citeproc
-      bash
       bash-completion
+      bashInteractive
       cacert
       coreutils
       docker

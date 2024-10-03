@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: nix-chache-${{ runner.os }}-${{ matrix.profile }}-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
+          key: nix-${{ runner.os }}-${{ matrix.profile }}-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
       - name: install just
         uses: extractions/setup-just@v2
       - name: login to ghcr.io

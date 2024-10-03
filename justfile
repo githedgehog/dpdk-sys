@@ -5,8 +5,9 @@ default_profile := "debug"
 container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
 default_llvm_version := "18"
 max_nix_jobs := "1"
-date := `date --utc --iso-8601=seconds | sed 's/[:+]/_/g'`
+date := `nix eval -f ./nix/versions.nix nix.date | sed 's/[:+]/_/g'`
 commit := `git rev-parse HEAD`
+slug := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/_/g'`
 # Compute the default number of jobs to use as a guess to try and keep the build within the memory limits
 # of the system
 jobs_guess := `
@@ -44,11 +45,15 @@ build-container profile=default_profile llvm_version=default_llvm_version cores=
   docker load --input ./container.dev-env
   docker tag \
     "{{container_name}}:{{profile}}-llvm{{llvm_version}}" \
-    "{{container_name}}:{{date}}-{{profile}}-llvm{{llvm_version}}-{{commit}}"
+    "{{container_name}}:{{slug}}-{{profile}}-llvm{{llvm_version}}"
   docker tag \
     "{{container_name}}:{{profile}}-llvm{{llvm_version}}" \
-    "{{container_name}}:{{date}}-{{profile}}-llvm{{llvm_version}}"
+    "{{container_name}}:{{date}}-{{slug}}-{{profile}}-llvm{{llvm_version}}"
+  docker tag \
+    "{{container_name}}:{{profile}}-llvm{{llvm_version}}" \
+    "{{container_name}}:{{date}}-{{slug}}-{{profile}}-llvm{{llvm_version}}-{{commit}}"
 
 push-container profile=default_profile llvm_version=default_llvm_version: (build-container profile llvm_version)
-  docker push "{{container_name}}:{{date}}-{{profile}}-llvm{{llvm_version}}-{{commit}}"
-  docker push "{{container_name}}:{{date}}-{{profile}}-llvm{{llvm_version}}"
+  docker push "{{container_name}}:{{slug}}-{{profile}}-llvm{{llvm_version}}"
+  docker push "{{container_name}}:{{date}}-{{slug}}-{{profile}}-llvm{{llvm_version}}"
+  docker push "{{container_name}}:{{date}}-{{slug}}-{{profile}}-llvm{{llvm_version}}-{{commit}}"
