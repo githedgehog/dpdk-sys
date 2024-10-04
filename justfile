@@ -31,7 +31,7 @@ _nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
 
 build-sysroot llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "sysroot" llvm_version cores)
 
-build-container llvm_version=default_llvm_version cores=jobs_guess: (build-sysroot llvm_version cores) (_nix_build "container.dev-env" llvm_version cores)
+build-container llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "container.dev-env" llvm_version cores)
   docker load --input /tmp/dpdk-sys-builds/container.dev-env
   docker tag \
     "{{container_name}}:llvm{{llvm_version}}" \

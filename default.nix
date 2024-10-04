@@ -139,12 +139,10 @@
       libnl.out
       libpcap
       linuxHeaders
-      llvmPackages.clang-unwrapped
-      llvmPackages.libclang.dev
+      llvmPackages.clang
       llvmPackages.libclang.lib
       llvmPackages.libcxx
       llvmPackages.libcxx.dev
-      llvmPackages.libcxxClang
       llvmPackages.lld
       numactl
       rdma-core
@@ -170,9 +168,18 @@
     bashInteractive
     cacert
     coreutils
+    glibc
+    glibc.bin
+    glibc.debug
     glibc.dev
+    glibc.getent
+    glibc.static
     libclang.lib
-    llvmPackages.clang-unwrapped
+    libgcc.libgcc
+    libgcc.libgcc.checksum
+    libgcc.libgcc.lib
+    libgcc.libgcc.libgcc
+    llvmPackages.clang
     llvmPackages.compiler-rt
     llvmPackages.compiler-rt.dev
     llvmPackages.libclang.lib
@@ -226,34 +233,41 @@
 
   sysroot = toolchainPkgs.stdenv.mkDerivation {
     name = "${project-name}-sysroot";
-    src = env.sysroot.gnu64.debug;
+    src = ./nix; # arbitrary path, it won't work unless you give it something
     buildPhase = ''
-      mkdir -p $out/x86_64-unknown-linux-{musl,gnu}
-      ln -s ${env.sysroot.gnu64.debug} $out/x86_64-unknown-linux-gnu/debug
-      ln -s ${env.sysroot.gnu64.release} $out/x86_64-unknown-linux-gnu/release
-      ln -s ${env.sysroot.musl64.debug} $out/x86_64-unknown-linux-musl/debug
-      ln -s ${env.sysroot.musl64.release} $out/x86_64-unknown-linux-musl/release
+      mkdir -p $out/sysroot/x86_64-unknown-linux-{musl,gnu}
+      ln -s ${env.sysroot.gnu64.debug} $out/sysroot/x86_64-unknown-linux-gnu/debug
+      ln -s ${env.sysroot.gnu64.release} $out/sysroot/x86_64-unknown-linux-gnu/release
+      ln -s ${env.sysroot.musl64.debug} $out/sysroot/x86_64-unknown-linux-musl/debug
+      ln -s ${env.sysroot.musl64.release} $out/sysroot/x86_64-unknown-linux-musl/release
     '';
   };
 
-  build = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-dir";
-    src = env.toolchain;
-    nativeBuildInputs = [ toolchainPkgs.rsync ];
-    buildPhase = ''
-      mkdir -p $out
-      cp -r ${env.toolchain}/* $out/
-      mkdir $out/sysroot
-      cp -r ${sysroot}/* $out/sysroot/
-      mkdir $out/tmp
-    '';
+  dev-env = toolchainPkgs.buildEnv {
+    name = "${project-name}-dev-env";
+    paths = [ env.toolchain sysroot ];
+    pathsToLink = [ "/" ];
+  };
+
+  dev-container = toolchainPkgs.dockerTools.buildLayeredImage {
+    name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
+    tag = "llvm${llvm-version}";
+    contents = [ env.toolchain sysroot ];
+    config = {
+      Cmd = [ "/bin/bash" ];
+      WorkingDir = "/";
+      Env = [
+        "LD_LIBRARY_PATH=/lib"
+      ];
+    };
+    maxLayers = 120;
   };
 
   container = {
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
       tag = "llvm${llvm-version}";
-      contents = [ build ];
+      contents = [ env.toolchain sysroot ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";
