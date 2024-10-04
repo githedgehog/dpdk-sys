@@ -139,11 +139,13 @@
       libnl.out
       libpcap
       linuxHeaders
+      llvmPackages.clang-unwrapped
       llvmPackages.libclang.dev
       llvmPackages.libclang.lib
       llvmPackages.libcxx
       llvmPackages.libcxx.dev
       llvmPackages.libcxxClang
+      llvmPackages.lld
       numactl
       rdma-core
     ] ++
@@ -169,6 +171,7 @@
     cacert
     coreutils
     glibc.dev
+    libclang.lib
     llvmPackages.clang-unwrapped
     llvmPackages.compiler-rt
     llvmPackages.compiler-rt.dev
@@ -190,15 +193,6 @@
       new_target="$(realpath -s --relative-to="$1" "$(readlink "$1")")"
       rm "$1"
       ln -rs "$new_target" "$1"
-    '';
-  };
-
-  de-link = toolchainPkgs.writeShellApplication {
-    name = "de-link";
-    runtimeInputs = with toolchainPkgs; [ coreutils ];
-    text = ''
-      target="$(readlink --canonicalize-existing "$1")"
-      cp -r "$target" "$2/$1"
     '';
   };
 
@@ -268,16 +262,6 @@
         ];
       };
       maxLayers = 120;
-#      enableFakechroot = true;
-#      fakeRootCommands = let re-link-sh=(toolchainPkgs.lib.getExe re-link); in ''
-#        find /bin -type l -lname '/nix/*' -exec ${re-link-sh} {} \;
-#        find /lib -type l -lname '/nix/*' -exec ${re-link-sh} {} \;
-#        find /include -type l -lname '/nix/*' -exec ${re-link-sh} {} \;
-#        ${re-link-sh} /sysroot/x86_64-unknown-linux-gnu/debug
-#        ${re-link-sh} /sysroot/x86_64-unknown-linux-gnu/release
-#        ${re-link-sh} /sysroot/x86_64-unknown-linux-musl/debug
-#        ${re-link-sh} /sysroot/x86_64-unknown-linux-musl/release
-#      '';
     };
   };
 }
