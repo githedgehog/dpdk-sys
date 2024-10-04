@@ -17,13 +17,14 @@ install-nix:
 
 _nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
   @echo MAX JOBS GUESS: {{jobs_guess}}
+  mkdir -p /tmp/dpdk-sys-builds
   nix build  \
     --keep-failed  \
     --print-build-logs \
     --show-trace \
     -f default.nix \
     "{{attribute}}" \
-    --out-link "{{attribute}}" \
+    --out-link "/tmp/dpdk-sys-builds/{{attribute}}" \
     --argstr llvm-version "{{llvm_version}}" \
     "-j{{max_nix_jobs}}" \
     `if [ "{{cores}}" != "all" ]; then echo --cores "{{cores}}"; fi`
@@ -31,7 +32,7 @@ _nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
 build-sysroot llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "sysroot" llvm_version cores)
 
 build-container llvm_version=default_llvm_version cores=jobs_guess: (build-sysroot llvm_version cores) (_nix_build "container.dev-env" llvm_version cores)
-  docker load --input ./container.dev-env
+  docker load --input /tmp/dpdk-sys-builds/container.dev-env
   docker tag \
     "{{container_name}}:llvm{{llvm_version}}" \
     "{{container_name}}:{{slug}}-llvm{{llvm_version}}"
