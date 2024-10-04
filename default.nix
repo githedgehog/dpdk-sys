@@ -20,11 +20,15 @@
     customStdenv = self.stdenvAdapters.makeStaticLibraries (
       self.stdenvAdapters.useMoldLinker (
         if crossEnv == "musl64" then
+          # TODO: It doesn't really make any sense to me that I need
+          # to use pkgsMusl here.
+          # In my mind that is implied by the fact that super is a
+          # crossEnv.
           self.pkgsMusl.${llvmPackagesVersion}.libcxxStdenv
         else if crossEnv == "gnu64" then
-          llvmPackages.stdenv
+          llvmPackages.libcxxStdenv
         else
-          llvmPackages.stdenv
+          llvmPackages.libcxxStdenv
       )
     );
     # NOTE: libmd and libbsd customizations will cause an infinite recursion if done with normal overlay methods
