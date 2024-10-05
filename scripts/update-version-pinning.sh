@@ -74,5 +74,5 @@ declare NIXPKGS_NIX_HASH
 NIXPKGS_NIX_HASH="$(nix-prefetch-url --name "${NIXPKGS_BRANCH}" --type "${NIXPKGS_NIX_HASH_TYPE}" --unpack "${NIXPKGS_SOURCE_URL}")"
 declare -rx NIXPKGS_NIX_HASH
 
-pushd "${script_dir}"
-envsubst < "${script_dir}/nix/versions.nix.template" > "${script_dir}/nix/versions.nix"
+pushd "${project_dir}"
+envsubst < "${project_dir}/nix/versions.nix.template" > "${project_dir}/nix/versions.nix"

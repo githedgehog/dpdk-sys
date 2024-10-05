@@ -17,6 +17,9 @@
     }));
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
+    # TODO: consider LTO optimizing compiler-rt
+    # TODO: consider LTO optimizing libcxx{,abi}
+    # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
     customStdenv = self.stdenvAdapters.makeStaticLibraries (
       self.stdenvAdapters.useMoldLinker (
         if crossEnv == "musl64" then
@@ -157,13 +160,13 @@
   );
 
   sysrootPackageList = {
-    debug = {
-      gnu64 = sysrootPackageListFn "gnu64" pkgsCrossDebug.gnu64;
-      musl64 = sysrootPackageListFn "musl64" pkgsCrossDebug.musl64;
+    gnu64 = {
+      debug = sysrootPackageListFn "gnu64" pkgsCrossDebug.gnu64;
+      release = sysrootPackageListFn "gnu64" pkgsCrossRelease.gnu64;
     };
-    release = {
-      gnu64 = sysrootPackageListFn "gnu64" pkgsCrossRelease.gnu64;
-      musl64 = sysrootPackageListFn "musl64" pkgsCrossRelease.musl64;
+    musl64 = {
+      debug = sysrootPackageListFn "musl64" pkgsCrossDebug.musl64;
+      release = sysrootPackageListFn "musl64" pkgsCrossRelease.musl64;
     };
   };
 
@@ -208,49 +211,44 @@
   };
 
   env = {
-    sysroot.gnu64.debug = toolchainPkgs.buildEnv {
+    sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
       name = "${project-name}-debug-sysroot-gnu64";
-      paths = sysrootPackageList.debug.gnu64;
-      pathsToLink = [ "/" ];
+      paths = sysrootPackageList.gnu64.debug;
     };
-    sysroot.musl64.debug = toolchainPkgs.buildEnv {
-      name = "${project-name}-debug-sysroot-musl64";
-      paths = sysrootPackageList.debug.musl64;
-      pathsToLink = [ "/" ];
-    };
-    sysroot.gnu64.release = toolchainPkgs.buildEnv {
+    sysroot.gnu64.release = toolchainPkgs.symlinkJoin {
       name = "${project-name}-release-sysroot-gnu64";
-      paths = sysrootPackageList.release.gnu64;
-      pathsToLink = [ "/" ];
+      paths = sysrootPackageList.gnu64.release;
     };
-    sysroot.musl64.release = toolchainPkgs.buildEnv {
+    sysroot.musl64.debug = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-debug-sysroot-musl64";
+      paths = sysrootPackageList.musl64.debug;
+    };
+    sysroot.musl64.release = toolchainPkgs.symlinkJoin {
       name = "${project-name}-release-sysroot-musl64";
-      paths = sysrootPackageList.release.musl64;
-      pathsToLink = [ "/" ];
+      paths = sysrootPackageList.musl64.release;
     };
-    toolchain = toolchainPkgs.buildEnv {
+    toolchain = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
       paths = toolchainPackageList;
-      pathsToLink = [ "/" ];
     };
   };
 
   sysroot = toolchainPkgs.stdenv.mkDerivation {
     name = "${project-name}-sysroot";
-    src = ./nix; # arbitrary path, it won't work unless you give it something
-    buildPhase = ''
-      mkdir -p $out/sysroot/x86_64-unknown-linux-{musl,gnu}
-      ln -s ${env.sysroot.gnu64.debug} $out/sysroot/x86_64-unknown-linux-gnu/debug
-      ln -s ${env.sysroot.gnu64.release} $out/sysroot/x86_64-unknown-linux-gnu/release
-      ln -s ${env.sysroot.musl64.debug} $out/sysroot/x86_64-unknown-linux-musl/debug
-      ln -s ${env.sysroot.musl64.release} $out/sysroot/x86_64-unknown-linux-musl/release
+    src = null;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir --parent "$out/sysroot/x86_64-unknown-linux-"{musl,gnu}
+      ln -s "${env.sysroot.gnu64.debug}" "$out/sysroot/x86_64-unknown-linux-gnu/debug"
+      ln -s "${env.sysroot.gnu64.release}" "$out/sysroot/x86_64-unknown-linux-gnu/release"
+      ln -s "${env.sysroot.musl64.debug}" "$out/sysroot/x86_64-unknown-linux-musl/debug"
+      ln -s "${env.sysroot.musl64.release}" "$out/sysroot/x86_64-unknown-linux-musl/release"
     '';
   };
 
   dev-env = toolchainPkgs.buildEnv {
     name = "${project-name}-dev-env";
     paths = [ env.toolchain sysroot ];
-    pathsToLink = [ "/" ];
   };
 
   dev-container = toolchainPkgs.dockerTools.buildLayeredImage {
@@ -277,6 +275,7 @@
         WorkingDir = "/";
         Env = [
           "LD_LIBRARY_PATH=/lib"
+          "LIBCLANG_PATH=/lib"
         ];
       };
       maxLayers = 120;
