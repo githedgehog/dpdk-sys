@@ -137,20 +137,14 @@
   sysrootPackageListFn = crossEnv: pkgs: with pkgs; (
     [
       customLibbsd
+      customLibbsd.dev
       customLibmd
       dpdk
       dpdk-wrapper
-      libbsd.dev
       libmnl
       libnftnl
       libnl.out
       libpcap
-      linuxHeaders
-      llvmPackages.clang
-      llvmPackages.libclang.lib
-      llvmPackages.libcxx
-      llvmPackages.libcxx.dev
-      llvmPackages.lld
       numactl
       rdma-core
     ] ++
@@ -197,7 +191,10 @@
     llvmPackages.llvm
     mold
     nix
+    pam
     rustup
+    sudo
+    util-linux
   ];
 
   re-link = toolchainPkgs.writeShellApplication {
@@ -278,7 +275,7 @@
           "LIBCLANG_PATH=/lib"
         ];
       };
-      maxLayers = 120;
+      maxLayers = 100;
     };
   };
 }
