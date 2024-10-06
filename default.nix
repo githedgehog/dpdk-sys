@@ -148,7 +148,7 @@
       numactl
       rdma-core
     ] ++
-    (if crossEnv == "gnu64" then [ glibc glibc.out libgcc.libgcc glibc.dev ] else [])
+    (if crossEnv == "gnu64" then [ glibc glibc.out libgcc.libgcc glibc.dev glibc.static ] else [])
     ++
     (if crossEnv == "musl64" then [ musl.out musl.dev ] else [])
   );
@@ -169,32 +169,12 @@
     bashInteractive
     cacert
     coreutils
-    glibc
-    glibc.bin
-    glibc.debug
-    glibc.dev
-    glibc.getent
-    glibc.static
-    libclang.lib
-    libgcc.libgcc
-    libgcc.libgcc.checksum
-    libgcc.libgcc.lib
-    libgcc.libgcc.libgcc
     llvmPackages.clang
-    llvmPackages.compiler-rt
-    llvmPackages.compiler-rt.dev
     llvmPackages.libclang.lib
-    llvmPackages.libcxx
-    llvmPackages.libllvm
-    llvmPackages.libllvm.lib
     llvmPackages.lld
-    llvmPackages.llvm
-    mold
-    nix
     pam
     rustup
     sudo
-    util-linux
   ];
 
   re-link = toolchainPkgs.writeShellApplication {
@@ -235,11 +215,15 @@
     src = null;
     dontUnpack = true;
     installPhase = ''
-      mkdir --parent "$out/sysroot/x86_64-unknown-linux-"{musl,gnu}
-      ln -s "${env.sysroot.gnu64.debug}" "$out/sysroot/x86_64-unknown-linux-gnu/debug"
-      ln -s "${env.sysroot.gnu64.release}" "$out/sysroot/x86_64-unknown-linux-gnu/release"
-      ln -s "${env.sysroot.musl64.debug}" "$out/sysroot/x86_64-unknown-linux-musl/debug"
-      ln -s "${env.sysroot.musl64.release}" "$out/sysroot/x86_64-unknown-linux-musl/release"
+      mkdir --parent "$out/sysroot/x86_64-unknown-linux-"{musl,gnu}/{debug,release}
+      cp -r "${env.sysroot.gnu64.debug}"/* "$out/sysroot/x86_64-unknown-linux-gnu/debug"
+      cp -r "${env.sysroot.gnu64.release}"/* "$out/sysroot/x86_64-unknown-linux-gnu/release"
+      cp -r "${env.sysroot.musl64.debug}"/* "$out/sysroot/x86_64-unknown-linux-musl/debug"
+      cp -r "${env.sysroot.musl64.release}"/* "$out/sysroot/x86_64-unknown-linux-musl/release"
+      ln -s /nix "$out/sysroot/x86_64-unknown-linux-gnu/debug"
+      ln -s /nix "$out/sysroot/x86_64-unknown-linux-gnu/release"
+      ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/debug"
+      ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/release"
     '';
   };
 
