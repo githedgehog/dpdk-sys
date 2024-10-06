@@ -2,6 +2,8 @@ set shell := ["bash", "-euxo", "pipefail", "-c"]
 default_target := "x86_64-unknown-linux-musl"
 default_toolchain := "stable"
 container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
+compile_container_name := "ghcr.io/githedgehog/dpdk-sys/compile-env"
+test_container_name := "ghcr.io/githedgehog/dpdk-sys/test-env"
 default_llvm_version := "18"
 max_nix_jobs := "1"
 commit := `git rev-parse HEAD`
@@ -39,6 +41,15 @@ build-container llvm_version=default_llvm_version cores=jobs_guess: (_nix_build 
   docker tag \
     "{{container_name}}:llvm{{llvm_version}}" \
     "{{container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
+
+build-compile-container llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "container.compile-env" llvm_version cores)
+  docker load --input /tmp/dpdk-sys-builds/container.compile-env
+  docker tag \
+    "{{compile_container_name}}:llvm{{llvm_version}}" \
+    "{{compile_container_name}}:{{slug}}-llvm{{llvm_version}}"
+  docker tag \
+    "{{compile_container_name}}:llvm{{llvm_version}}" \
+    "{{compile_container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
 
 push-container llvm_version=default_llvm_version: (build-container llvm_version)
   docker push "{{container_name}}:{{slug}}-llvm{{llvm_version}}"

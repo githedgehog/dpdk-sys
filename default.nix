@@ -164,18 +164,35 @@
     };
   };
 
-  toolchainPackageList = with toolchainPkgs; [
-    bash-completion
-    bashInteractive
-    cacert
+  compileEnvPackageList = with toolchainPkgs; [
     coreutils
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
+  ];
+
+  testEnvPackageList = with toolchainPkgs; [
+    bash-completion
+    bashInteractive
+    cacert
+    coreutils
     pam
-    rustup
     sudo
   ];
+
+  toolchainEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ [toolchainPkgs.rustup];
+
+#  toolchainPackageList = with toolchainPkgs; [
+#    bash-completion
+#    bashInteractive
+#    cacert
+#    coreutils
+#    llvmPackages.clang
+#    llvmPackages.libclang.lib
+#    llvmPackages.lld
+#    pam
+#    sudo
+#  ];
 
   re-link = toolchainPkgs.writeShellApplication {
     name = "re-link";
@@ -189,24 +206,32 @@
 
   env = {
     sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-debug-sysroot-gnu64";
+      name = "${project-name}-env-debug-sysroot-gnu64";
       paths = sysrootPackageList.gnu64.debug;
     };
     sysroot.gnu64.release = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-release-sysroot-gnu64";
+      name = "${project-name}-env-release-sysroot-gnu64";
       paths = sysrootPackageList.gnu64.release;
     };
     sysroot.musl64.debug = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-debug-sysroot-musl64";
+      name = "${project-name}-env-debug-sysroot-musl64";
       paths = sysrootPackageList.musl64.debug;
     };
     sysroot.musl64.release = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-release-sysroot-musl64";
+      name = "${project-name}-env-release-sysroot-musl64";
       paths = sysrootPackageList.musl64.release;
+    };
+    compile = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-compile";
+      paths = compileEnvPackageList;
+    };
+    test = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-test";
+      paths = testEnvPackageList;
     };
     toolchain = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
-      paths = toolchainPackageList;
+      paths = toolchainEnvPackageList;
     };
   };
 
@@ -247,6 +272,26 @@
   };
 
   container = {
+    compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "ghcr.io/githedgehog/dpdk-sys/compile-env";
+      tag = "llvm${llvm-version}";
+      contents = [ env.compile sysroot ];
+      maxLayers = 100;
+    };
+    test-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "ghcr.io/githedgehog/dpdk-sys/test-env";
+      tag = "llvm${llvm-version}";
+      contents = [ env.test ];
+      config = {
+        Cmd = [ "/bin/bash" ];
+        WorkingDir = "/";
+        Env = [
+          "LD_LIBRARY_PATH=/lib"
+          "LIBCLANG_PATH=/lib"
+        ];
+      };
+      maxLayers = 100;
+    };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
       tag = "llvm${llvm-version}";
