@@ -6,7 +6,14 @@
   toolchainPkgs = import (fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
     sha256 = versions.nixpkgs.hash.nar.sha256;
-  }) {};
+  }) {
+    overlays = [
+      (self: super: { dataplane-test-runner = super.callPackage ./nix/test-runner {}; })
+      (self: super: {
+        llvmPackages = super."llvmPackages_${llvm-version}";
+      })
+    ];
+  };
   project-name = "dpdk-sys";
   crossOverlay = { build-flags, crossEnv }: self: super: rec {
     inherit build-flags;
@@ -166,43 +173,46 @@
 
   compileEnvPackageList = with toolchainPkgs; [
     coreutils
+    dataplane-test-runner
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
   ];
 
-  testEnvPackageList = with toolchainPkgs; [
+  testEnvPackageList = [];
+
+  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ (with toolchainPkgs; [
     bash-completion
     bashInteractive
     cacert
     coreutils
+    curl
+    dataplane-test-runner
+    ethtool
+    gawk
+    gdb
+    glibc.bin # for ldd
+    gnugrep
+    gnused
+    gnutar
+    htop
+    hwloc
+    iproute2
+    jq
+    just
+    libcap
+    llvmPackages.bintools-unwrapped
+    llvmPackages.lldb
+    numactl
+    openssl
     pam
+    pciutils
+    rustup
+    strace
     sudo
-  ];
-
-  toolchainEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ [toolchainPkgs.rustup];
-
-#  toolchainPackageList = with toolchainPkgs; [
-#    bash-completion
-#    bashInteractive
-#    cacert
-#    coreutils
-#    llvmPackages.clang
-#    llvmPackages.libclang.lib
-#    llvmPackages.lld
-#    pam
-#    sudo
-#  ];
-
-  re-link = toolchainPkgs.writeShellApplication {
-    name = "re-link";
-    runtimeInputs = with toolchainPkgs; [ coreutils ];
-    text = ''
-      new_target="$(realpath -s --relative-to="$1" "$(readlink "$1")")"
-      rm "$1"
-      ln -rs "$new_target" "$1"
-    '';
-  };
+    util-linux
+    wget
+  ]);
 
   env = {
     sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
@@ -229,9 +239,9 @@
       name = "${project-name}-env-test";
       paths = testEnvPackageList;
     };
-    toolchain = toolchainPkgs.symlinkJoin {
+    dev = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
-      paths = toolchainEnvPackageList;
+      paths = devEnvPackageList;
     };
   };
 
@@ -293,9 +303,9 @@
       maxLayers = 100;
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
+      name = "ghcr.io/githedgehog/dpdk-sys/dev-env-nix";
       tag = "llvm${llvm-version}";
-      contents = [ env.toolchain sysroot ];
+      contents = [ env.dev sysroot ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";

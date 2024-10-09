@@ -3,7 +3,7 @@ on: [ push, pull_request ]
 
 jobs:
   build:
-    name: build-container
+    name: build-containers
     runs-on: [lab]
     timeout-minutes: 180
     strategy:
@@ -30,9 +30,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build on llvm "${{ matrix.llvm_version }}"
-        run: just build-container "${{ matrix.llvm_version }}"
+        run: just build-containers "${{ matrix.llvm_version }}"
       - name: push containers
-        run: just push-container "${{ matrix.llvm_version }}"
+        run: just push-containers "${{ matrix.llvm_version }}"
       - name: clean up nix
         run: |
           nix-env --delete-generations old

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 declare -ri KiB=$((1024**1));
 declare -ri GiB=$((1024**3));
@@ -12,7 +12,7 @@ declare -ri free_memory;
 
 # guess the worst case memory load per core for build (GiB)
 declare max_mem_per_core_guess;
-max_mem_per_core_guess=10;
+max_mem_per_core_guess=2;
 declare -ri max_mem_per_core_guess;
 
 # guess the max number of cores we can safely use
