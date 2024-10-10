@@ -206,11 +206,14 @@
     libcap
     llvmPackages.bintools-unwrapped
     llvmPackages.lldb
+    nodejs_20 # for github ci
     numactl
-    openssl
-    pam
+    openssh # for git
+    openssl.all # for git
+    pam # for sudo
     pciutils
     rustup
+    stdenv.cc.cc.lib # for github ci
     strace
     sudo
     util-linux
@@ -289,7 +292,7 @@
       name = "ghcr.io/githedgehog/dpdk-sys/compile-env";
       tag = "llvm${llvm-version}";
       contents = [ env.compile sysroot ];
-      maxLayers = 100;
+      maxLayers = 120;
     };
     test-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/test-env";
@@ -303,7 +306,7 @@
           "LIBCLANG_PATH=/lib"
         ];
       };
-      maxLayers = 100;
+      maxLayers = 120;
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "ghcr.io/githedgehog/dpdk-sys/dev-env-nix";
@@ -317,7 +320,7 @@
           "LIBCLANG_PATH=/lib"
         ];
       };
-      maxLayers = 100;
+      maxLayers = 120;
     };
   };
 }

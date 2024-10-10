@@ -18,6 +18,8 @@ RUN mkdir /tmp \
  && chmod 544 /etc/passwd \
  && chmod 544 /etc/group
 
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+
 COPY ./os-release /etc/os-release
 
 ENV __bold=1
