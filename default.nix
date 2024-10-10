@@ -205,6 +205,9 @@
     just
     libcap
     llvmPackages.bintools-unwrapped
+    llvmPackages.clang
+    llvmPackages.libclang.lib
+    llvmPackages.lld
     llvmPackages.lldb
     nodejs_20 # for github ci
     numactl
