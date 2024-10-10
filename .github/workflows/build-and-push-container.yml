@@ -4,7 +4,8 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: build-containers
-    runs-on: [lab]
+    runs-on:
+      - lab
     timeout-minutes: 180
     strategy:
       matrix:
@@ -23,6 +24,8 @@ jobs:
           key: nix-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
       - name: install just
         uses: extractions/setup-just@v2
+        with:
+          just-version: "1.36.0"
       - name: login to ghcr.io
         uses: docker/login-action@v3
         with:
