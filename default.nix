@@ -111,7 +111,9 @@
       libbsd = customLibbsd; libmd = customLibmd;
     }));
     dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
-      libbsd = customLibbsd; inherit dpdk;
+      libbsd = customLibbsd;
+      inherit dpdk;
+      bintools = llvmPackages.bintools;
     }));
   };
 
