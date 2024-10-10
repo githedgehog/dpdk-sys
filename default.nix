@@ -188,9 +188,12 @@
     coreutils
     curl
     dataplane-test-runner
+    docker
     ethtool
     gawk
     gdb
+    git
+    glibc
     glibc.bin # for ldd
     gnugrep
     gnused

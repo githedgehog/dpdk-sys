@@ -1,10 +1,6 @@
-ARG LLVM_VERSION=18
-ARG BUILDER_GID=1000
-ARG BUILDER_UID=1000
+ARG LLVM_VERSION=19
 ARG DEV_ENV_SRC="ghcr.io/githedgehog/dpdk-sys/dev-env-nix"
 FROM ${DEV_ENV_SRC}:main-llvm${LLVM_VERSION} AS dev-env
-ARG BUILDER_GID
-ARG BUILDER_UID
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
@@ -14,7 +10,15 @@ RUN mkdir /tmp \
  && chmod 0444 /etc/sudoers.d/dangerous \
  && chmod 4755 /sbin/sudo \
  && chmod 555 /etc/pam.d \
- && chmod 444 /etc/pam.d/*
+ && chmod 444 /etc/pam.d/* \
+ && echo 'root:x:0:0::/root:/bin/bash' > /etc/passwd \
+ && echo 'root:x:0:' > /etc/group \
+ && chown root:root /etc/passwd \
+ && chown root:root /etc/group \
+ && chmod 544 /etc/passwd \
+ && chmod 544 /etc/group
+
+COPY ./os-release /etc/os-release
 
 ENV __bold=1
 ENV __prompt_env_color=99
