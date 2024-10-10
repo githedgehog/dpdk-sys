@@ -50,7 +50,12 @@ build-dev-env-container llvm_version=default_llvm_version cores=jobs_guess: (_ni
   docker tag \
     "{{dev_env_container_name}}-nix:llvm{{llvm_version}}" \
     "{{dev_env_container_name}}-nix:{{slug}}-llvm{{llvm_version}}-{{commit}}"
-  docker build -t "{{dev_env_container_name}}:llvm{{llvm_version}}" -f Dockerfile.dev-env .
+  docker build \
+    --build-arg COMPILER="llvm{{llvm_version}}" \
+    --build-arg BRANCH="{{slug}}" \
+    --tag "{{dev_env_container_name}}:llvm{{llvm_version}}" \
+    -f Dockerfile.dev-env \
+    .
   docker tag \
     "{{dev_env_container_name}}:llvm{{llvm_version}}" \
     "{{dev_env_container_name}}:{{slug}}-llvm{{llvm_version}}"
