@@ -1,5 +1,5 @@
 {
-  llvm-version ? "19",
+  llvm-version ? "18",
   build-flags ? import ./nix/flags.nix,
   versions ? import ./nix/versions.nix,
 }: rec {
