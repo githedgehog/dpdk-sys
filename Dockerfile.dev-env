@@ -5,6 +5,8 @@ FROM ${DEV_ENV_SRC}:${BRANCH}-${COMPILER} AS dev-env
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
+# /etc/passwd and /etc/group are replaced in the dev-env image when run in dataplane.
+# This is a hack to get the image to build in CI.
 RUN mkdir /tmp \
  && chmod 777 /tmp \
  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
@@ -21,6 +23,7 @@ RUN mkdir /tmp \
 
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
 
+# TODO: move os-release to a nix package.  This is just a hack to get CI working.
 COPY ./os-release /etc/os-release
 
 ENV __bold=1
@@ -40,20 +43,3 @@ ENV _env_propt="${_bold}${_prompt_env_color}⟪dataplane:dev-env:\$(whoami)⟫${
 ENV _pwd_prompt="${_bold}${_prompt_dir_color}⟪\$(pwd)⟫${_end_color}"
 ENV _cmd_prompt="${_bold}${_red_if_root}⟪$_sigil⟫${_end_color} "
 ENV PS1="\n${_env_propt}\n${_pwd_prompt}\n${_cmd_prompt}"
-
-#ENV LD_LIBRARY_PATH="/lib"
-#ENV LIBCLANG_PATH="${LD_LIBRARY_PATH}"
-#ENV DEV_ENV="/"
-#ENV SYSROOT="/sysroot"
-#ENV USER=builder
-#ENV UID="${BUILDER_UID}"
-#ENV GID="${BUILDER_GID}"
-#ENV HOME="/home/builder"
-
-# Install rust
-#RUN rustup set profile minimal \
-# && rustup toolchain install stable \
-# && rustup target add x86_64-unknown-linux-gnu \
-# && rustup target add x86_64-unknown-linux-musl \
-# && rustup default stable
-

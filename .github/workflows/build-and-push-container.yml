@@ -2,52 +2,16 @@ name: test suite
 on: [ push, pull_request ]
 
 jobs:
-#  build-on-lab:
-#    name: build-containers
-#    runs-on:
-#      - lab
-#    timeout-minutes: 180
-#    strategy:
-#      matrix:
-#        llvm_version:
-#          - 18
-#          - 19
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: install nix
-#        uses: cachix/install-nix-action@v27
-#      - name: setup nix cache
-#        id: nix-package-cache
-#        uses: actions/cache@v4
-#        with:
-#          path: /nix
-#          key: nix-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
-#      - name: install just
-#        uses: extractions/setup-just@v2
-#        with:
-#          just-version: "1.36.0"
-#      - name: login to ghcr.io
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#      - name: build on llvm "${{ matrix.llvm_version }}"
-#        run: just build-containers "${{ matrix.llvm_version }}"
-#      - name: push containers
-#        run: just push-containers "${{ matrix.llvm_version }}"
-#      - name: clean up nix
-#        run: |
-#          nix-env --delete-generations old
-#          nix-store --gc
-  build-on-gh:
+  build-on-lab:
     name: build-containers
-    runs-on: ubuntu-latest
-    timeout-minutes: 500
+    runs-on:
+      - lab
+    timeout-minutes: 180
     strategy:
       matrix:
         llvm_version:
           - 18
+          - 19
     steps:
       - uses: actions/checkout@v4
       - name: install nix

@@ -1,5 +1,5 @@
 {
-  llvm-version ? "18",
+  llvm-version ? "19",
   build-flags ? import ./nix/flags.nix,
   versions ? import ./nix/versions.nix,
 }: rec {
@@ -15,8 +15,27 @@
     ];
   };
   project-name = "dpdk-sys";
-  crossOverlay = { build-flags, crossEnv }: self: super: rec {
-    inherit build-flags;
+  crossOverlay = { build-flags, crossEnv }: self: super:
+  let
+  llvmPackagesVersion = "llvmPackages_${llvm-version}";
+  llvmPackages = super.${llvmPackagesVersion};
+  customStdenv = self.stdenvAdapters.makeStaticLibraries (
+    self.stdenvAdapters.useMoldLinker (
+      if crossEnv == "musl64" then
+        # TODO: It doesn't really make any sense to me that I need
+        # to use pkgsMusl here.
+        # In my mind that is implied by the fact that super is a
+        # crossEnv.
+        self.pkgsMusl.${llvmPackagesVersion}.libcxxStdenv
+      else if crossEnv == "gnu64" then
+        llvmPackages.libcxxStdenv
+      else
+        llvmPackages.libcxxStdenv
+    )
+  );
+  in
+  rec {
+    inherit build-flags customStdenv;
     buildWithFlags = flags: pkg: (pkg.overrideAttrs (orig: {
       CFLAGS = "${orig.CFLAGS or ""} ${flags.CFLAGS}";
       CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
@@ -27,20 +46,6 @@
     # TODO: consider LTO optimizing compiler-rt
     # TODO: consider LTO optimizing libcxx{,abi}
     # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
-    customStdenv = self.stdenvAdapters.makeStaticLibraries (
-      self.stdenvAdapters.useMoldLinker (
-        if crossEnv == "musl64" then
-          # TODO: It doesn't really make any sense to me that I need
-          # to use pkgsMusl here.
-          # In my mind that is implied by the fact that super is a
-          # crossEnv.
-          self.pkgsMusl.${llvmPackagesVersion}.libcxxStdenv
-        else if crossEnv == "gnu64" then
-          llvmPackages.libcxxStdenv
-        else
-          llvmPackages.libcxxStdenv
-      )
-    );
     # NOTE: libmd and libbsd customizations will cause an infinite recursion if done with normal overlay methods
     customLibmd = ((buildWithMyFlags (super.libmd)).override { stdenv = customStdenv; }).overrideAttrs (orig: {
       configureFlags = orig.configureFlags ++ ["--enable-static" "--disable-shared"];
@@ -117,7 +122,7 @@
     }));
   };
 
-  pkgsCrossDebug = (import toolchainPkgs.path {
+  pkgs.debug = (import toolchainPkgs.path {
     overlays = [
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
@@ -130,7 +135,7 @@
     ];
   }).pkgsCross;
 
-  pkgsCrossRelease = (import toolchainPkgs.path {
+  pkgs.release = (import toolchainPkgs.path {
     overlays = [
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
@@ -159,17 +164,17 @@
     ] ++
     (if crossEnv == "gnu64" then [ glibc glibc.out libgcc.libgcc glibc.dev glibc.static ] else [])
     ++
-    (if crossEnv == "musl64" then [ musl.out musl.dev ] else [])
+    (if crossEnv == "musl64" then [ mimalloc musl.out musl.dev ] else [])
   );
 
   sysrootPackageList = {
     gnu64 = {
-      debug = sysrootPackageListFn "gnu64" pkgsCrossDebug.gnu64;
-      release = sysrootPackageListFn "gnu64" pkgsCrossRelease.gnu64;
+      debug = sysrootPackageListFn "gnu64" pkgs.debug.gnu64;
+      release = sysrootPackageListFn "gnu64" pkgs.release.gnu64;
     };
     musl64 = {
-      debug = sysrootPackageListFn "musl64" pkgsCrossDebug.musl64;
-      release = sysrootPackageListFn "musl64" pkgsCrossRelease.musl64;
+      debug = sysrootPackageListFn "musl64" pkgs.debug.musl64;
+      release = sysrootPackageListFn "musl64" pkgs.release.musl64;
     };
   };
 
