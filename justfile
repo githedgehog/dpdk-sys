@@ -5,7 +5,6 @@ set script-interpreter := ["bash", "-euo", "pipefail"]
 debug_mode := "false"
 export _just_debug_ := if debug_mode == "true" { "set -x" } else { "set +x" }
 
-
 default_target := "x86_64-unknown-linux-musl"
 default_toolchain := "stable"
 dev_env_container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
