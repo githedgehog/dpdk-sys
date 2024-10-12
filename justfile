@@ -181,89 +181,10 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
 # Build and tag the dev-env container
-[script]
-build-dev-env-container: (_nix_build "container.dev-env")
-  {{_just_debug_}}
-  declare build_date
-  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
-  declare -r build_date
-  docker load --input /tmp/dpdk-sys/builds/container.dev-env
-  docker tag \
-    "{{dev_env_container_name}}:{{_build-id}}" \
-    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker tag \
-    "{{dev_env_container_name}}:{{_build-id}}" \
-    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker build \
-    --label "git.commit={{_commit}}" \
-    --label "git.branch={{_branch}}" \
-    --label "git.tree-state={{_clean}}" \
-    --label "build.date=${build_date}" \
-    --label "build.timestamp={{_build_time}}" \
-    --label "version.llvm={{llvm}}" \
-    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
-    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
-    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
-    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
-    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
-    --build-arg IMAGE="{{dev_env_container_name}}" \
-    --build-arg TAG="{{_build-id}}" \
-    --tag "{{dev_env_container_name}}:post-{{_build-id}}" \
-    -f Dockerfile.dev-env \
-    .
-  docker tag \
-    "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker tag \
-    "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker tag \
-    "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker rmi "{{dev_env_container_name}}:{{_build-id}}"
-  docker rmi "{{dev_env_container_name}}:post-{{_build-id}}"
+build-dev-env-container: (_build-container "Dockerfile.dev-env" dev_env_container_name "container.dev-env")
 
-# Build and tag the compile-env container
-[script]
-build-compile-env-container: (_nix_build "container.compile-env")
-  {{_just_debug_}}
-  declare build_date
-  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
-  declare -r build_date
-  docker load --input /tmp/dpdk-sys/builds/container.compile-env
-  docker build \
-    --label "git.commit={{_commit}}" \
-    --label "git.branch={{_branch}}" \
-    --label "git.tree-state={{_clean}}" \
-    --label "build.date=${build_date}" \
-    --label "build.timestamp={{_build_time}}" \
-    --label "version.llvm={{llvm}}" \
-    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
-    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
-    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
-    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
-    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
-    --build-arg IMAGE="{{compile_env_container_name}}" \
-    --build-arg TAG="{{_build-id}}" \
-    --tag "{{compile_env_container_name}}:post-{{_build-id}}" \
-    -f Dockerfile.compile-env \
-    .
-  docker tag \
-    "{{compile_env_container_name}}:post-{{_build-id}}" \
-    "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker tag \
-    "{{compile_env_container_name}}:post-{{_build-id}}" \
-    "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker tag \
-    "{{compile_env_container_name}}:post-{{_build-id}}" \
-    "{{compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker rmi "{{compile_env_container_name}}:{{_build-id}}"
-  docker rmi "{{compile_env_container_name}}:post-{{_build-id}}"
-
+# Build and tag the dev-env container
+build-compile-env-container: (_build-container "Dockerfile.compile-env" compile_env_container_name "container.compile-env")
 
 # Build the sysroot, compile-env, and dev-env containers
 build: build-sysroot build-dev-env-container build-compile-env-container
@@ -273,7 +194,7 @@ build: build-sysroot build-dev-env-container build-compile-env-container
 push: build
   {{_just_debug_}}
   declare build_date
-  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
+  build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
   docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
   docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
