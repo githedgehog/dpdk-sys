@@ -1,7 +1,7 @@
 { llvm-version ? "19", build-flags ? import ./nix/flags.nix
 , versions ? import ./nix/versions.nix, }: rec {
 
-  llvm-overlay = crossEnv: self: super: rec {
+  llvm-overlay = self: super: rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
   };
@@ -16,7 +16,7 @@
       (self: super: {
         dataplane-test-runner = super.callPackage ./nix/test-runner { };
       })
-      (llvm-overlay "gnu64")
+      llvm-overlay
       rust-overlay
     ];
   };
@@ -119,7 +119,7 @@
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
           overlays = [
-            (llvm-overlay "gnu64")
+            llvm-overlay
             (crossOverlay {
               build-flags = build-flags.debug;
               crossEnv = "gnu64";
@@ -128,7 +128,7 @@
         };
         pkgsCross.musl64 = import prev.path {
           overlays = [
-            (llvm-overlay "musl64")
+            llvm-overlay
             (crossOverlay {
               build-flags = build-flags.debug;
               crossEnv = "musl64";
@@ -144,7 +144,7 @@
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
           overlays = [
-            (llvm-overlay "gnu64")
+            llvm-overlay
             (crossOverlay {
               build-flags = build-flags.release;
               crossEnv = "gnu64";
@@ -153,7 +153,7 @@
         };
         pkgsCross.musl64 = import prev.path {
           overlays = [
-            (llvm-overlay "musl64")
+            llvm-overlay
             (crossOverlay {
               build-flags = build-flags.release;
               crossEnv = "musl64";
