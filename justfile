@@ -12,9 +12,6 @@ debug_mode := "false"
 # stable version.
 rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
-dev_env_container_name := container_repo + "/dev-env"
-compile_env_container_name := container_repo + "/compile-env"
-test_env_container_name := container_repo + "/test-env"
 
 # This is the version of LLVM to compile everything with.
 # nix packages basically every major version of LLVM so
@@ -58,6 +55,13 @@ _commit := `git rev-parse HEAD`
 _branch := `git rev-parse --abbrev-ref HEAD`
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
+
+# The name of the dev-env container
+_dev_env_container_name := container_repo + "/dev-env"
+# The name of the compile-env container
+_compile_env_container_name := container_repo + "/compile-env"
+# The name of the test-env container
+_test_env_container_name := container_repo + "/test-env"
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -105,7 +109,6 @@ cores := `./scripts/estimate-jobs.sh`
   just --list --justfile {{justfile()}}
 
 # Install the nix package manager (in single user mode)
-# You should not need to do this more than once
 [script]
 install-nix:
   {{_just_debug_}}
@@ -135,6 +138,7 @@ _nix_build attribute:
 build-sysroot: (_nix_build "sysroot")
   {{_just_debug_}}
 
+# Builds and post processes a container from the nix build
 [private]
 [script]
 _build-container dockerfile container-name attribute: (_nix_build attribute)
@@ -181,10 +185,10 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
 # Build and tag the dev-env container
-build-dev-env-container: (_build-container "Dockerfile.dev-env" dev_env_container_name "container.dev-env")
+build-dev-env-container: (_build-container "Dockerfile.dev-env" _dev_env_container_name "container.dev-env")
 
 # Build and tag the dev-env container
-build-compile-env-container: (_build-container "Dockerfile.compile-env" compile_env_container_name "container.compile-env")
+build-compile-env-container: (_build-container "Dockerfile.compile-env" _compile_env_container_name "container.compile-env")
 
 # Build the sysroot, compile-env, and dev-env containers
 build: build-sysroot build-dev-env-container build-compile-env-container
@@ -196,9 +200,9 @@ push: build
   declare build_date
   build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
-  docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker push "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{_compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
+  docker push "{{_compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
+  docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
