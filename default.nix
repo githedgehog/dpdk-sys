@@ -1,6 +1,6 @@
 { llvm-version ? "19", build-flags ? import ./nix/flags.nix
-, versions ? import ./nix/versions.nix, }: rec {
-
+, versions ? import ./nix/versions.nix, image-tag ? "latest"
+, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys" }: rec {
   llvm-overlay = self: super: rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
@@ -351,38 +351,28 @@
 
   maxLayers = 110;
 
-  dev-container = toolchainPkgs.dockerTools.buildLayeredImage {
-    name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
-    tag = "llvm${llvm-version}";
-    contents = [ env.toolchain sysroot ];
-    config = {
-      Cmd = [ "/bin/bash" ];
-      WorkingDir = "/";
-      Env = [ "LD_LIBRARY_PATH=/lib" ];
-    };
-    inherit maxLayers;
-  };
-
   container = {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/compile-env";
-      tag = "llvm${llvm-version}";
+      name = "${contianer-repo}/compile-env";
+      tag = "${image-tag}";
       contents = [ env.compile sysroot ];
       inherit maxLayers;
       config = {
         Cmd = [ "/bin/sh" ];
         WorkingDir = "/";
         Env = [
-          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
-          "PATH=/bin"
+          "DEV_ENV=/"
           "LD_LIBRARY_PATH=/lib"
           "LIBCLANG_PATH=/lib"
+          "PATH=/bin"
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "SYSROOT=/sysroot"
         ];
       };
     };
     test-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/test-env";
-      tag = "llvm${llvm-version}";
+      name = "${contianer-repo}/test-env";
+      tag = "${image-tag}";
       contents = [ env.test ];
       config = {
         Cmd = [ "/bin/bash" ];
@@ -397,17 +387,19 @@
       inherit maxLayers;
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/dev-env-nix";
-      tag = "llvm${llvm-version}";
+      name = "${contianer-repo}/dev-env";
+      tag = "${image-tag}";
       contents = [ env.dev sysroot ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";
         Env = [
-          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
-          "PATH=/bin"
+          "DEV_ENV=/"
           "LD_LIBRARY_PATH=/lib"
           "LIBCLANG_PATH=/lib"
+          "PATH=/bin"
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "SYSROOT=/sysroot"
         ];
       };
       inherit maxLayers;

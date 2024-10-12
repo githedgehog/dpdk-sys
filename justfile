@@ -3,21 +3,30 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 set script-interpreter := ["bash", "-euo", "pipefail"]
 
 debug_mode := "false"
-export _just_debug_ := if debug_mode == "true" { "set -x" } else { "set +x" }
+export _just_debug_ := if debug_mode == "true" { "set -x" } else { "" }
 
-default_target := "x86_64-unknown-linux-musl"
-default_toolchain := "stable"
-dev_env_container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
-compile_env_container_name := "ghcr.io/githedgehog/dpdk-sys/compile-env"
-test_container_name := "ghcr.io/githedgehog/dpdk-sys/test-env"
-default_llvm_version := "19"
-max_nix_jobs := "1"
+target := "x86_64-unknown-linux-musl"
+rust := "stable"
+container_repo := "ghcr.io/githedgehog/dpdk-sys"
+dev_env_container_name := container_repo + "/dev-env"
+compile_env_container_name := container_repo + "/compile-env"
+test_env_container_name := container_repo + "/test-env"
+llvm := "19"
+max_nix_builds := "1"
 commit := `git rev-parse HEAD`
-slug := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/_/g'`
+clean := `git diff-index --quiet HEAD -- && echo clean || echo dirty`
+branch := `git rev-parse --abbrev-ref HEAD`
+slug := (if clean == "clean" { "" } else { "dirty-_-" }) + branch
+versions := "./nix/versions.nix"
+_build-id := `uuidgen --random`
+build-date := `date --iso-8601=seconds --utc | sed -e 's/[-:+]/_/g'`
 
 # Compute the default number of jobs to use as a guess to try and keep the build within the memory limits
 # of the system
 jobs_guess := `./scripts/estimate-jobs.sh`
+
+is_clean:
+  echo {{clean}}
 
 debug_recipe +args="default":
   just debug_mode=true {{args}}
@@ -25,7 +34,7 @@ debug_recipe +args="default":
 install-nix:
   sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
-_nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
+_nix_build attribute llvm=llvm cores=jobs_guess:
   @echo MAX JOBS GUESS: {{jobs_guess}}
   mkdir -p /tmp/dpdk-sys-builds
   nix build  \
@@ -36,50 +45,73 @@ _nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
     -f default.nix \
     "{{attribute}}" \
     --out-link "/tmp/dpdk-sys-builds/{{attribute}}" \
-    --argstr llvm-version "{{llvm_version}}" \
-    "-j{{max_nix_jobs}}" \
+    --argstr image-tag "{{_build-id}}" \
+    --argstr llvm-version "{{llvm}}" \
+    --argstr versions-file "{{versions}}" \
+    "-j{{max_nix_builds}}" \
     `if [ "{{cores}}" != "all" ]; then echo --cores "{{cores}}"; fi`
 
-build-sysroot llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "sysroot" llvm_version cores)
+build-sysroot llvm=llvm cores=jobs_guess: (_nix_build "sysroot" llvm cores)
 
-build-dev-env-container llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "container.dev-env" llvm_version cores)
+build-dev-env-container llvm=llvm cores=jobs_guess: (_nix_build "container.dev-env" llvm cores)
   docker load --input /tmp/dpdk-sys-builds/container.dev-env
   docker tag \
-    "{{dev_env_container_name}}-nix:llvm{{llvm_version}}" \
-    "{{dev_env_container_name}}-nix:{{slug}}-llvm{{llvm_version}}"
+    "{{dev_env_container_name}}:{{_build-id}}" \
+    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
   docker tag \
-    "{{dev_env_container_name}}-nix:llvm{{llvm_version}}" \
-    "{{dev_env_container_name}}-nix:{{slug}}-llvm{{llvm_version}}-{{commit}}"
+    "{{dev_env_container_name}}:{{_build-id}}" \
+    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
   docker build \
-    --build-arg COMPILER="llvm{{llvm_version}}" \
-    --build-arg BRANCH="{{slug}}" \
-    --tag "{{dev_env_container_name}}:llvm{{llvm_version}}" \
+    --label "git.commit={{commit}}" \
+    --label "git.branch={{branch}}" \
+    --label "git.tree-state={{clean}}" \
+    --label "build.date={{build-date}}" \
+    --label "version.llvm={{llvm}}" \
+    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
+    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
+    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
+    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
+    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
+    --build-arg IMAGE="{{dev_env_container_name}}" \
+    --build-arg TAG="{{_build-id}}" \
+    --tag "{{dev_env_container_name}}:post-{{_build-id}}" \
     -f Dockerfile.dev-env \
     .
   docker tag \
-    "{{dev_env_container_name}}:llvm{{llvm_version}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm_version}}"
+    "{{dev_env_container_name}}:post-{{_build-id}}" \
+    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
   docker tag \
-    "{{dev_env_container_name}}:llvm{{llvm_version}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
+    "{{dev_env_container_name}}:post-{{_build-id}}" \
+    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+  docker tag \
+    "{{dev_env_container_name}}:post-{{_build-id}}" \
+    "{{dev_env_container_name}}:{{build-date}}-{{slug}}-llvm{{llvm}}-{{commit}}"
+  docker rmi "{{dev_env_container_name}}:{{_build-id}}"
+  docker rmi "{{dev_env_container_name}}:post-{{_build-id}}"
 
-build-compile-env-container llvm_version=default_llvm_version cores=jobs_guess: (_nix_build "container.compile-env" llvm_version cores)
+build-compile-env-container llvm=llvm cores=jobs_guess: (_nix_build "container.compile-env" llvm cores)
   docker load --input /tmp/dpdk-sys-builds/container.compile-env
   docker tag \
-    "{{compile_env_container_name}}:llvm{{llvm_version}}" \
-    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm_version}}"
+    "{{compile_env_container_name}}:{{_build-id}}" \
+    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}"
   docker tag \
-    "{{compile_env_container_name}}:llvm{{llvm_version}}" \
-    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
+    "{{compile_env_container_name}}:{{_build-id}}" \
+    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+  docker tag \
+    "{{compile_env_container_name}}:{{_build-id}}" \
+    "{{compile_env_container_name}}:{{build-date}}-{{slug}}-llvm{{llvm}}-{{commit}}"
+  docker rmi "{{compile_env_container_name}}:{{_build-id}}"
 
-push-containers llvm_version=default_llvm_version: (build llvm_version)
-  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm_version}}"
-  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
-  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm_version}}"
-  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm_version}}-{{commit}}"
+push-containers llvm=llvm: (build llvm)
+  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}"
+  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
+  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
 
-build-containers llvm_version=default_llvm_version cores=jobs_guess: (build-dev-env-container llvm_version cores) (build-compile-env-container llvm_version cores)
+build-containers llvm=llvm cores=jobs_guess: (build-dev-env-container llvm cores) (build-compile-env-container llvm cores)
 
-build llvm_version=default_llvm_version cores=jobs_guess: (build-sysroot llvm_version cores) (build-containers llvm_version cores)
+build llvm=llvm cores=jobs_guess: (build-sysroot llvm cores) (build-containers llvm cores)
 
-push llvm_version=default_llvm_version: (push-containers llvm_version)
+push llvm=llvm: (push-containers llvm)
