@@ -1,71 +1,205 @@
 set unstable
 set shell := ["bash", "-euo", "pipefail", "-c"]
 set script-interpreter := ["bash", "-euo", "pipefail"]
+set positional-arguments := true
 
+# Turn on debug_mode if you want to `set -x` all the just [script] recipes
 debug_mode := "false"
-export _just_debug_ := if debug_mode == "true" { "set -x" } else { "" }
 
-target := "x86_64-unknown-linux-musl"
+# The version of the rust compiler to include.
+# You can pick "stable" or "beta" if you want floating versions
+# or you can pick a specific version like "1.81.0" if you want a specific
+# stable version.
 rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 dev_env_container_name := container_repo + "/dev-env"
 compile_env_container_name := container_repo + "/compile-env"
 test_env_container_name := container_repo + "/test-env"
+
+# This is the version of LLVM to compile everything with.
+# nix packages basically every major version of LLVM so
+# you can pick the version that you want to use independently of
+# the nixpkgs version.
+# The important thing is that the version of LLVM you pick should be the same
+# as the version of LLVM for the rust toolchain you are using.
 llvm := "19"
+
+# This is the maximum number of builds nix will start at a time.
+# You can jump this up to 8 or 16 if you have a really powerful machine.
+# Be careful tho, LLVM is a memory hog of a build.
 max_nix_builds := "1"
-commit := `git rev-parse HEAD`
-clean := `(git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)" && echo clean) || echo dirty`
-branch := `git rev-parse --abbrev-ref HEAD`
-slug := (if clean == "clean" { "" } else { "dirty-_-" }) + branch
+
+# This is the path to the versions.nix file that contains the nixpkgs version information
+# It is a safe bet that the current ./nix/versions.nix file is what you want unless you are
+# trying to jump back in time to a previous version of nixpkgs or something.
 versions := "./nix/versions.nix"
+
+# semi private (override if you really need to)
+
+# Setting this to "false" will disable pulling derivations from the nix cache.
+
+# If you turn this to "false" with an empty /nix/store, then you will have to rebuild
+# _everything_.
+# The rebuild will be massive!
+# On the other hand, setting this to "false" will allow you to test
+# the reproducibility of the entire dependency graph.
+#
+# NOTE: if you already have packages cached they will still be used.
+# You would need to clear out /nix/store to truly force a rebuild of everything.
+nix_substitute := "true"
+
+# private fields (do not override)
+
+# The git tree state (clean or dirty)
+_clean := `(git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)" && echo clean) || echo dirty`
+# The git commit hash of the last commit to HEAD
+_commit := `git rev-parse HEAD`
+# The git branch we are currnetly on
+_branch := `git rev-parse --abbrev-ref HEAD`
+# The slug is the branch name (sanitized) with a marker if the tree is dirty
+_slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
+
+# This is a unique identifier for the build.
+# We temporarily tag our containers with this id so that we can be certain that we are
+# not retagging or pushing some other container.
 _build-id := `uuidgen --random`
-build-date := `date --iso-8601=seconds --utc | sed -e 's/[-:+]/_/g'`
+
+export _just_debug_ := if debug_mode == "true" { "set -x" } else { "" }
+
+# NOTE: we parse the returned date from the worldtimeapi.org API to ensure that
+# we actually got a valid iso-8601 date.
+#
+# We also diff the official worldtimeapi.org time with the system time to see if we are off by more than 5 seconds
+# If we are, then we should fail the build as either
+# 1. the system is incorrectly configured
+# 2. someone is messing with the system clock (which makes me think CA cert issues are afoot)
+# 3. the worldtimeapi.org API is down or inacurate (very unlikely)
+export _build_time := ```
+  set -euo pipefail
+  declare official_unparsed
+  official_unparsed="$(curl "http://worldtimeapi.org/api/timezone/utc" 2>/dev/null | jq --raw-output '.utc_datetime')"
+  declare -r official_unparsed
+  declare official
+  official="$(date --iso-8601=seconds --utc --date="${official_unparsed}")"
+  declare -r official
+  declare system_epoch
+  system_epoch="$(date --utc +%s)"
+  declare -ri system_epoch
+  declare official_epoch
+  official_epoch="$(date --utc --date="${official}" +%s)"
+  declare -ri official_epoch
+  declare -ri clock_skew=$((system_epoch - official_epoch))
+  if [ "${clock_skew}" -gt 5 ] || [ "${clock_skew}" -lt -5 ]; then
+    >&2 echo "Clock skew detected: system time: ${system_epoch} official time: ${official_epoch}"
+    exit 1
+  fi
+  printf -- "%s" "${official}"
+```
 
 # Compute the default number of jobs to use as a guess to try and keep the build within the memory limits
 # of the system
-jobs_guess := `./scripts/estimate-jobs.sh`
+cores := `./scripts/estimate-jobs.sh`
 
-is_clean:
-  echo {{clean}}
+[private]
+@default:
+  just --list --justfile {{justfile()}}
 
-debug_recipe +args="default":
-  just debug_mode=true {{args}}
-
+# Install the nix package manager (in single user mode)
+# You should not need to do this more than once
+[script]
 install-nix:
+  {{_just_debug_}}
   sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
-_nix_build attribute llvm=llvm cores=jobs_guess:
-  @echo MAX JOBS GUESS: {{jobs_guess}}
-  mkdir -p /tmp/dpdk-sys-builds
+[private]
+[script]
+_nix_build attribute:
+  {{_just_debug_}}
+  mkdir -p /tmp/dpdk-sys/builds
   nix build  \
-    --option substitute false \
+    --option substitute {{nix_substitute}} \
     --keep-failed  \
     --print-build-logs \
     --show-trace \
     -f default.nix \
     "{{attribute}}" \
-    --out-link "/tmp/dpdk-sys-builds/{{attribute}}" \
+    --out-link "/tmp/dpdk-sys/builds/{{attribute}}" \
+    --argstr container-repo "{{container_repo}}" \
     --argstr image-tag "{{_build-id}}" \
     --argstr llvm-version "{{llvm}}" \
-    --argstr versions-file "{{versions}}" \
     "-j{{max_nix_builds}}" \
     `if [ "{{cores}}" != "all" ]; then echo --cores "{{cores}}"; fi`
 
-build-sysroot llvm=llvm cores=jobs_guess: (_nix_build "sysroot" llvm cores)
+# Build only the sysroot
+[script]
+build-sysroot: (_nix_build "sysroot")
+  {{_just_debug_}}
 
-build-dev-env-container llvm=llvm cores=jobs_guess: (_nix_build "container.dev-env" llvm cores)
-  docker load --input /tmp/dpdk-sys-builds/container.dev-env
+[private]
+[script]
+_build-container dockerfile container-name attribute: (_nix_build attribute)
+  {{_just_debug_}}
+  declare build_date
+  build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
+  declare -r build_date
+  docker load --input /tmp/dpdk-sys/builds/{{attribute}}
   docker tag \
-    "{{dev_env_container_name}}:{{_build-id}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
+    "{{container-name}}:{{_build-id}}" \
+    "{{container-name}}:{{_slug}}-llvm{{llvm}}"
   docker tag \
-    "{{dev_env_container_name}}:{{_build-id}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+    "{{container-name}}:{{_build-id}}" \
+    "{{container-name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker build \
-    --label "git.commit={{commit}}" \
-    --label "git.branch={{branch}}" \
-    --label "git.tree-state={{clean}}" \
-    --label "build.date={{build-date}}" \
+    --label "git.commit={{_commit}}" \
+    --label "git.branch={{_branch}}" \
+    --label "git.tree-state={{_clean}}" \
+    --label "build.date=${build_date}" \
+    --label "build.timestamp={{_build_time}}" \
+    --label "version.llvm={{llvm}}" \
+    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
+    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
+    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
+    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
+    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
+    --build-arg IMAGE="{{container-name}}" \
+    --build-arg TAG="{{_build-id}}" \
+    --tag "{{container-name}}:post-{{_build-id}}" \
+    -f {{dockerfile}} \
+    .
+  docker tag \
+    "{{container-name}}:post-{{_build-id}}" \
+    "{{container-name}}:{{_slug}}-llvm{{llvm}}"
+  docker tag \
+    "{{container-name}}:post-{{_build-id}}" \
+    "{{container-name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker tag \
+    "{{container-name}}:post-{{_build-id}}" \
+    "{{container-name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker rmi "{{container-name}}:{{_build-id}}"
+  docker rmi "{{container-name}}:post-{{_build-id}}"
+
+# Build and tag the dev-env container
+[script]
+build-dev-env-container: (_nix_build "container.dev-env")
+  {{_just_debug_}}
+  declare build_date
+  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
+  declare -r build_date
+  docker load --input /tmp/dpdk-sys/builds/container.dev-env
+  docker tag \
+    "{{dev_env_container_name}}:{{_build-id}}" \
+    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
+  docker tag \
+    "{{dev_env_container_name}}:{{_build-id}}" \
+    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker build \
+    --label "git.commit={{_commit}}" \
+    --label "git.branch={{_branch}}" \
+    --label "git.tree-state={{_clean}}" \
+    --label "build.date=${build_date}" \
+    --label "build.timestamp={{_build_time}}" \
     --label "version.llvm={{llvm}}" \
     --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
     --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
@@ -81,37 +215,69 @@ build-dev-env-container llvm=llvm cores=jobs_guess: (_nix_build "container.dev-e
     .
   docker tag \
     "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
+    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
   docker tag \
     "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+    "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker tag \
     "{{dev_env_container_name}}:post-{{_build-id}}" \
-    "{{dev_env_container_name}}:{{build-date}}-{{slug}}-llvm{{llvm}}-{{commit}}"
+    "{{dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker rmi "{{dev_env_container_name}}:{{_build-id}}"
   docker rmi "{{dev_env_container_name}}:post-{{_build-id}}"
 
-build-compile-env-container llvm=llvm cores=jobs_guess: (_nix_build "container.compile-env" llvm cores)
-  docker load --input /tmp/dpdk-sys-builds/container.compile-env
+# Build and tag the compile-env container
+[script]
+build-compile-env-container: (_nix_build "container.compile-env")
+  {{_just_debug_}}
+  declare build_date
+  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
+  declare -r build_date
+  docker load --input /tmp/dpdk-sys/builds/container.compile-env
+  docker build \
+    --label "git.commit={{_commit}}" \
+    --label "git.branch={{_branch}}" \
+    --label "git.tree-state={{_clean}}" \
+    --label "build.date=${build_date}" \
+    --label "build.timestamp={{_build_time}}" \
+    --label "version.llvm={{llvm}}" \
+    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
+    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
+    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
+    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
+    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
+    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
+    --build-arg IMAGE="{{compile_env_container_name}}" \
+    --build-arg TAG="{{_build-id}}" \
+    --tag "{{compile_env_container_name}}:post-{{_build-id}}" \
+    -f Dockerfile.compile-env \
+    .
   docker tag \
-    "{{compile_env_container_name}}:{{_build-id}}" \
-    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}"
+    "{{compile_env_container_name}}:post-{{_build-id}}" \
+    "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
   docker tag \
-    "{{compile_env_container_name}}:{{_build-id}}" \
-    "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
+    "{{compile_env_container_name}}:post-{{_build-id}}" \
+    "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker tag \
-    "{{compile_env_container_name}}:{{_build-id}}" \
-    "{{compile_env_container_name}}:{{build-date}}-{{slug}}-llvm{{llvm}}-{{commit}}"
+    "{{compile_env_container_name}}:post-{{_build-id}}" \
+    "{{compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker rmi "{{compile_env_container_name}}:{{_build-id}}"
+  docker rmi "{{compile_env_container_name}}:post-{{_build-id}}"
 
-push-containers llvm=llvm: (build llvm)
-  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}"
-  docker push "{{compile_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
-  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}"
-  docker push "{{dev_env_container_name}}:{{slug}}-llvm{{llvm}}-{{commit}}"
 
-build-containers llvm=llvm cores=jobs_guess: (build-dev-env-container llvm cores) (build-compile-env-container llvm cores)
+# Build the sysroot, compile-env, and dev-env containers
+build: build-sysroot build-dev-env-container build-compile-env-container
 
-build llvm=llvm cores=jobs_guess: (build-sysroot llvm cores) (build-containers llvm cores)
-
-push llvm=llvm: (push-containers llvm)
+# Push the compile-env and dev-env containers to the container registry
+[script]
+push: build
+  {{_just_debug_}}
+  declare build_date
+  build_date=$(date --utc --iso-8601=date --date="{{_build_time}}")
+  declare -r build_date
+  docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
+  docker push "{{compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
+  docker push "{{dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
