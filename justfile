@@ -10,7 +10,7 @@ default_toolchain := "stable"
 dev_env_container_name := "ghcr.io/githedgehog/dpdk-sys/dev-env"
 compile_env_container_name := "ghcr.io/githedgehog/dpdk-sys/compile-env"
 test_container_name := "ghcr.io/githedgehog/dpdk-sys/test-env"
-default_llvm_version := "18"
+default_llvm_version := "19"
 max_nix_jobs := "1"
 commit := `git rev-parse HEAD`
 slug := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/_/g'`
@@ -29,6 +29,7 @@ _nix_build attribute llvm_version=default_llvm_version cores=jobs_guess:
   @echo MAX JOBS GUESS: {{jobs_guess}}
   mkdir -p /tmp/dpdk-sys-builds
   nix build  \
+    --option substitute false \
     --keep-failed  \
     --print-build-logs \
     --show-trace \

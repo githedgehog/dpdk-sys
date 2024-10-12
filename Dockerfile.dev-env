@@ -43,3 +43,14 @@ ENV _env_propt="${_bold}${_prompt_env_color}⟪dataplane:dev-env:\$(whoami)⟫${
 ENV _pwd_prompt="${_bold}${_prompt_dir_color}⟪\$(pwd)⟫${_end_color}"
 ENV _cmd_prompt="${_bold}${_red_if_root}⟪$_sigil⟫${_end_color} "
 ENV PS1="\n${_env_propt}\n${_pwd_prompt}\n${_cmd_prompt}"
+
+
+#ENV PATH="/root/.cargo/bin:${PATH}"
+#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+#  | sh -x -s -- \
+#      -y \
+#      --default-toolchain 1.81.0 \
+#      --target x86_64-unknown-linux-gnu \
+#      --target x86_64-unknown-linux-musl \
+# && rustup install beta \
+# && rustup install nightly
