@@ -14,7 +14,7 @@ test_env_container_name := container_repo + "/test-env"
 llvm := "19"
 max_nix_builds := "1"
 commit := `git rev-parse HEAD`
-clean := `git diff-index --quiet HEAD -- && echo clean || echo dirty`
+clean := `(git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)" && echo clean) || echo dirty`
 branch := `git rev-parse --abbrev-ref HEAD`
 slug := (if clean == "clean" { "" } else { "dirty-_-" }) + branch
 versions := "./nix/versions.nix"
