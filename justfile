@@ -68,6 +68,8 @@ _test_env_container_name := container_repo + "/test-env"
 # not retagging or pushing some other container.
 _build-id := `uuidgen --random`
 
+environments := "environments.yml"
+
 export _just_debug_ := if debug_mode == "true" { "set -x" } else { "" }
 
 # NOTE: we parse the returned date from the worldtimeapi.org API to ensure that
@@ -222,11 +224,4 @@ ci: push nix-garbage-collector
 # Generate the test matrix for the CI
 [script]
 generate-test-matrix matrix="require":
-  yq -r -c '
-    .matrix.require |
-    . as $matrix |
-    keys[] |
-    . as $key |
-    $key + "=" + ($matrix[$key] | unique | sort | tostring)
-  ' ./environments.yml
-
+  yq -r -c '.matrix.{{matrix}} | "matrix=" + (.|tostring)' {{environments}}

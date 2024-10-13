@@ -9,12 +9,12 @@ env:
   rust_nightly_pin_version: nightly-2024-10-12
 
 jobs:
-  gen-matrix:
+  generate-test-matrix:
     name: generate test matrix
     runs-on: ubuntu-latest
     outputs:
-      require: ${{ steps.require.outputs.require }}
-      inform: ${{ steps.inform.outputs.inform }}
+      require: ${{ steps.require.outputs.matrix }}
+      inform: ${{ steps.inform.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -24,17 +24,13 @@ jobs:
       - run: cargo install whyq
       - name: install just
         uses: extractions/setup-just@v2
-#      - id: matrix
-#        run: just generate-test-matrix require >> >> "${GITHUB_OUTPUT}"
       - id: require
-        run: yq -c -r '.matrix.require | "require=" + (.|tostring)' ./environments.yml | tee -a "$GITHUB_OUTPUT"
+        run: just generate-test-matrix require >> "${GITHUB_OUTPUT}"
       - id: inform
-        run: yq -c -r '.matrix.inform | "inform=" + (.|tostring)' ./environments.yml | tee -a "$GITHUB_OUTPUT"
-#      - id: requirement-matrix
-#        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
+        run: just generate-test-matrix inform >> "${GITHUB_OUTPUT}"
   require-matrix:
     runs-on: ubuntu-latest
-    needs: gen-matrix
+    needs: generate-test-matrix
     strategy:
       matrix: ${{fromJson(needs.gen-matrix.outputs.require)}}
     steps:
@@ -45,7 +41,7 @@ jobs:
       - run: echo "just=${{ matrix.just }}"
   inform-matrix:
     runs-on: ubuntu-latest
-    needs: gen-matrix
+    needs: generate-test-matrix
     strategy:
       matrix: ${{fromJson(needs.gen-matrix.outputs.inform)}}
     steps:
