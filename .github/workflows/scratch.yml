@@ -45,6 +45,7 @@ jobs:
       - run: echo "just=${{ matrix.just }}"
   inform-matrix:
     runs-on: ubuntu-latest
+    needs: gen-matrix
     strategy:
       matrix: ${{fromJson(needs.gen-matrix.outputs.inform)}}
     steps:
