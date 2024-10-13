@@ -9,7 +9,7 @@ env:
   rust_nightly_pin_version: nightly-2024-10-12
 
 jobs:
-  generate-test-matrix:
+  test-matrix:
     name: generate test matrix
     runs-on: ubuntu-latest
     outputs:
@@ -28,22 +28,22 @@ jobs:
         run: just generate-test-matrix require >> "${GITHUB_OUTPUT}"
       - id: inform
         run: just generate-test-matrix inform >> "${GITHUB_OUTPUT}"
-  require-matrix:
+  require:
     runs-on: ubuntu-latest
-    needs: generate-test-matrix
+    needs: test-matrix
     strategy:
-      matrix: ${{fromJson(needs.gen-matrix.outputs.require)}}
+      matrix: ${{fromJson(needs.test-matrix.outputs.require)}}
     steps:
       - run: echo "required=${{ matrix.required }}"
       - run: echo "nixpkgs=${{ matrix.nixpkgs }}"
       - run: echo "llvm=${{ matrix.llvm }}"
       - run: echo "rust=${{ matrix.rust }}"
       - run: echo "just=${{ matrix.just }}"
-  inform-matrix:
+  inform:
     runs-on: ubuntu-latest
-    needs: generate-test-matrix
+    needs: test-matrix
     strategy:
-      matrix: ${{fromJson(needs.gen-matrix.outputs.inform)}}
+      matrix: ${{fromJson(needs.test-matrix.outputs.inform)}}
     steps:
       - run: echo "required=${{ matrix.required }}"
       - run: echo "nixpkgs=${{ matrix.nixpkgs }}"
