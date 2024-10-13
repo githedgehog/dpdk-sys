@@ -28,9 +28,9 @@ matrix:
     just:
       - *just-target
   inform:
+    <<: *require
     required:
       - false
-    <<: *require
     llvm:
       - "latest"
     rust:
