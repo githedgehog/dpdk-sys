@@ -230,4 +230,4 @@ generate-todo-list param:
     [range(0; $factors | length)] as $itr |
     $factors | map($matrix[.]) | combinations as $combinations |
     $itr | map({($factors[.]): $combinations[.]}) | add
-  ]' ./environments.yml
+  ]' ./builds.yml
