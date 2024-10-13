@@ -1,0 +1,25 @@
+name: check out test matrix generation
+on: [ push, pull_request ]
+env:
+  default_llvm_version: 19
+  default_just_version: 1.36.0
+  rust_msrv_pin_version: 1.80.1
+  rust_stable_pin_version: 1.81.0
+  rust_beta_pin_version: 1.82.0-beta.5
+  rust_nightly_pin_version: nightly-2024-10-12
+
+jobs:
+  generate-matrix:
+    name: generate test matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Setup jq
+        # TODO: this seems jank, find a better way to get jq
+        uses: vegardit/gha-setup-jq@v1
+      - run: cargo install whyq
+      - name: install just
+        uses: extractions/setup-just@v2
+      - run: just generate-test-matrix require
+      - run: just generate-test-matrix inform

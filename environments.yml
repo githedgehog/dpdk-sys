@@ -1,0 +1,41 @@
+params:
+  llvm:
+    - &llvm-minimum "18"
+    - &llvm-release "19"
+  rust:
+    - &rust-msrv "1.80.1"
+    - &rust-target "1.81.1"
+    - &rust-required-nightly "nightly-2024-10-12"
+  nixpkgs:
+    - &nixpkgs-target "./nix/versions.nix"
+  just:
+    - &just-target "1.36.0"
+
+matrix:
+  require: &require
+    required:
+      - true
+    nixpkgs:
+      - *nixpkgs-target
+    llvm:
+      - *llvm-minimum
+      - *llvm-release
+    rust:
+      - "stable"
+      - *rust-msrv
+      - *rust-target
+      - *rust-required-nightly
+    just:
+      - *just-target
+  inform:
+    required:
+      - false
+    <<: *require
+    llvm:
+      - "latest"
+    rust:
+      - *rust-msrv
+      - *rust-target
+      - "stable"
+      - "beta"
+      - "nightly"

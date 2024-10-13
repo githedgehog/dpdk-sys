@@ -120,7 +120,7 @@ _nix_build attribute:
   {{_just_debug_}}
   mkdir -p /tmp/dpdk-sys/builds
   nix build  \
-    --option substitute {{nix_substitute}} \
+    --option substitute "{{nix_substitute}}" \
     --keep-failed  \
     --print-build-logs \
     --show-trace \
@@ -206,3 +206,28 @@ push: build
   docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
   docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
   docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+
+# Delete all the old generations of the nix store and run the garbage collector
+[script]
+nix-garbage-collector:
+  {{_just_debug_}}
+  nix-env --delete-generations old
+  nix-store --gc
+
+# Recipe for CI
+[private]
+ci: push nix-garbage-collector
+
+
+# Generate the test matrix for the CI
+[script]
+generate-test-matrix matrix="require":
+  yq -r -c '.matrix.require' ./environments.yml
+  yq -r -c '
+    .matrix.require |
+    . as $matrix |
+    keys[] |
+    . as $key |
+    $key + "=" + ($matrix[$key] | unique | sort | tostring)
+  ' ./environments.yml
+
