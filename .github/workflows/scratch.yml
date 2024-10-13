@@ -19,14 +19,18 @@ jobs:
         # TODO: this seems jank, find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
-      # - name: install just
-      #   uses: extractions/setup-just@v2
+      - name: install just
+        uses: extractions/setup-just@v2
+#      - id: matrix
+#        run: just generate-test-matrix require >> >> "${GITHUB_OUTPUT}"
       - id: require
-        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
+        run: yq -c -r '.matrix.require | "require=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
+#      - id: requirement-matrix
+#        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
   show-matrix:
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.generate-requirements.outputs.matrix)}}
+      matrix: ${{fromJson(needs.generate-requirements.outputs.require)}}
     steps:
       - run: echo "required=${{ matrix.required }}"
       - run: echo "nixpkgs=${{ matrix.nixpkgs }}"

@@ -222,7 +222,6 @@ ci: push nix-garbage-collector
 # Generate the test matrix for the CI
 [script]
 generate-test-matrix matrix="require":
-  yq -r -c '.matrix.require' ./environments.yml
   yq -r -c '
     .matrix.require |
     . as $matrix |
