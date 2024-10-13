@@ -11,7 +11,8 @@ env:
 jobs:
   generate-matrix:
     name: generate test matrix
-    runs-on: ubuntu-latest
+    runs-on:
+      - lab
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
