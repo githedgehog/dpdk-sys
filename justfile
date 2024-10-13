@@ -221,7 +221,13 @@ nix-garbage-collector:
 ci: push nix-garbage-collector
 
 
-# Generate the test matrix for the CI
+# Generate the test matrix
 [script]
-generate-test-matrix matrix="require":
-  yq -r -c '.matrix.{{matrix}} | "matrix=" + (.|tostring)' {{environments}}
+generate-todo-list param:
+  yq -r -c '[
+    {{param}} as $matrix |
+    $matrix | keys as $factors |
+    [range(0; $factors | length)] as $itr |
+    $factors | map($matrix[.]) | combinations as $combinations |
+    $itr | map({($factors[.]): $combinations[.]}) | add
+  ]' ./environments.yml
