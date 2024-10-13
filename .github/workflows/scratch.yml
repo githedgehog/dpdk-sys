@@ -9,9 +9,12 @@ env:
   rust_nightly_pin_version: nightly-2024-10-12
 
 jobs:
-  generate-requirements:
+  gen-matrix:
     name: generate test matrix
     runs-on: ubuntu-latest
+    outputs:
+      require: ${{ steps.require.outputs.matrix }}
+      inform: ${{ steps.inform.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -24,13 +27,25 @@ jobs:
 #      - id: matrix
 #        run: just generate-test-matrix require >> >> "${GITHUB_OUTPUT}"
       - id: require
-        run: yq -c -r '.matrix.require | "require=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
+        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml >> "$GITHUB_OUTPUT"
+      - id: inform
+        run: yq -c -r '.matrix.inform | "matrix=" + (.|tostring)' ./environments.yml >> "$GITHUB_OUTPUT"
 #      - id: requirement-matrix
 #        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
-  show-matrix:
+  require-matrix:
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.generate-requirements.outputs.require)}}
+      matrix: ${{fromJson(needs.gen-matrix.outputs.require)}}
+    steps:
+      - run: echo "required=${{ matrix.required }}"
+      - run: echo "nixpkgs=${{ matrix.nixpkgs }}"
+      - run: echo "llvm=${{ matrix.llvm }}"
+      - run: echo "rust=${{ matrix.rust }}"
+      - run: echo "just=${{ matrix.just }}"
+  inform-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.gen-matrix.outputs.inform)}}
     steps:
       - run: echo "required=${{ matrix.required }}"
       - run: echo "nixpkgs=${{ matrix.nixpkgs }}"
