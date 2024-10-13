@@ -9,10 +9,9 @@ env:
   rust_nightly_pin_version: nightly-2024-10-12
 
 jobs:
-  generate-matrix:
+  generate-requirements:
     name: generate test matrix
-    runs-on:
-      - lab
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -20,7 +19,17 @@ jobs:
         # TODO: this seems jank, find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
-      - name: install just
-        uses: extractions/setup-just@v2
-      - run: just generate-test-matrix require
-      - run: just generate-test-matrix inform
+      # - name: install just
+      #   uses: extractions/setup-just@v2
+      - id: require
+        run: yq -c -r '.matrix.require | "matrix=" + (.|tostring)' ./environments.yml | tee -a "${GITHUB_OUTPUT}"
+  show-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.generate-requirements.outputs.matrix)}}
+    steps:
+      - run: echo "required=${{ matrix.required }}"
+      - run: echo "nixpkgs=${{ matrix.nixpkgs }}"
+      - run: echo "llvm=${{ matrix.llvm }}"
+      - run: echo "rust=${{ matrix.rust }}"
+      - run: echo "just=${{ matrix.just }}"
