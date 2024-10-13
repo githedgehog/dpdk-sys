@@ -1,6 +1,5 @@
 params:
   llvm: &llvm
-    - "18"
     - "19"
   rust:
     - &rust-target "1.81.0"
@@ -13,7 +12,6 @@ params:
   profile: &profile
     - "release"
     - "debug"
-
 
 runner:
   require: &require
