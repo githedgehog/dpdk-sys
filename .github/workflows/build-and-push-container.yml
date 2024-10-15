@@ -23,32 +23,9 @@ jobs:
           - ${{ env.default_just_version }}
         nixpkgs:
           - ${{ hashFiles('./nix/versions.nix') }}
-        rust:
-          - msrv
-          - stable
-          - beta
-          - nightly
-        include:
-          - rust: stable
-            llvm: 18
-            rust_pin: true
-            must_pass: true
-          - rust: stable
-            llvm: 18
-            rust_pin: false
-            must_pass: false
-          - rust: 1.81.0
-            llvm: 18
-            must_pass: true
-          - rust: stable
-            llvm: 18
-            must_pass: true
-          - rust: beta
-            llvm: 19
-            must_pass: false
-          - rust: nightly
-            llvm: 19
-            must_pass: false
+        llvm:
+          - "18"
+          - "19"
     steps:
       - uses: actions/checkout@v4
       - name: install nix
@@ -69,4 +46,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: just --yes debug_mode=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+      - name: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci

@@ -218,7 +218,7 @@ nix-garbage-collector:
 
 # Recipe for CI
 [private]
-ci: push nix-garbage-collector
+ci: build push nix-garbage-collector
 
 
 # Generate the test matrix
