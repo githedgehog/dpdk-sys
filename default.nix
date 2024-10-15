@@ -203,56 +203,27 @@
     };
   };
 
-  rust = { pkgs, channel ? "stable", version ? "latest", profile ? "minimal"
+  rust-toolchain = { channel ? "stable", version ? "latest", profile ? "minimal"
     , targets ? [ "x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl" ] }:
-    (pkgs.rust-bin.${channel}.${version}.${profile}.override {
+    (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
       targets = targets;
     });
 
-  compileStuff = { channel ? "stable", version ? "latest", profile ? "minimal"
-    , targets ? [ "x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl" ] }:
-    with toolchainPkgs; [
-      bash
-      coreutils
-      llvmPackages.clang
-      llvmPackages.libclang.lib
-      llvmPackages.lld
-      rust-bin.${channel}.${version}.${profile}.override
-      { targets = targets; }
-    ];
-
-  compileRequirements = with toolchainPkgs; [
-    acl.out
-    attr.out
-    bintools
+  compileEnvPackageList = (with toolchainPkgs; [
+    (rust-toolchain { })
+    bash
+    cacert
     coreutils
-    curl
-    gmp
-    gnugrep
-    gnused
-    gnutar
-    libgcc.libgcc
-    libz
-    llvmPackages.bintools
+    just
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
-    openssl.all
-    rust-bin.stable."1.81.0".default
-  ];
-
-  compileEnvPackageList = compileRequirements ++ (with toolchainPkgs; [
-    bash-completion
-    bashInteractive
-    cacert
-    coreutils
-    dataplane-test-runner
-    strace
+    sysroot
   ]);
 
   testEnvPackageList = [ ];
 
-  devEnvPackageList = compileRequirements ++ testEnvPackageList
+  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive
@@ -344,18 +315,13 @@
     '';
   };
 
-  dev-env = toolchainPkgs.buildEnv {
-    name = "${project-name}-dev-env";
-    paths = [ env.toolchain sysroot ];
-  };
-
   maxLayers = 110;
 
   container = {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/compile-env";
       tag = "${image-tag}";
-      contents = [ env.compile sysroot ];
+      contents = [ compileEnvPackageList ];
       inherit maxLayers;
       config = {
         Cmd = [ "/bin/sh" ];
@@ -389,7 +355,7 @@
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/dev-env";
       tag = "${image-tag}";
-      contents = [ env.dev sysroot ];
+      contents = [ env.dev ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";

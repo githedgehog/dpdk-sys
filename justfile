@@ -193,7 +193,7 @@ build-dev-env-container: (_build-container "Dockerfile.dev-env" _dev_env_contain
 build-compile-env-container: (_build-container "Dockerfile.compile-env" _compile_env_container_name "container.compile-env")
 
 # Build the sysroot, compile-env, and dev-env containers
-build: build-sysroot build-dev-env-container build-compile-env-container
+build: build-sysroot build-compile-env-container build-dev-env-container
 
 # Push the compile-env and dev-env containers to the container registry
 [script]
