@@ -4,7 +4,7 @@ set script-interpreter := ["bash", "-euo", "pipefail"]
 set positional-arguments := true
 
 # Turn on debug_mode if you want to `set -x` all the just [script] recipes
-debug_mode := "false"
+debug := "false"
 
 # The version of the rust compiler to include.
 # You can pick "stable" or "beta" if you want floating versions
@@ -70,7 +70,7 @@ _build-id := `uuidgen --random`
 
 environments := "environments.yml"
 
-export _just_debug_ := if debug_mode == "true" { "set -x" } else { "" }
+export _just_debug_ := if debug == "true" { "set -x" } else { "" }
 
 # NOTE: we parse the returned date from the worldtimeapi.org API to ensure that
 # we actually got a valid iso-8601 date.
@@ -224,6 +224,7 @@ ci: build push nix-garbage-collector
 # Generate the test matrix
 [script]
 generate-todo-list param:
+  {{_just_debug_}}
   yq -r -c '[
     {{param}} as $matrix |
     $matrix | keys as $factors |
