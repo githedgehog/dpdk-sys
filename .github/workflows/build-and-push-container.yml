@@ -36,4 +36,5 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: apt-get update && apt-get install --yes --no-install-recommends util-linux
       - run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
