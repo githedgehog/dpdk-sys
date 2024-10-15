@@ -15,7 +15,7 @@ jobs:
         just:
           - 1.36.0
         nixpkgs:
-          - ${{ hashFile('./nix/versions.nix') }}
+          - "./nix/versions.nix"
         llvm:
           - "18"
           - "19"
@@ -28,7 +28,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nix/llvm/${{ matrix.llvm }}/version/${{ matrix.nixpkgs }}
+          key: /nix/llvm/${{ matrix.llvm }}/version/${{ hashFiles(matrix.nixpkgs) }}
       - name: install just
         uses: extractions/setup-just@v2
         with:
