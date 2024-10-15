@@ -1,72 +1,72 @@
-#name: test suite
-#on: [ push, pull_request ]
-#defaults:
-#  run:
-#    shell: bash -euxo pipefail -c
-#env:
-#  default_llvm_version: 19
-#  default_just_version: 1.36.0
-#  rust_msrv_pin_version: 1.80.1
-#  rust_stable_pin_version: 1.81.0
-#  rust_beta_pin_version: 1.82.0-beta.5
-#  rust_nightly_pin_version: nightly-2024-10-12
-#
-#jobs:
-#  build-on-lab:
-#    name: build-containers
-#    runs-on:
-#      - lab
-#    timeout-minutes: 180
-#    strategy:
-#      matrix:
-#        just:
-#          - ${{ env.default_just_version }}
-#        nixpkgs:
-#          - ${{ hashFiles('./nix/versions.nix') }}
-#        rust:
-#          - msrv
-#          - stable
-#          - beta
-#          - nightly
-#        include:
-#          - rust: stable
-#            llvm: 18
-#            rust_pin: true
-#            must_pass: true
-#          - rust: stable
-#            llvm: 18
-#            rust_pin: false
-#            must_pass: false
-#          - rust: 1.81.0
-#            llvm: 18
-#            must_pass: true
-#          - rust: stable
-#            llvm: 18
-#            must_pass: true
-#          - rust: beta
-#            llvm: 19
-#            must_pass: false
-#          - rust: nightly
-#            llvm: 19
-#            must_pass: false
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: install nix
-#        uses: cachix/install-nix-action@v27
-#      - name: setup nix cache
-#        id: nix-package-cache
-#        uses: actions/cache@v4
-#        with:
-#          path: /nix
-#          key: /nix/llvm/${{ matrix.llvm }}/version/${{ matrix.nixpkgs }}
-#      - name: install just
-#        uses: extractions/setup-just@v2
-#        with:
-#          just-version: ${{ matrix.just }}
-#      - name: login to ghcr.io
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#      - name: just --yes debug_mode=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+name: test suite
+on: [ push, pull_request ]
+defaults:
+  run:
+    shell: bash -euxo pipefail -c
+env:
+  default_llvm_version: 19
+  default_just_version: 1.36.0
+  rust_msrv_pin_version: 1.80.1
+  rust_stable_pin_version: 1.81.0
+  rust_beta_pin_version: 1.82.0-beta.6
+  rust_nightly_pin_version: nightly-2024-10-12
+
+jobs:
+  build-on-lab:
+    name: build-containers
+    runs-on:
+      - lab
+    timeout-minutes: 180
+    strategy:
+      matrix:
+        just:
+          - ${{ env.default_just_version }}
+        nixpkgs:
+          - ${{ hashFiles('./nix/versions.nix') }}
+        rust:
+          - msrv
+          - stable
+          - beta
+          - nightly
+        include:
+          - rust: stable
+            llvm: 18
+            rust_pin: true
+            must_pass: true
+          - rust: stable
+            llvm: 18
+            rust_pin: false
+            must_pass: false
+          - rust: 1.81.0
+            llvm: 18
+            must_pass: true
+          - rust: stable
+            llvm: 18
+            must_pass: true
+          - rust: beta
+            llvm: 19
+            must_pass: false
+          - rust: nightly
+            llvm: 19
+            must_pass: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: install nix
+        uses: cachix/install-nix-action@v27
+      - name: setup nix cache
+        id: nix-package-cache
+        uses: actions/cache@v4
+        with:
+          path: /nix
+          key: /nix/llvm/${{ matrix.llvm }}/version/${{ matrix.nixpkgs }}
+      - name: install just
+        uses: extractions/setup-just@v2
+        with:
+          just-version: ${{ matrix.just }}
+      - name: login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: just --yes debug_mode=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
