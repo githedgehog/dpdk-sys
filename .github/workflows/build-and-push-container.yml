@@ -1,8 +1,5 @@
 name: test suite
 on: [ push, pull_request ]
-defaults:
-  run:
-    shell: bash -euxo pipefail -c
 
 jobs:
   build-on-lab:
