@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         just:
-          - ${{ env.default_just_version }}
+          - 1.36.0
         nixpkgs:
           - ${{ hashFiles('./nix/versions.nix') }}
         llvm:
