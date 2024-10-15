@@ -46,4 +46,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+      - run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
