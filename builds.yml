@@ -5,11 +5,9 @@
 env:
   rust_pins:
     stable: &rust_stable "1.81.0"
-    msrv: &rust_msrv "1.80.0"
     nightly: &nightly_pin "nightly-2024-10-16"
   llvm_for_rust_pins:
     stable: &llvm_stable "18"
-    msrv: &llvm_msrv "18"
     nightly: &llvm_nightly "19"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
@@ -29,12 +27,6 @@ matrix:
         target:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
-    - # MSRV
-      <<: *default
-      llvm: *llvm_msrv
-      rust:
-        channel: "stable"
-        version: *rust_msrv
     - # pinned nightly
       <<: *default
       llvm: *llvm_nightly
