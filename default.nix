@@ -1,5 +1,4 @@
-let
-in { rust-channel ? "stable", build-flags ? import ./nix/flags.nix
+{ rust-channel ? "stable", build-flags ? import ./nix/flags.nix
 , versions ? import ./nix/versions.nix, image-tag ? "latest"
 , contianer-repo ? "ghcr.io/githedgehog/dpdk-sys" }: rec {
   rust-version = versions.rust.${rust-channel};
