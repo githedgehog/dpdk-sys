@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: install nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@v30
       - name: setup nix cache
         id: nix-package-cache
         uses: actions/cache@v4
