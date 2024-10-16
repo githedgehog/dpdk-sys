@@ -2,19 +2,35 @@ name: Build
 on: [ push, pull_request ]
 
 jobs:
+  build-matrix:
+    name: generate build matrix
+    runs-on:
+      - lab
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Setup jq
+        # TODO: this seems jank, find a better way to get jq
+        uses: vegardit/gha-setup-jq@v1
+      - run: cargo install whyq
+      - name: install uuid-runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends uuid-runtime
+      - name: install just
+        uses: extractions/setup-just@v2
+      - id: matrix
+        run: just generate-todo-list >> "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
+    needs: build-matrix
     runs-on:
       - lab
     timeout-minutes: 300
     strategy:
-      matrix:
-        just:
-          - "1.36.0"
-        nixpkgs:
-          - "./nix/versions.nix"
-        llvm:
-          - "19"
+      matrix: ${{fromJson(needs.build-matrix.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v4
       - name: install nix
@@ -39,5 +55,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends uuid-runtime
-      - name: Do it!
-        run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+      - run: echo "${{ toJSON(matrix) }}"
+#      - name: Do it!
+#        run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci

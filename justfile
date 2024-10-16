@@ -81,7 +81,8 @@ _just_debug_ := if debug == "true" { "set -x" } else { "" }
 export _build_time := ```
   set -euo pipefail
   declare official_unparsed
-  official_unparsed="$(curl "http://worldtimeapi.org/api/timezone/utc" 2>/dev/null | jq --raw-output '.utc_datetime')"
+  #  official_unparsed="$(curl "http://worldtimeapi.org/api/timezone/utc" 2>/dev/null | jq --raw-output '.utc_datetime')"
+  official_unparsed="$(date --iso-8601=seconds --utc)"
   declare -r official_unparsed
   declare official
   official="$(date --iso-8601=seconds --utc --date="${official_unparsed}")"
@@ -238,11 +239,11 @@ ci-group-end:
 [private]
 ci env="lab": \
   (ci-group-begin "build") \
-  build \
+    build \
   ci-group-end \
   (ci-group-begin "push") \
-  push \
+    push \
   ci-group-end \
   (ci-group-begin "garbage-collector") \
-  nix-garbage-collector \
+    nix-garbage-collector \
   ci-group-end
