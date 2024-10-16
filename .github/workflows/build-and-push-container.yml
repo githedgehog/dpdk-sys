@@ -15,6 +15,10 @@ jobs:
         # TODO: find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
+      - name: install uuid-runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends uuid-runtime
       - id: matrix
         run: echo "matrix=$(yq -r -c '.matrix' builds.yml)" >> "${GITHUB_OUTPUT}"
   build-on-lab:
@@ -51,4 +55,4 @@ jobs:
           sudo apt-get install --yes --no-install-recommends uuid-runtime
       - run: echo "${{ toJSON(matrix) }}"
       - name: Do it!
-        run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.rust.channel}} ci
