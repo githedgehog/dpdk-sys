@@ -216,7 +216,7 @@ nix-garbage-collector:
 
 # Generate the test matrix
 [script]
-generate-todo-list param:
+generate-todo-list param=".":
   {{_just_debug_}}
   yq -r -c '[
     {{param}} as $matrix |
