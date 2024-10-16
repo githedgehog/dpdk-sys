@@ -15,14 +15,8 @@ jobs:
         # TODO: this seems jank, find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
-      - name: install uuid-runtime
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends uuid-runtime
-      - name: install just
-        uses: extractions/setup-just@v2
       - id: matrix
-        run: just generate-todo-list >> "${GITHUB_OUTPUT}"
+        run: yq . builds.yml >> "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
     needs: build-matrix
