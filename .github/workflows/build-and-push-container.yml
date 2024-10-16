@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nix/llvm/${{ matrix.llvm }}/version/${{ hashFiles(matrix.nixpkgs) }}
+          key: /nix/rust/${{ matrix.toolchain.rust.channel }}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
       - name: install just
         uses: extractions/setup-just@v2
         with:

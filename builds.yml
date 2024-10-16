@@ -13,7 +13,7 @@ env:
 matrix:
   nixpkgs:
     - "nix/versions.nix"
-  rust:
+  toolchain:
     - # pinned stable
       &default
       llvm: *llvm_stable
