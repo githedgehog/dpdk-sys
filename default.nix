@@ -211,14 +211,15 @@
     });
 
   compileEnvPackageList = (with toolchainPkgs; [
-    rust-toolchain
     bash
     cacert
     coreutils
+    glibc
     just
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
+    rust-toolchain
     sysroot
   ]);
 
