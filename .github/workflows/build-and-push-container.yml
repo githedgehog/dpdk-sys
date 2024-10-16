@@ -12,11 +12,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Setup jq
-        # TODO: this seems jank, find a better way to get jq
+        # TODO: find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
       - id: matrix
-        run: echo matrix="$(yq -r -c '.matrix' builds.yml)" >> "${GITHUB_OUTPUT}"
+        run: echo "matrix=$(yq -r -c '.matrix' builds.yml)" >> "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
     needs: build-matrix
@@ -24,7 +24,7 @@ jobs:
       - lab
     timeout-minutes: 300
     strategy:
-      matrix: ${{fromJson(needs.build-matrix.outputs.matrix)}}
+      matrix: ${{fromJSON(needs.build-matrix.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v4
       - name: install nix
