@@ -40,7 +40,14 @@ nix_substitute := "true"
 # private fields (do not override)
 
 # The git tree state (clean or dirty)
-_clean := `(git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)" && echo clean) || echo dirty`
+_clean := ```
+  set -euo pipefail
+  (
+    git diff-index --quiet HEAD -- && \
+    test -z "$(git ls-files --exclude-standard --others)" && \
+    echo clean \
+  ) || echo dirty
+```
 # The git commit hash of the last commit to HEAD
 _commit := `git rev-parse HEAD`
 # The git branch we are currnetly on
