@@ -1,5 +1,29 @@
 nixpkgs:
   - "nix/versions.nix"
 rust:
-  - llvm: "18"
-    rust: "stable"
+  - &default
+    llvm: "18"
+    rust:
+      channel: "stable"
+      version: "1.81.0"
+    sysroot:
+      profile:
+        - "release"
+        - "debug"
+      target:
+        - "x86_64-unknown-linux-gnu"
+        - "x86_64-unknown-linux-musl"
+  - <<: *default
+    rust:
+      channel: "stable"
+      version: "1.80.1"
+  - <<: *default
+    llvm: "19"
+    rust:
+      channel: beta
+      version: "2024-10-15"
+  - <<: *default
+    llvm: "19"
+    rust:
+      channel: nightly
+      version: "2024-10-15"
