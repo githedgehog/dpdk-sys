@@ -6,15 +6,14 @@ jobs:
     name: build-containers
     runs-on:
       - lab
-    timeout-minutes: 180
+    timeout-minutes: 300
     strategy:
       matrix:
         just:
-          - 1.36.0
+          - "1.36.0"
         nixpkgs:
           - "./nix/versions.nix"
         llvm:
-          - "18"
           - "19"
     steps:
       - uses: actions/checkout@v4
@@ -36,5 +35,5 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends uuid-runtime
-      - run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci
+      - name: Do it!
+        run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci

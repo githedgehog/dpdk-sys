@@ -60,8 +60,6 @@ _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 _dev_env_container_name := container_repo + "/dev-env"
 # The name of the compile-env container
 _compile_env_container_name := container_repo + "/compile-env"
-# The name of the test-env container
-_test_env_container_name := container_repo + "/test-env"
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -70,7 +68,7 @@ _build-id := `uuidgen --random`
 
 environments := "environments.yml"
 
-export _just_debug_ := if debug == "true" { "set -x" } else { "" }
+_just_debug_ := if debug == "true" { "set -x" } else { "" }
 
 # NOTE: we parse the returned date from the worldtimeapi.org API to ensure that
 # we actually got a valid iso-8601 date.
@@ -216,11 +214,6 @@ nix-garbage-collector:
   nix-env --delete-generations old
   nix-store --gc
 
-# Recipe for CI
-[private]
-ci: build push nix-garbage-collector
-
-
 # Generate the test matrix
 [script]
 generate-todo-list param:
@@ -232,3 +225,20 @@ generate-todo-list param:
     $factors | map($matrix[.]) | combinations as $combinations |
     $itr | map({($factors[.]): $combinations[.]}) | add
   ]' ./builds.yml
+
+[private]
+[script]
+ci-install-dependencies env:
+  {{_just_debug_}}
+  if [ "{{env}}" = "lab" ] || [ "{{env}}" = "vlab" ]; then
+    sudo apt-get --yes update
+    sudo apt-get --yes install uuid-runtime
+  fi
+
+# Recipe for CI
+[private]
+ci env="lab": \
+  ci-install-dependencies \
+  build \
+  push \
+  nix-garbage-collector
