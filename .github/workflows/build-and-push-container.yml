@@ -35,5 +35,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: install uuid-runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends uuid-runtime
       - name: Do it!
         run: just --yes debug=true max_nix_builds=1 llvm=${{matrix.llvm}} ci

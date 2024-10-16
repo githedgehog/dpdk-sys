@@ -1,6 +1,15 @@
-{ llvm-version ? "19", build-flags ? import ./nix/flags.nix
+let
+  default-rust-toolchain-config = {
+    channel = "stable";
+    version = "latest";
+    profile = "minimal";
+    targets = [ "x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl" ];
+  };
+in { llvm-version ? "19", build-flags ? import ./nix/flags.nix
 , versions ? import ./nix/versions.nix, image-tag ? "latest"
-, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys" }: rec {
+, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys"
+, rust-toolchain-config ? default-rust-toolchain-config }: rec {
+  rust-toolchain-config-unified = default-rust-toolchain-config // rust-toolchain-config;
   llvm-overlay = self: super: rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
@@ -203,14 +212,13 @@
     };
   };
 
-  rust-toolchain = { channel ? "stable", version ? "latest", profile ? "minimal"
-    , targets ? [ "x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl" ] }:
+  rust-toolchain = with rust-toolchain-config-unified;
     (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
       targets = targets;
     });
 
   compileEnvPackageList = (with toolchainPkgs; [
-    (rust-toolchain { })
+    rust-toolchain
     bash
     cacert
     coreutils

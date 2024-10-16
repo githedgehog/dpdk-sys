@@ -227,18 +227,22 @@ generate-todo-list param:
   ]' ./builds.yml
 
 [private]
-[script]
-ci-install-dependencies env:
-  {{_just_debug_}}
-  if [ "{{env}}" = "lab" ] || [ "{{env}}" = "vlab" ]; then
-    sudo apt-get --yes update
-    sudo apt-get --yes install uuid-runtime
-  fi
+ci-group-begin env:
+  echo "::group::{{env}}"
+
+[private]
+ci-group-end:
+  echo "::endgroup::"
 
 # Recipe for CI
 [private]
 ci env="lab": \
-  ci-install-dependencies \
+  (ci-group-begin "build") \
   build \
+  ci-group-end \
+  (ci-group-begin "push") \
   push \
-  nix-garbage-collector
+  ci-group-end \
+  (ci-group-begin "garbage-collector") \
+  nix-garbage-collector \
+  ci-group-end
