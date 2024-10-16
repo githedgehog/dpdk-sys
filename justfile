@@ -13,14 +13,6 @@ debug := "false"
 rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 
-# This is the version of LLVM to compile everything with.
-# nix packages basically every major version of LLVM so
-# you can pick the version that you want to use independently of
-# the nixpkgs version.
-# The important thing is that the version of LLVM you pick should be the same
-# as the version of LLVM for the rust toolchain you are using.
-llvm := "19"
-
 # This is the maximum number of builds nix will start at a time.
 # You can jump this up to 8 or 16 if you have a really powerful machine.
 # Be careful tho, LLVM is a memory hog of a build.
@@ -130,7 +122,7 @@ _nix_build attribute:
     --out-link "/tmp/dpdk-sys/builds/{{attribute}}" \
     --argstr container-repo "{{container_repo}}" \
     --argstr image-tag "{{_build-id}}" \
-    --argstr llvm-version "{{llvm}}" \
+    --argstr rust-channel "{{rust}}" \
     "-j{{max_nix_builds}}" \
     `if [ "{{cores}}" != "all" ]; then echo --cores "{{cores}}"; fi`
 
@@ -150,17 +142,17 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
   docker load --input /tmp/dpdk-sys/builds/{{attribute}}
   docker tag \
     "{{container-name}}:{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-llvm{{llvm}}"
+    "{{container-name}}:{{_slug}}-rust-{{rust}}"
   docker tag \
     "{{container-name}}:{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+    "{{container-name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker build \
     --label "git.commit={{_commit}}" \
     --label "git.branch={{_branch}}" \
     --label "git.tree-state={{_clean}}" \
     --label "build.date=${build_date}" \
     --label "build.timestamp={{_build_time}}" \
-    --label "version.llvm={{llvm}}" \
+    --label "version.rust={{rust}}" \
     --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
     --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
     --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
@@ -175,13 +167,13 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
     .
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-llvm{{llvm}}"
+    "{{container-name}}:{{_slug}}-rust-{{rust}}"
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
+    "{{container-name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+    "{{container-name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker rmi "{{container-name}}:{{_build-id}}"
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
@@ -201,12 +193,12 @@ push: build
   declare build_date
   build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
-  docker push "{{_compile_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker push "{{_compile_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}"
-  docker push "{{_dev_env_container_name}}:{{_slug}}-llvm{{llvm}}-{{_commit}}"
-  docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-llvm{{llvm}}-{{_commit}}"
+  docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}"
+  docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}"
+  docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]

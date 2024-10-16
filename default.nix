@@ -1,15 +1,9 @@
 let
-  default-rust-toolchain-config = {
-    channel = "stable";
-    version = "latest";
-    profile = "minimal";
-    targets = [ "x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl" ];
-  };
-in { llvm-version ? "19", build-flags ? import ./nix/flags.nix
+in { rust-channel ? "stable", build-flags ? import ./nix/flags.nix
 , versions ? import ./nix/versions.nix, image-tag ? "latest"
-, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys"
-, rust-toolchain-config ? default-rust-toolchain-config }: rec {
-  rust-toolchain-config-unified = default-rust-toolchain-config // rust-toolchain-config;
+, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys" }: rec {
+  rust-version = versions.rust.${rust-channel};
+  llvm-version = rust-version.llvm;
   llvm-overlay = self: super: rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
@@ -212,7 +206,7 @@ in { llvm-version ? "19", build-flags ? import ./nix/flags.nix
     };
   };
 
-  rust-toolchain = with rust-toolchain-config-unified;
+  rust-toolchain = with rust-version;
     (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
       targets = targets;
     });
@@ -239,7 +233,7 @@ in { llvm-version ? "19", build-flags ? import ./nix/flags.nix
       coreutils
       curl
       dataplane-test-runner
-      docker
+      docker-client
       ethtool
       gawk
       gdb

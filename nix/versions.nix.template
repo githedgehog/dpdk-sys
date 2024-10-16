@@ -19,4 +19,30 @@
       };
     };
   };
+  rust = {
+    pinned = {
+      channel = "stable";
+      version = "$RUST_STABLE";
+      llvm = "$RUST_STABLE_LLVM";
+      profile = "minimal";
+    };
+    stable = {
+      channel = "stable";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+    };
+    beta = {
+      channel = "beta";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+    };
+    nightly = {
+      channel = "nightly";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+    };
+  };
 }
