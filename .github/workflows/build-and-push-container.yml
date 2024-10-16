@@ -55,4 +55,4 @@ jobs:
           sudo apt-get install --yes --no-install-recommends uuid-runtime
       - run: echo "${{ toJSON(matrix) }}"
       - name: Do it!
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.rust.channel}} ci
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.rust.rust.channel}} ci
