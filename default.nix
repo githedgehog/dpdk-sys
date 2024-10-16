@@ -214,6 +214,7 @@
     bash
     cacert
     coreutils
+    glibc.static
     just
     llvmPackages.clang
     llvmPackages.libclang.lib
