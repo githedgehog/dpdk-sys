@@ -211,7 +211,7 @@
     });
 
   compileEnvPackageList = (with toolchainPkgs; [
-    bash
+    bashInteractive
     cacert
     coreutils
     glibc.static
