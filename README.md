@@ -50,11 +50,7 @@
 4. <details>
    <summary>
    <a href="https://www.gnu.org/software/bash/">
-   <code>
-   
-   bash [^yes-bash]
-
-   </code>
+   <code>bash</code>
    </a>
    </summary>
    
@@ -63,9 +59,9 @@
    </details>
 
 
-<!-- Footnotes -->
-[^yes-bash]: It really needs to be `bash` and not just some [POSIX] `sh`. 
-             The problem is that the `justfile` needs to set the shell explicitly to bash to get reasonable error handling.
+> [!Warning]
+> Yes, it really does need to be `bash` and not just some [POSIX] `sh`.
+> The problem is that the `justfile` needs to set the shell explicitly to bash to get reasonable error handling.
 
 <!-- Links -->
 [`just`]: https://github.com/casey/just
