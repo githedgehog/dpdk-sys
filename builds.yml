@@ -13,20 +13,13 @@ env:
 matrix:
   nixpkgs:
     - "nix/versions.nix"
-  rust:
+  toolchain:
     - # pinned stable
       &default
       llvm: *llvm_stable
       rust:
         channel: "stable"
         version: *rust_stable
-      sysroot:
-        profile:
-          - "release"
-          - "debug"
-        target:
-          - "x86_64-unknown-linux-gnu"
-          - "x86_64-unknown-linux-musl"
     - # pinned nightly
       <<: *default
       llvm: *llvm_nightly
