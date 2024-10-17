@@ -7,7 +7,7 @@
 ### Requirements:
 
 1. <details>
-   [`just`]<summary></summary>
+   <summary><a href="https://github.com/casey/just"><code>just</code></a></summary>
    
    1. If you have [`cargo`]:
       ```bash
