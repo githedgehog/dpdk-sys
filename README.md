@@ -6,45 +6,53 @@
 
 ### Requirements:
 
-1. [`just`]
-
-   <details>
-   <summary>Install details:</summary>
+1. <details>
+   <summary>
+   
+   [`just`]
+   </summary>
    
    1. If you have [`cargo`]:
-      ```sh
+      ```bash
       cargo install just
       ```
    2. use your package manager (but ensure a recent version of `just`)
    </details>
 
-2. [`nix`]
-
-   <details>
-   <summary>Install details:</summary>
+2. <details>
+   <summary>
+   
+   [`nix`]
+   </summary>
 
    Single user `nix` (which I recommend) can be installed with:
-   ```sh
+   ```bash
    sudo mkdir -m 0755 -p /nix
    sudo chown "$(id -u):$(id -g)" /nix
    sh <(curl -L https://nixos.org/nix/install) --no-daemon
    ```
    </details>
 
-3. [`docker`] 
+3. <details>
 
-   <details>
-   <summary>Install details:</summary>
+   <summary>
+   
+   [`docker`] 
+   </summary>
+
+   
    1. Install `docker` via a package manager.
    2. The user you are running the build as needs to be in the `docker` group (or be root).
    </details>
    
-4. [`bash`][`bash`] [^yes-bash] 
-
-   <details>
-   <summary>Install details:</summary>
+4. <details>
    
-   You very likely already have this.
+   <summary>
+   
+   [`bash`][`bash`] [^yes-bash] 
+   </summary>
+   
+   You very likely already have `bash`.
    If not, install it via a package manager.
    </details>
 
