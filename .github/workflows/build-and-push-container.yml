@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends uuid-runtime
       - id: matrix
-        run: echo "matrix=$(yq -r -c '.matrix' builds.yml)" >> "${GITHUB_OUTPUT}"
+        run: echo "matrix=$(yq -r -c '.matrix' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
     needs: build-matrix
