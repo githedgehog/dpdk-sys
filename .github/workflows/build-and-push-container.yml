@@ -26,6 +26,8 @@ jobs:
     strategy:
       matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
+      - run: echo "${{ matrix }}"
+      - run: echo "${{ matrix.toolchain }}"
       - uses: actions/checkout@v4
       - name: install nix
         uses: cachix/install-nix-action@v30
