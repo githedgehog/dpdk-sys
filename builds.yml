@@ -9,6 +9,8 @@ env:
   llvm_for_rust_pins:
     stable: &llvm_stable "18"
     nightly: &llvm_nightly "19"
+  just_pins:
+    stable: &just_stable "1.36.0"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
@@ -16,6 +18,7 @@ matrix:
   toolchain:
     - # pinned stable
       &default
+      just: *just_stable
       llvm: *llvm_stable
       rust:
         channel: "stable"
