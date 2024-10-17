@@ -214,7 +214,7 @@
     bashInteractive
     cacert
     coreutils
-    glibc.static
+    glibc.static # for linking the tests
     just
     llvmPackages.clang
     llvmPackages.libclang.lib
