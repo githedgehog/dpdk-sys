@@ -211,7 +211,6 @@
     });
 
   compileEnvPackageList = (with toolchainPkgs; [
-    bashInteractive
     cacert
     coreutils
     glibc.static # for linking the tests
