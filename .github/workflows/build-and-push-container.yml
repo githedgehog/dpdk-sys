@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
+          key: /rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}/nixpkgs/${{ matrix.nixpkgs }}
       - name: install just
         uses: extractions/setup-just@v2
         with:

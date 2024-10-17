@@ -14,7 +14,7 @@ env:
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
-    - "nix/versions.nix"
+    - "b69de56fac8c2b6f8fd27f2eca01dcda8e0a4221"
   toolchain:
     - # pinned stable
       &default
