@@ -7,9 +7,7 @@
 ### Requirements:
 
 1. <details>
-   <summary>
-   [`just`]
-   </summary>
+   [`just`]<summary></summary>
    
    1. If you have [`cargo`]:
       ```bash
