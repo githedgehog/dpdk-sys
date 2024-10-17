@@ -42,31 +42,30 @@
    </a>
    </summary>
 
-   
    1. Install `docker` via a package manager.
    2. The user you are running the build as needs to be in the `docker` group (or be root).
    </details>
    
 4. <details>
    <summary>
-   <a href="https://www.gnu.org/software/bash/">
-   <code>bash</code>
-   </a>
+   <a href="https://www.gnu.org/software/bash/"></a><code>bash</code></a> or some other POSIX shell (with `set -euo pipefail`)
    </summary>
    
-   You very likely already have `bash`.
-   If not, install it via a package manager.
+   Whatever implementation of `sh` you have is fine so long as it supports
+
+   1. `set -e` (exit on error)
+   2. `set -u` (exit on undefined variable)
+   3. `set -o pipefail` (exit on error in a pipeline)
+
+   You very likely already have [`bash`] or [`busybox`] which supports these flags.
    </details>
 
 
-> [!Warning]
-> Yes, it really does need to be `bash` and not just some [POSIX] `sh`.
-> The problem is that the `justfile` needs to set the shell explicitly to bash to get reasonable error handling.
-
 <!-- Links -->
+[POSIX]: https://en.wikipedia.org/wiki/POSIX
+[`bash`]: https://www.gnu.org/software/bash/
+[`busybox`]: https://www.busybox.net/
+[`cargo`]: https://doc.rust-lang.org/cargo/getting-started/installation.html
+[`docker`]: https://www.docker.com/
 [`just`]: https://github.com/casey/just
 [`nix`]: https://nixos.org/nix/
-[`docker`]: https://www.docker.com/
-[`bash`]: https://www.gnu.org/software/bash/
-[POSIX]: https://en.wikipedia.org/wiki/POSIX
-[`cargo`]: https://doc.rust-lang.org/cargo/getting-started/installation.html
