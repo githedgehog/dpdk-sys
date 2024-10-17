@@ -24,7 +24,7 @@ jobs:
       - lab
     timeout-minutes: 300
     strategy:
-      matrix: ${{fromJSON(needs.build-matrix.outputs.matrix)}}
+      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: install nix
@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nix/rust/${{ fromJSON(matrix.toolchain).rust.channel }}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
+          key: /nix/rust/${{ matrix.toolchain }}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
       - name: install just
         uses: extractions/setup-just@v2
         with:
