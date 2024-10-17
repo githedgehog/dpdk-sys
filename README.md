@@ -50,7 +50,11 @@
 4. <details>
    <summary>
    <a href="https://www.gnu.org/software/bash/">
-   <code>bash</code>
+   <code>
+   
+   bash [^yes-bash]
+
+   </code>
    </a>
    </summary>
    
@@ -69,3 +73,4 @@
 [`docker`]: https://www.docker.com/
 [`bash`]: https://www.gnu.org/software/bash/
 [POSIX]: https://en.wikipedia.org/wiki/POSIX
+[`cargo`]: https://doc.rust-lang.org/cargo/getting-started/installation.html
