@@ -26,33 +26,28 @@ jobs:
     strategy:
       matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
-      - run: echo "${{ matrix }}"
-      - run: echo "${{ matrix.toolchain }}"
-      - run: echo "${{ matrix.toolchain.rust }}"
-      - run: echo "${{ matrix.toolchain.rust.channel }}"
-#      - uses: actions/checkout@v4
-#      - name: install nix
-#        uses: cachix/install-nix-action@v30
-#      - name: setup nix cache
-#        id: nix-package-cache
-#        uses: actions/cache@v4
-#        with:
-#          path: /nix
-#          key: /nix/rust/${{ matrix.toolchain }}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
-#      - name: install just
-#        uses: extractions/setup-just@v2
-#        with:
-#          just-version: ${{ matrix.just }}
-#      - name: login to ghcr.io
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#      - name: install uuid-runtime
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install --yes --no-install-recommends uuid-runtime
-#      - run: echo "${{ toJSON(matrix) }}"
-#      - name: Do it!
-#        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.rust.rust.channel}} ci
+      - uses: actions/checkout@v4
+      - name: install nix
+        uses: cachix/install-nix-action@v30
+      - name: setup nix cache
+        id: nix-package-cache
+        uses: actions/cache@v4
+        with:
+          path: /nix
+          key: /rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}/nixpkgs/${{ hashFiles(matrix.nixpkgs) }}
+      - name: install just
+        uses: extractions/setup-just@v2
+        with:
+          just-version: ${{ matrix.just }}
+      - name: login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: install uuid-runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends uuid-runtime
+      - name: Do it!
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} ci
