@@ -7,7 +7,11 @@
 ### Requirements:
 
 1. <details>
-   <summary><a href="https://github.com/casey/just"><code>just</code></a></summary>
+   <summary>
+   <a href="https://github.com/casey/just">
+   <code>just</code>
+   </a>
+   </summary>
    
    1. If you have [`cargo`]:
       ```bash
@@ -18,8 +22,9 @@
 
 2. <details>
    <summary>
-   
-   [`nix`]
+   <a href="https://nixos.org/nix/">
+   <code>nix</code>
+   </a>
    </summary>
 
    Single user `nix` (which I recommend) can be installed with:
@@ -31,10 +36,10 @@
    </details>
 
 3. <details>
-
    <summary>
-   
-   [`docker`] 
+   <a href="https://www.docker.com/">
+   <code>docker</code>
+   </a>
    </summary>
 
    
@@ -43,10 +48,10 @@
    </details>
    
 4. <details>
-   
    <summary>
-   
-   [`bash`][`bash`] [^yes-bash] 
+   <a href="https://www.gnu.org/software/bash/">
+   <code>bash</code>
+   </a>
    </summary>
    
    You very likely already have `bash`.
