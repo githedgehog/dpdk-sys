@@ -8,7 +8,6 @@
 
 1. <details>
    <summary>
-   
    [`just`]
    </summary>
    
