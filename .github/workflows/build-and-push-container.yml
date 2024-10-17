@@ -16,7 +16,7 @@ jobs:
         uses: vegardit/gha-setup-jq@v1
       - run: cargo install whyq
       - id: matrix
-        run: echo matrix="$(yq -c '.matrix | tostring' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
+        run: echo "matrix=$(yq -c '.matrix' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
     needs: build-matrix
