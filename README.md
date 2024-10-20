@@ -58,6 +58,8 @@
    3. `set -o pipefail` (exit on error in a pipeline)
 
    You very likely already have [`bash`] or [`busybox`] which supports these flags.
+
+   Unfortunately, `sh` as it exists in CI does not support these flags, so we need to specify `bash` in the `justfile` ¯\_(ツ)_/¯
    </details>
 
 

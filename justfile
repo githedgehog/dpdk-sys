@@ -1,6 +1,6 @@
 set unstable
-set shell := ["sh", "-euo", "pipefail", "-c"]
-set script-interpreter := ["sh", "-euo", "pipefail"]
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set script-interpreter := ["bash", "-euo", "pipefail"]
 
 # Turn on debug_mode if you want to `set -x` all the just [script] recipes
 debug := "false"
