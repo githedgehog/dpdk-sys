@@ -74,7 +74,7 @@ declare NIXPKGS_NIX_HASH
 NIXPKGS_NIX_HASH="$(nix-prefetch-url --name "${NIXPKGS_BRANCH}" --type "${NIXPKGS_NIX_HASH_TYPE}" --unpack "${NIXPKGS_SOURCE_URL}")"
 declare -rx NIXPKGS_NIX_HASH
 
-declare -rx RUST_STABLE="1.81.0"
+declare -rx RUST_STABLE="1.82.0"
 declare -rx RUST_STABLE_LLVM="19"
 
 pushd "${project_dir}"

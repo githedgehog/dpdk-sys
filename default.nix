@@ -41,20 +41,21 @@
           self.pkgsMusl.${self.llvmPackagesVersion}.libcxxStdenv
         else
           self.llvmPackages.libcxxStdenv));
-      # TODO: consider LTO optimizing libcxx{,abi}
       # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
-      # NOTE: libmd and libbsd customizations will cause an infinite recursion if done with normal overlay methods
-      customLibmd = ((buildWithMyFlags (super.libmd)).override {
-        stdenv = customStdenv;
-      }).overrideAttrs (orig: {
+      buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
+      optimizedBuild = pkg:
+        (buildWithMyFlags (pkg.override { stdenv = customStdenv; })).overrideAttrs {
+          withDoc = false;
+          doCheck = false;
+        };
+      customLibmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
         configureFlags = orig.configureFlags
           ++ [ "--enable-static" "--disable-shared" ];
         postFixup = (orig.postFixup or "") + ''
           rm $out/lib/*.la
         '';
       });
-      customLibbsd = ((buildWithMyFlags super.libbsd).override {
-        stdenv = customStdenv;
+      customLibbsd = ((optimizedBuild super.libbsd).override {
         libmd = customLibmd;
       }).overrideAttrs (orig: {
         doCheck = false;
@@ -64,14 +65,20 @@
           rm $out/lib/*.la
         '';
       });
-      buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
-      optimizedBuild = pkg:
-        (buildWithMyFlags (pkg.override { stdenv = customStdenv; }));
       fatLto = pkg:
         pkg.overrideAttrs
         (orig: { CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects"; });
       rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs
-        (orig: { cmakeFlags = orig.cmakeFlags ++ [ "-DENABLE_STATIC=1" ]; });
+        (orig: {
+          cmakeFlags = orig.cmakeFlags ++ [ "-DENABLE_STATIC=1" ];
+          patches = (orig.patches or []) ++ (if customStdenv.targetPlatform.isMusl then [] else [(super.fetchpatch {
+            # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortyfying
+            # this function with clang.
+            name = "fix-for-glibc-2.40.x";
+            url = "https://git.openembedded.org/meta-openembedded/plain/meta-networking/recipes-support/rdma-core/rdma-core/0001-librdmacm-Use-overloadable-function-attribute-with-c.patch?id=69769ff44ed0572a7b3c769ce3c36f28fff359d1";
+            sha256 = "sha256-k+T8vSkvljksJabSJ/WRCXTYfbINcW1n0oDQrvFXXGM=";
+          })]);
+        });
       iptables = null;
       ethtool = null;
       iproute2 = null;
