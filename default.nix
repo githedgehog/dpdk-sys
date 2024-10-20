@@ -71,8 +71,8 @@
       rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs
         (orig: {
           cmakeFlags = orig.cmakeFlags ++ [ "-DENABLE_STATIC=1" ];
-          patches = (orig.patches or []) ++ (if customStdenv.targetPlatform.isMusl then [] else [(super.fetchpatch {
-            # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortyfying
+          patches = (orig.patches or []) ++ (if crossEnv == "musl64" then [] else [(super.fetchpatch {
+            # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortifying
             # this function with clang.
             name = "fix-for-glibc-2.40.x";
             url = "https://git.openembedded.org/meta-openembedded/plain/meta-networking/recipes-support/rdma-core/rdma-core/0001-librdmacm-Use-overloadable-function-attribute-with-c.patch?id=69769ff44ed0572a7b3c769ce3c36f28fff359d1";
