@@ -5,11 +5,8 @@ set script-interpreter := ["bash", "-euo", "pipefail"]
 # Turn on debug_mode if you want to `set -x` all the just [script] recipes
 debug := "false"
 
-# The version of the rust compiler to include.
-# You can pick "stable" or "beta" if you want floating versions
-# or you can pick a specific version like "1.81.0" if you want a specific
-# stable version.
-rust := "stable"
+# The version of the rust compiler to include.  Pick "pinned" to use the pinned version.
+rust := "pinned"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 
 # This is the maximum number of builds nix will start at a time.
