@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nixpkgs/${{ matrix.nixpkgs }}
+          key: /nixpkgs/${{ matrix.nixpkgs }}/rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}
       - name: install uuid-runtime # needed for justfile
         run: |
           sudo apt-get update
