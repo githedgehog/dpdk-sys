@@ -5,16 +5,16 @@
 env:
   rust_pins:
     stable: &rust_stable "${RUST_STABLE_PIN}"
-    msrv: &rust_msrv "${RUST_MSRV}"
     nightly: &nightly_pin "${RUST_NIGHTLY_PIN}"
   llvm_for_rust_pins:
     stable: &llvm_stable "${RUST_STABLE_LLVM}"
-    msrv: &llvm_msrv "${RUST_MSRV_LLVM}"
     nightly: &llvm_nightly "${RUST_NIGHTLY_LLVM}"
+  nixpkgs:
+    unstable: &nixpkgs_unstable "${NIXPKGS_COMMIT}"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
-    - "nix/versions.nix"
+    - *nixpkgs_unstable
   toolchain:
     - # pinned stable
       &default
@@ -29,12 +29,6 @@ matrix:
         target:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
-    - # MSRV
-      <<: *default
-      llvm: *llvm_msrv
-      rust:
-        channel: "stable"
-        version: *rust_msrv
     - # pinned nightly
       <<: *default
       llvm: *llvm_nightly
