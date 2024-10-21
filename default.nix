@@ -1,135 +1,148 @@
-{
-  llvm-version ? "19",
-  build-flags ? import ./nix/flags.nix,
-  versions ? import ./nix/versions.nix,
-}: rec {
+{ rust-channel ? "stable", build-flags ? import ./nix/flags.nix
+, versions ? import ./nix/versions.nix, image-tag ? "latest"
+, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys" }: rec {
+  rust-version = versions.rust.${rust-channel};
+  llvm-version = rust-version.llvm;
+  llvm-overlay = self: super: rec {
+    llvmPackagesVersion = "llvmPackages_${llvm-version}";
+    llvmPackages = super.${llvmPackagesVersion};
+  };
+  rust-overlay = (import (builtins.fetchTarball
+    "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"));
   toolchainPkgs = import (fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
+    url =
+      "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
     sha256 = versions.nixpkgs.hash.nar.sha256;
   }) {
     overlays = [
-      (self: super: { dataplane-test-runner = super.callPackage ./nix/test-runner {}; })
       (self: super: {
-        llvmPackages = super."llvmPackages_${llvm-version}";
+        dataplane-test-runner = super.callPackage ./nix/test-runner { };
       })
+      llvm-overlay
+      rust-overlay
     ];
   };
   project-name = "dpdk-sys";
-  crossOverlay = { build-flags, crossEnv }: self: super:
-  let
-  llvmPackagesVersion = "llvmPackages_${llvm-version}";
-  llvmPackages = super.${llvmPackagesVersion};
-  customStdenv = self.stdenvAdapters.makeStaticLibraries (
-    self.stdenvAdapters.useMoldLinker (
-      if crossEnv == "musl64" then
+  crossOverlay = { build-flags, crossEnv }:
+    self: super: rec {
+      inherit build-flags;
+      buildWithFlags = flags: pkg:
+        (pkg.overrideAttrs (orig: {
+          CFLAGS = "${orig.CFLAGS or ""} ${flags.CFLAGS}";
+          CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
+          LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
+        }));
+      customStdenv = self.stdenvAdapters.makeStaticLibraries
+        (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
         # TODO: It doesn't really make any sense to me that I need
         # to use pkgsMusl here.
         # In my mind that is implied by the fact that super is a
         # crossEnv.
-        self.pkgsMusl.${llvmPackagesVersion}.libcxxStdenv
-      else if crossEnv == "gnu64" then
-        llvmPackages.libcxxStdenv
-      else
-        llvmPackages.libcxxStdenv
-    )
-  );
-  in
-  rec {
-    inherit build-flags customStdenv;
-    buildWithFlags = flags: pkg: (pkg.overrideAttrs (orig: {
-      CFLAGS = "${orig.CFLAGS or ""} ${flags.CFLAGS}";
-      CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
-      LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
-    }));
-    llvmPackagesVersion = "llvmPackages_${llvm-version}";
-    llvmPackages = super.${llvmPackagesVersion};
-    # TODO: consider LTO optimizing compiler-rt
-    # TODO: consider LTO optimizing libcxx{,abi}
-    # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
-    # NOTE: libmd and libbsd customizations will cause an infinite recursion if done with normal overlay methods
-    customLibmd = ((buildWithMyFlags (super.libmd)).override { stdenv = customStdenv; }).overrideAttrs (orig: {
-      configureFlags = orig.configureFlags ++ ["--enable-static" "--disable-shared"];
-      postFixup = (orig.postFixup or "") + ''
-        rm $out/lib/*.la
-      '';
-    });
-    customLibbsd = ((buildWithMyFlags super.libbsd).override {
-      stdenv = customStdenv; libmd = customLibmd;
-    }).overrideAttrs (orig: {
-      doCheck = false;
-      configureFlags = orig.configureFlags ++ ["--enable-static" "--enable-shared"];
-      postFixup = (orig.postFixup or "") + ''
-        rm $out/lib/*.la
-      '';
-    });
-    buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
-    optimizedBuild = pkg: (buildWithMyFlags (pkg.override {
-      stdenv = customStdenv;
-    }));
-    fatLto = pkg: pkg.overrideAttrs (orig: {
-      CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects";
-    });
-    rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs (orig: {
-      cmakeFlags = orig.cmakeFlags ++ [
-        "-DENABLE_STATIC=1"
-      ];
-    });
-    iptables = null;
-    ethtool = null;
-    iproute2 = null;
-    libnl = (optimizedBuild super.libnl).overrideAttrs (orig: {
-      configureFlags = orig.configureFlags ++ [
-        "--enable-static"
-        "--disable-shared"
-      ];
-      postFixup = (orig.postFixup or "") + ''
-        rm $out/lib/*.la
-      '';
-    });
-    jansson = (optimizedBuild super.jansson).overrideAttrs (orig: {
-      cmakeFlags = [
-        "-DJANSSON_BUILD_SHARED_LIBS=OFF"
-      ];
-    });
-    libmnl = optimizedBuild super.libmnl;
-    libnetfilter_conntrack = optimizedBuild super.libnetfilter_conntrack;
-    libnftnl = optimizedBuild super.libnftnl;
-    libpcap = optimizedBuild super.libpcap;
-    numactl = (optimizedBuild super.numactl).overrideAttrs (orig: {
-      outputs = super.lib.lists.remove "man" orig.outputs;
-      configurePhase = ''
-        set -euxo pipefail;
-        ./configure \
-          --prefix=$out \
-          --libdir=$out/lib \
-          --includedir=$out/include \
-          --enable-static \
-          --enable-shared;
-      '';
-      buildPhase = ''
-        set -euxo pipefail;
-        make;
-        rm ./.libs/*.la;
-      '';
-    });
-    dpdk = (optimizedBuild (self.callPackage ./nix/dpdk {
-      libbsd = customLibbsd; libmd = customLibmd;
-    }));
-    dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
-      libbsd = customLibbsd;
-      inherit dpdk;
-      bintools = llvmPackages.bintools;
-    }));
-  };
+          self.pkgsMusl.${self.llvmPackagesVersion}.libcxxStdenv
+        else
+          self.llvmPackages.libcxxStdenv));
+      # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
+      buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
+      optimizedBuild = pkg:
+        (buildWithMyFlags (pkg.override { stdenv = customStdenv; })).overrideAttrs {
+          withDoc = false;
+          doCheck = false;
+        };
+      customLibmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
+        configureFlags = orig.configureFlags
+          ++ [ "--enable-static" "--disable-shared" ];
+        postFixup = (orig.postFixup or "") + ''
+          rm $out/lib/*.la
+        '';
+      });
+      customLibbsd = ((optimizedBuild super.libbsd).override {
+        libmd = customLibmd;
+      }).overrideAttrs (orig: {
+        doCheck = false;
+        configureFlags = orig.configureFlags
+          ++ [ "--enable-static" "--enable-shared" ];
+        postFixup = (orig.postFixup or "") + ''
+          rm $out/lib/*.la
+        '';
+      });
+      fatLto = pkg:
+        pkg.overrideAttrs
+        (orig: { CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects"; });
+      rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs
+        (orig: {
+          cmakeFlags = orig.cmakeFlags ++ [ "-DENABLE_STATIC=1" ];
+          patches = (orig.patches or []) ++ (if crossEnv == "musl64" then [] else [(super.fetchpatch {
+            # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortifying
+            # this function with clang.
+            name = "fix-for-glibc-2.40.x";
+            url = "https://git.openembedded.org/meta-openembedded/plain/meta-networking/recipes-support/rdma-core/rdma-core/0001-librdmacm-Use-overloadable-function-attribute-with-c.patch?id=69769ff44ed0572a7b3c769ce3c36f28fff359d1";
+            sha256 = "sha256-k+T8vSkvljksJabSJ/WRCXTYfbINcW1n0oDQrvFXXGM=";
+          })]);
+        });
+      iptables = null;
+      ethtool = null;
+      iproute2 = null;
+      libnl = (optimizedBuild super.libnl).overrideAttrs (orig: {
+        configureFlags = orig.configureFlags
+          ++ [ "--enable-static" "--disable-shared" ];
+        postFixup = (orig.postFixup or "") + ''
+          rm $out/lib/*.la
+        '';
+      });
+      jansson = (optimizedBuild super.jansson).overrideAttrs
+        (orig: { cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ]; });
+      libmnl = optimizedBuild super.libmnl;
+      libnetfilter_conntrack = optimizedBuild super.libnetfilter_conntrack;
+      libnftnl = optimizedBuild super.libnftnl;
+      libpcap = optimizedBuild super.libpcap;
+      numactl = (optimizedBuild super.numactl).overrideAttrs (orig: {
+        outputs = super.lib.lists.remove "man" orig.outputs;
+        configurePhase = ''
+          set -euxo pipefail;
+          ./configure \
+            --prefix=$out \
+            --libdir=$out/lib \
+            --includedir=$out/include \
+            --enable-static \
+            --enable-shared;
+        '';
+        buildPhase = ''
+          set -euxo pipefail;
+          make;
+          rm ./.libs/*.la;
+        '';
+      });
+      dpdk = (optimizedBuild (self.callPackage ./nix/dpdk {
+        libbsd = customLibbsd;
+        libmd = customLibmd;
+      }));
+      dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
+        inherit dpdk;
+        libbsd = customLibbsd;
+        bintools = self.llvmPackages.bintools;
+      }));
+    };
 
   pkgs.debug = (import toolchainPkgs.path {
     overlays = [
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
-          overlays = [(crossOverlay { build-flags = build-flags.debug; crossEnv="gnu64"; })];
+          overlays = [
+            llvm-overlay
+            (crossOverlay {
+              build-flags = build-flags.debug;
+              crossEnv = "gnu64";
+            })
+          ];
         };
         pkgsCross.musl64 = import prev.path {
-          overlays = [(crossOverlay { build-flags = build-flags.debug; crossEnv="musl64"; })];
+          overlays = [
+            llvm-overlay
+            (crossOverlay {
+              build-flags = build-flags.debug;
+              crossEnv = "musl64";
+            })
+          ];
         };
       })
     ];
@@ -139,17 +152,30 @@
     overlays = [
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
-          overlays = [(crossOverlay { build-flags = build-flags.release; crossEnv="gnu64"; })];
+          overlays = [
+            llvm-overlay
+            (crossOverlay {
+              build-flags = build-flags.release;
+              crossEnv = "gnu64";
+            })
+          ];
         };
         pkgsCross.musl64 = import prev.path {
-          overlays = [(crossOverlay { build-flags = build-flags.release; crossEnv="musl64"; })];
+          overlays = [
+            llvm-overlay
+            (crossOverlay {
+              build-flags = build-flags.release;
+              crossEnv = "musl64";
+            })
+          ];
         };
       })
     ];
   }).pkgsCross;
 
-  sysrootPackageListFn = crossEnv: pkgs: with pkgs; (
-    [
+  sysrootPackageListFn = crossEnv: pkgs:
+    with pkgs;
+    ([
       customLibbsd
       customLibbsd.dev
       customLibmd
@@ -161,11 +187,19 @@
       libpcap
       numactl
       rdma-core
-    ] ++
-    (if crossEnv == "gnu64" then [ glibc glibc.out libgcc.libgcc glibc.dev glibc.static ] else [])
-    ++
-    (if crossEnv == "musl64" then [ mimalloc musl.out musl.dev ] else [])
-  );
+    ] ++ (if crossEnv == "gnu64" then [
+      glibc
+      glibc.out
+      libgcc.libgcc
+      glibc.dev
+      glibc.static
+    ] else
+      [ ]) ++ (if crossEnv == "musl64" then [
+        mimalloc
+        musl.out
+        musl.dev
+      ] else
+        [ ]));
 
   sysrootPackageList = {
     gnu64 = {
@@ -178,57 +212,71 @@
     };
   };
 
-  compileEnvPackageList = with toolchainPkgs; [
-    coreutils
-    dataplane-test-runner
-    llvmPackages.clang
-    llvmPackages.libclang.lib
-    llvmPackages.lld
-  ];
+  rust-toolchain = with rust-version;
+    (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
+      targets = targets;
+    });
 
-  testEnvPackageList = [];
-
-  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ (with toolchainPkgs; [
-    bash-completion
-    bashInteractive
+  # Don't add in a shell here or it may override the shell in the
+  # dev-env container
+  # We can just add pkgsStatic.busybox to the complete environment at the end
+  compileEnvPackageList = (with toolchainPkgs; [
     cacert
     coreutils
-    curl
-    dataplane-test-runner
-    docker
-    ethtool
-    gawk
-    gdb
-    git
-    glibc
-    glibc.bin # for ldd
-    gnugrep
-    gnused
-    gnutar
-    htop
-    hwloc
-    iproute2
-    jq
+    glibc.static # for linking the tests
     just
-    libcap
-    llvmPackages.bintools-unwrapped
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
-    llvmPackages.lldb
-    nodejs_20 # for github ci
-    numactl
-    openssh # for git
-    openssl.all # for git
-    pam # for sudo
-    pciutils
-    rustup
-    stdenv.cc.cc.lib # for github ci
-    strace
-    sudo
-    util-linux
-    wget
+    rust-toolchain
+    sysroot
   ]);
+
+  testEnvPackageList = [ ];
+
+  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList
+    ++ (with toolchainPkgs; [
+      bash-completion
+      bashInteractive
+      cacert
+      coreutils
+      curl
+      dataplane-test-runner
+      docker-client
+      ethtool
+      gawk
+      gdb
+      git
+      glibc
+      glibc.bin # for ldd
+      gnugrep
+      gnused
+      gnutar
+      htop
+      hwloc
+      iproute2
+      jq
+      just
+      less
+      libcap
+      llvmPackages.bintools-unwrapped
+      llvmPackages.clang
+      llvmPackages.libclang.lib
+      llvmPackages.lld
+      llvmPackages.lldb
+      nodejs_20 # for github ci
+      numactl
+      openssh # for git
+      openssl.all # for git
+      pam # for sudo
+      pciutils
+      stdenv.cc.cc.lib # for github ci
+      strace
+      sudo
+      util-linux
+      vim
+      wget
+    ]);
 
   env = {
     sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
@@ -278,59 +326,60 @@
     '';
   };
 
-  dev-env = toolchainPkgs.buildEnv {
-    name = "${project-name}-dev-env";
-    paths = [ env.toolchain sysroot ];
-  };
-
-  dev-container = toolchainPkgs.dockerTools.buildLayeredImage {
-    name = "ghcr.io/githedgehog/dpdk-sys/dev-env";
-    tag = "llvm${llvm-version}";
-    contents = [ env.toolchain sysroot ];
-    config = {
-      Cmd = [ "/bin/bash" ];
-      WorkingDir = "/";
-      Env = [
-        "LD_LIBRARY_PATH=/lib"
-      ];
-    };
-    maxLayers = 120;
-  };
+  maxLayers = 110;
 
   container = {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/compile-env";
-      tag = "llvm${llvm-version}";
-      contents = [ env.compile sysroot ];
-      maxLayers = 120;
+      name = "${contianer-repo}/compile-env";
+      tag = "${image-tag}";
+      contents = [ toolchainPkgs.pkgsStatic.busybox ] ++ compileEnvPackageList;
+      inherit maxLayers;
+      config = {
+        Cmd = [ "/bin/sh" ];
+        WorkingDir = "/";
+        Env = [
+          "DEV_ENV=/"
+          "LD_LIBRARY_PATH=/lib"
+          "LIBCLANG_PATH=/lib"
+          "PATH=/bin"
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "SYSROOT=/sysroot"
+        ];
+      };
     };
     test-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/test-env";
-      tag = "llvm${llvm-version}";
+      name = "${contianer-repo}/test-env";
+      tag = "${image-tag}";
       contents = [ env.test ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";
         Env = [
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "PATH=/bin"
           "LD_LIBRARY_PATH=/lib"
           "LIBCLANG_PATH=/lib"
         ];
       };
-      maxLayers = 120;
+      inherit maxLayers;
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "ghcr.io/githedgehog/dpdk-sys/dev-env-nix";
-      tag = "llvm${llvm-version}";
-      contents = [ env.dev sysroot ];
+      name = "${contianer-repo}/dev-env";
+      tag = "${image-tag}";
+      contents = [ env.dev ];
       config = {
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";
         Env = [
+          "DEV_ENV=/"
           "LD_LIBRARY_PATH=/lib"
           "LIBCLANG_PATH=/lib"
+          "PATH=/bin"
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "SYSROOT=/sysroot"
         ];
       };
-      maxLayers = 120;
+      inherit maxLayers;
     };
   };
 }

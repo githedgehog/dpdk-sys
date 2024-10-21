@@ -19,4 +19,34 @@
       };
     };
   };
+  rust = {
+    pinned = {
+      channel = "stable";
+      version = "$RUST_STABLE";
+      llvm = "$RUST_STABLE_LLVM";
+      profile = "minimal";
+      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+    };
+    stable = {
+      channel = "stable";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+    };
+    beta = {
+      channel = "beta";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+    };
+    nightly = {
+      channel = "nightly";
+      version = "latest";
+      llvm = "latest";
+      profile = "minimal";
+      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+    };
+  };
 }

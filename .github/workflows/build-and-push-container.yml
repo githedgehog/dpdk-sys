@@ -1,42 +1,53 @@
-name: test suite
+name: Build
 on: [ push, pull_request ]
 
 jobs:
-  build-on-lab:
-    name: build-containers
+  build-matrix:
+    name: generate build matrix
     runs-on:
       - lab
-    timeout-minutes: 180
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Setup jq
+        # TODO: find a better way to get jq
+        uses: vegardit/gha-setup-jq@v1
+      - run: cargo install whyq
+      - id: matrix
+        run: echo "matrix=$(yq -c '.matrix' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
+  build-on-lab:
+    name: build-containers
+    needs: build-matrix
+    runs-on:
+      - lab
+    timeout-minutes: 300
     strategy:
-      matrix:
-        llvm_version:
-          - 18
-          - 19
+      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: install nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@v30
       - name: setup nix cache
         id: nix-package-cache
         uses: actions/cache@v4
         with:
           path: /nix
-          key: nix-llvm${{ matrix.llvm_version }}-${{ hashFiles('./nix/versions.nix') }}
+          key: /rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}/nixpkgs/${{ matrix.nixpkgs }}
       - name: install just
         uses: extractions/setup-just@v2
         with:
-          just-version: "1.36.0"
+          just-version: ${{ matrix.just }}
       - name: login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: build on llvm "${{ matrix.llvm_version }}"
-        run: just build-containers "${{ matrix.llvm_version }}"
-      - name: push containers
-        run: just push-containers "${{ matrix.llvm_version }}"
-      - name: clean up nix
+      - name: install uuid-runtime
         run: |
-          nix-env --delete-generations old
-          nix-store --gc
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends uuid-runtime
+      - name: Do it!
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} ci

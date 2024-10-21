@@ -1,0 +1,3 @@
+ARG IMAGE="ghcr.io/githedgehog/dpdk-sys/compile-env"
+ARG TAG="latest"
+FROM ${IMAGE}:${TAG} AS dev-env

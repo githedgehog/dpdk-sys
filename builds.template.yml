@@ -1,0 +1,43 @@
+# ${WARNING}
+
+# env describes things which I expect will change frequently
+# (to the point of needing automation to keep up to date).
+env:
+  rust_pins:
+    stable: &rust_stable "${RUST_STABLE_PIN}"
+    msrv: &rust_msrv "${RUST_MSRV}"
+    nightly: &nightly_pin "${RUST_NIGHTLY_PIN}"
+  llvm_for_rust_pins:
+    stable: &llvm_stable "${RUST_STABLE_LLVM}"
+    msrv: &llvm_msrv "${RUST_MSRV_LLVM}"
+    nightly: &llvm_nightly "${RUST_NIGHTLY_LLVM}"
+# matrix describes the test structure which I expect to be relatively stable.
+matrix:
+  nixpkgs:
+    - "nix/versions.nix"
+  toolchain:
+    - # pinned stable
+      &default
+      llvm: *llvm_stable
+      rust:
+        channel: "stable"
+        version: *rust_stable
+      sysroot:
+        profile:
+          - "release"
+          - "debug"
+        target:
+          - "x86_64-unknown-linux-gnu"
+          - "x86_64-unknown-linux-musl"
+    - # MSRV
+      <<: *default
+      llvm: *llvm_msrv
+      rust:
+        channel: "stable"
+        version: *rust_msrv
+    - # pinned nightly
+      <<: *default
+      llvm: *llvm_nightly
+      rust:
+        channel: "nightly"
+        version: *nightly_pin
