@@ -4,10 +4,10 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    stable: &rust_stable "1.81.0"
+    stable: &rust_stable "1.82.0"
     nightly: &nightly_pin "nightly-2024-10-16"
   llvm_for_rust_pins:
-    stable: &llvm_stable "18"
+    stable: &llvm_stable "19"
     nightly: &llvm_nightly "19"
   just_pins:
     stable: &just_stable "1.36.0"
