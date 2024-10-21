@@ -219,7 +219,7 @@
 
   # Don't add in a shell here or it may override the shell in the
   # dev-env container
-  # We can just add pkgsStatic.busybox to the complete environment at the end
+  # We can just add bash to the complete environment at the end
   compileEnvPackageList = (with toolchainPkgs; [
     cacert
     coreutils
@@ -332,7 +332,7 @@
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/compile-env";
       tag = "${image-tag}";
-      contents = [ toolchainPkgs.pkgsStatic.busybox ] ++ compileEnvPackageList;
+      contents = [ toolchainPkgs.bash ] ++ compileEnvPackageList;
       inherit maxLayers;
       config = {
         Cmd = [ "/bin/sh" ];
