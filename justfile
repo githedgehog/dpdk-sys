@@ -224,24 +224,3 @@ generate-todo-list param=".":
     $factors | map($matrix[.]) | combinations as $combinations |
     $itr | map({($factors[.]): $combinations[.]}) | add
   ]' ./builds.yml
-
-[private]
-ci-group-begin env:
-  echo "::group::{{env}}"
-
-[private]
-ci-group-end:
-  echo "::endgroup::"
-
-# Recipe for CI
-[private]
-ci env="lab": \
-  (ci-group-begin "build") \
-    build \
-  ci-group-end \
-  (ci-group-begin "push") \
-    push \
-  ci-group-end \
-  (ci-group-begin "garbage-collector") \
-    nix-garbage-collector \
-  ci-group-end

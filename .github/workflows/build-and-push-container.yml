@@ -45,9 +45,13 @@ jobs:
         with:
           path: /nix
           key: /nixpkgs/${{ matrix.nixpkgs }}
-      - name: install uuid-runtime
+      - name: install uuid-runtime # needed for justfile
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends uuid-runtime
-      - name: Do it!
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} ci
+      - name: build
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} build
+      - name: push
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} push
+      - name: garbage collect
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} nix-garbage-collector
