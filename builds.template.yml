@@ -7,8 +7,8 @@ env:
     stable: &rust_stable "${RUST_STABLE_PIN}"
     nightly: &nightly_pin "${RUST_NIGHTLY_PIN}"
   llvm_for_rust_pins:
-    stable: &llvm_stable "${RUST_STABLE_LLVM}"
-    nightly: &llvm_nightly "${RUST_NIGHTLY_LLVM}"
+    stable: &llvm_stable "${RUST_STABLE_PIN_LLVM}"
+    nightly: &llvm_nightly "${RUST_NIGHTLY_PIN_LLVM}"
   nixpkgs:
     unstable: &nixpkgs_unstable "${NIXPKGS_COMMIT}"
 # matrix describes the test structure which I expect to be relatively stable.
