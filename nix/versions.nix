@@ -2,21 +2,21 @@
 {
   nixpkgs = {
     branch = "nixpkgs-unstable";
-    commit = "ccc0c2126893dd20963580b6478d1a10a4512185";
-    source_url = "https://github.com/NixOS/nixpkgs/archive/ccc0c2126893dd20963580b6478d1a10a4512185.tar.gz";
+    commit = "ca30f584e18024baf39c395001262ed936f27ebd";
+    source_url = "https://github.com/NixOS/nixpkgs/archive/ca30f584e18024baf39c395001262ed936f27ebd.tar.gz";
     hash = {
       nar = {
         comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive";
-        sha256 = "1sm9mgz970p5mbxh8ws5xdqkb6w46di58binb4lpjfzclbxhhx70";
+        sha256 = "0h79z53amzmxd9k0fzl9vmvg6l56sxx5wsqfd085jrivwrikzgn5";
       };
       tar = {
         comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";
-        sha256 = "0b67698547f6303a89f65437dc540d077d2dea81b2d97c42d0f8c47d772e339b";
-        sha384 = "32564d10ec021183713cbccc88ad6455d91384b6ef61736582de6d911626b55bcdc2400b8803e2a749e64f8e3b1b9083";
-        sha512 = "7d76b3ed5dde2ea44fef6a2d8efb866ddf57643f9e10e2ca2d90735ccd16db857f3a456bc321e46dbe91bba86a3cf7f0136b05e18f47b0d9e0e9810fbf3acc4d";
-        sha3_256 = "2ec28d0775e75546f3dd95de095b60a2e7a0248ea2ba887cc88bb57b87930acc";
-        sha3_384 = "c123b251b1d4b4697af5d1327779d3020f5c9294b782aed935c611388d032f55aa509715719c59c3944b9f36297327df";
-        sha3_512 = "e3493d26e86372697ed7fbf9364badf9d2f351f661ddfa58035bc00e2c50cc8d392fafef9ecc4bd1e589ab361115da6413b06746a4f8b5701319aec7d7d8dfca";
+        sha256 = "d7ca13fdf884c0178f4ac8f31a73a5e171c673f5a5ee1ab2d5d3f7f8cd57c9ab";
+        sha384 = "460ac012c06a6534caee030d670392bb2215ea0975785081aaaac10226aaba1fd5b9f576115107aba33feea21fc85706";
+        sha512 = "7202de03be1a2ee711a65d196383c4f01544f0da90d7b9544f521dd2949b27599e88a253e9d9c6b6bcc22bb5a9a4eb8713bc06c61202402ea1573a2d382749ab";
+        sha3_256 = "95ce5b9135fff570d3fa994ff4ec595183d3408040c8d691f0f532c0d692e099";
+        sha3_384 = "1c549944641af66ab04e6deb375bc7355acbc3ea97921e4877dccad0dbf05393beea554b48f40f45f3c5309232e2b28b";
+        sha3_512 = "300de02a3d6aa53d51473766eb120a3a1cb4f86c815252ad8521459fec8cc66e5c45a54c6ac0da9afd26c3ac927cf309ae499df4307eb98dfd42cfc210686c93";
       };
     };
   };
