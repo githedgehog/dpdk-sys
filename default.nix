@@ -242,6 +242,7 @@
     docker-client
     gawk
     git
+    glibc
     gnugrep
     gnused
     gnutar
@@ -249,10 +250,11 @@
     just
     nodejs_20 # needed for checkout
     openssl.all # for git
+    stdenv.cc.cc.lib # for github ci
     wget
   ]);
 
-  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList
+  devEnvPackageList = compileEnvPackageList ++ ciEnvPackageList
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive
