@@ -1,0 +1,3 @@
+ARG IMAGE="ghcr.io/githedgehog/dpdk-sys/ci-env"
+ARG TAG="latest"
+FROM ${IMAGE}:${TAG} AS ci-env

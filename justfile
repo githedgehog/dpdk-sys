@@ -55,6 +55,8 @@ _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 _dev_env_container_name := container_repo + "/dev-env"
 # The name of the compile-env container
 _compile_env_container_name := container_repo + "/compile-env"
+# The name of the compile-env container
+_ci_env_container_name := container_repo + "/ci-env"
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -186,8 +188,11 @@ build-dev-env-container: (_build-container "Dockerfile.dev-env" _dev_env_contain
 # Build and tag the dev-env container
 build-compile-env-container: (_build-container "Dockerfile.compile-env" _compile_env_container_name "container.compile-env")
 
+# Build and tag the ci-env container
+build-ci-env-container: (_build-container "Dockerfile.ci-env" _ci_env_container_name "container.ci-env")
+
 # Build the sysroot, compile-env, and dev-env containers
-build: build-sysroot build-compile-env-container build-dev-env-container
+build: build-sysroot build-ci-env-container build-compile-env-container build-dev-env-container
 
 # Push the compile-env and dev-env containers to the container registry
 [script]
@@ -196,6 +201,9 @@ push: build
   declare build_date
   build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
+  docker push "{{_ci_env_container_name}}:{{_slug}}-rust-{{rust}}"
+  docker push "{{_ci_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_ci_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}"
   docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"

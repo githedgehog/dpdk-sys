@@ -234,6 +234,24 @@
 
   testEnvPackageList = [ ];
 
+  ciEnvPackageList = testEnvPackageList ++ (with toolchainPkgs; [
+    bash
+    cacert
+    coreutils
+    curl
+    docker-client
+    gawk
+    git
+    gnugrep
+    gnused
+    gnutar
+    jq
+    just
+    nodejs_20 # needed for checkout
+    openssl.all # for git
+    wget
+  ]);
+
   devEnvPackageList = compileEnvPackageList ++ testEnvPackageList
     ++ (with toolchainPkgs; [
       bash-completion
@@ -241,7 +259,6 @@
       cacert
       coreutils
       curl
-      dataplane-test-runner
       docker-client
       ethtool
       gawk
@@ -303,6 +320,10 @@
       name = "${project-name}-env-test";
       paths = testEnvPackageList;
     };
+    ci = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-ci";
+      paths = ciEnvPackageList;
+    };
     dev = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
       paths = devEnvPackageList;
@@ -344,6 +365,20 @@
           "PATH=/bin"
           "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
           "SYSROOT=/sysroot"
+        ];
+      };
+    };
+    ci-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/ci-env";
+      tag = "${image-tag}";
+      contents = ciEnvPackageList;
+      inherit maxLayers;
+      config = {
+        Cmd = [ "/bin/bash" ];
+        WorkingDir = "/";
+        Env = [
+          "PATH=/bin"
+          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
         ];
       };
     };
