@@ -250,7 +250,9 @@
     just
     nodejs_20 # needed for checkout
     openssl.all # for git
+    rust-toolchain
     stdenv.cc.cc.lib # for github ci
+    sysroot
     wget
   ]);
 
@@ -346,6 +348,15 @@
       ln -s /nix "$out/sysroot/x86_64-unknown-linux-gnu/release"
       ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/debug"
       ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/release"
+    '';
+  };
+
+  tmpdir = toolchainPkgs.stdenv.mkDerivation {
+    name = "${project-name}-tmpdir";
+    src = null;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir --parent "$out/tmp"
     '';
   };
 
