@@ -381,6 +381,7 @@
         Env = [
           "PATH=/bin"
           "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
+          "LD_LIBRARY_PATH=/lib:${toolchainPkgs.stdenv.cc.cc.lib}/lib/"
         ];
       };
     };
