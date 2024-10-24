@@ -11,8 +11,8 @@ RUN mkdir /tmp \
  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
  && chmod 0444 /etc/sudoers.d/dangerous \
  && chmod 4755 /sbin/sudo \
- && chmod 555 /etc/pam.d \
- && chmod 444 /etc/pam.d/* \
+# && chmod 555 /etc/pam.d \
+# && chmod 444 /etc/pam.d/* \
  && echo 'root:x:0:0::/root:/bin/bash' > /etc/passwd \
  && echo 'root:x:0:' > /etc/group \
  && chown root:root /etc/passwd \
