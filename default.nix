@@ -244,6 +244,7 @@
       docker-client
       ethtool
       findutils
+      freetype # for jetbrains
       gawk
       gdb
       git
@@ -267,16 +268,26 @@
       llvmPackages.lldb
       nodejs_22 # for github ci
       numactl
+      openjdk.out # for jetbrains
       openssh # for git
       openssl.all # for git
       pam # for sudo
       pciutils
+      pcre.out # for jetbrains
+      pcre2.out # for jetbrains
+      procps # for jetbrains
+      ps # for jetbrains
       stdenv.cc.cc.lib # for github ci
       strace
       sudo
+      unzip # for jetbrains
       util-linux
       vim
       wget
+      xorg.libXext # for jetbrains
+      xorg.libXi # for jetbrains
+      xorg.libXrender # for jetbrains
+      xorg.libXtst # for jetbrains
     ]);
 
   env = {
