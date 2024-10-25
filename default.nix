@@ -243,6 +243,7 @@
       curl
       docker-client
       ethtool
+      findutils
       gawk
       gdb
       git
