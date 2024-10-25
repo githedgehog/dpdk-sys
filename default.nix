@@ -265,7 +265,7 @@
       llvmPackages.libclang.lib
       llvmPackages.lld
       llvmPackages.lldb
-      nodejs_20 # for github ci
+      nodejs_22 # for github ci
       numactl
       openssh # for git
       openssl.all # for git
