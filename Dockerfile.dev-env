@@ -10,8 +10,12 @@ RUN chmod 777 /tmp \
  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
  && chmod 0444 /etc/sudoers.d/dangerous \
  && chmod 4755 /sbin/sudo \
-# && chmod 555 /etc/pam.d \
-# && chmod 444 /etc/pam.d/* \
+ && mkdir -p /etc/pam.d \
+ && chmod 555 /etc/pam.d \
+ && echo auth requisite pam_permit.so > /etc/pam.d/sudo \
+ && echo account requisite pam_permit.so >> /etc/pam.d/sudo \
+ && echo session requisite pam_permit.so >> /etc/pam.d/sudo \
+ && chmod 444 /etc/pam.d/* \
  && echo 'root:x:0:0::/root:/bin/bash' > /etc/passwd \
  && echo 'root:x:0:' > /etc/group \
  && echo 'runner:x:1000:1000::/home/runner:/bin/bash' >> /etc/passwd \
@@ -45,18 +49,6 @@ ENV _cmd_prompt="${_bold}${_red_if_root}⟪$_sigil⟫${_end_color} "
 ENV PS1="\n${_env_propt}\n${_pwd_prompt}\n${_cmd_prompt}"
 
 RUN rm /bin/ldconfig
-
 RUN mkdir -p /home/runner
 RUN chown -R runner:runner /home/runner
-
 USER runner
-
-#ENV PATH="/root/.cargo/bin:${PATH}"
-#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-#  | sh -x -s -- \
-#      -y \
-#      --default-toolchain 1.81.0 \
-#      --target x86_64-unknown-linux-gnu \
-#      --target x86_64-unknown-linux-musl \
-# && rustup install beta \
-# && rustup install nightly

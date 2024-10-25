@@ -271,7 +271,7 @@
       openjdk.out # for jetbrains
       openssh # for git
       openssl.all # for git
-      pam # for sudo
+      pam.out # for sudo
       pciutils
       pcre.out # for jetbrains
       pcre2.out # for jetbrains
