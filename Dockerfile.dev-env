@@ -14,6 +14,8 @@ RUN chmod 777 /tmp \
 # && chmod 444 /etc/pam.d/* \
  && echo 'root:x:0:0::/root:/bin/bash' > /etc/passwd \
  && echo 'root:x:0:' > /etc/group \
+ && echo 'runner:x:1000:1000::/home/runner:/bin/bash' >> /etc/passwd \
+ && echo 'runner:x:1000:' >> /etc/group \
  && chown root:root /etc/passwd \
  && chown root:root /etc/group \
  && chmod 544 /etc/passwd \
@@ -43,6 +45,11 @@ ENV _cmd_prompt="${_bold}${_red_if_root}⟪$_sigil⟫${_end_color} "
 ENV PS1="\n${_env_propt}\n${_pwd_prompt}\n${_cmd_prompt}"
 
 RUN rm /bin/ldconfig
+
+RUN mkdir -p /home/runner
+RUN chown -R runner:runner /home/runner
+
+USER runner
 
 #ENV PATH="/root/.cargo/bin:${PATH}"
 #RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
