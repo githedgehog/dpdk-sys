@@ -6,8 +6,7 @@ SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 # /etc/passwd and /etc/group are replaced in the dev-env image when run in dataplane.
 # This is a hack to get the image to build in CI.
-RUN mkdir /tmp \
- && chmod 777 /tmp \
+RUN chmod 777 /tmp \
  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
  && chmod 0444 /etc/sudoers.d/dangerous \
  && chmod 4755 /sbin/sudo \

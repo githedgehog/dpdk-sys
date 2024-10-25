@@ -234,7 +234,7 @@
 
   testEnvPackageList = [ ];
 
-  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList
+  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ [ tmpdir usr ]
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive
@@ -333,6 +333,17 @@
     dontUnpack = true;
     installPhase = ''
       mkdir --parent "$out/tmp"
+    '';
+  };
+
+  usr = toolchainPkgs.stdenv.mkDerivation {
+    name = "${project-name}-usr-bin";
+    src = null;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir --parent "$out"/{usr,lib}
+      ln -s /bin "$out/usr/bin"
+      ln -s /lib "$out/usr/lib"
     '';
   };
 
