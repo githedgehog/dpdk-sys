@@ -273,6 +273,7 @@
       gnugrep
       gnused
       gnutar
+      gzip
       htop
       hwloc
       iproute2
