@@ -17,6 +17,8 @@
         sha3_256 = "$NIXPKGS_TAR_SHA3_256";
         sha3_384 = "$NIXPKGS_TAR_SHA3_384";
         sha3_512 = "$NIXPKGS_TAR_SHA3_512";
+        blake2b512 ="$NIXPKGS_TAR_B2B512";
+        blake2s512 ="$NIXPKGS_TAR_B2S512";
       };
     };
   };
