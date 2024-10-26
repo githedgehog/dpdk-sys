@@ -5,12 +5,12 @@
 env:
   rust_pins:
     stable: &rust_stable "1.82.0"
-    nightly: &nightly_pin "nightly-2024-10-21"
+    nightly: &nightly_pin "nightly-2024-10-24"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
     nightly: &llvm_nightly "19"
   nixpkgs:
-    unstable: &nixpkgs_unstable "ca30f584e18024baf39c395001262ed936f27ebd"
+    unstable: &nixpkgs_unstable "41dea55321e5a999b17033296ac05fe8a8b5a257"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
