@@ -4,51 +4,15 @@ FROM ${IMAGE}:${TAG} AS dev-env
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
-# /etc/passwd and /etc/group are replaced in the dev-env image when run in dataplane.
-# This is a hack to get the image to build in CI.
+# I can't properly set permissions in nix because of the way it works.
+# So I have to do this hacky thing to get sudo to work.
 RUN chmod 777 /tmp \
- && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
- && chmod 0444 /etc/sudoers.d/dangerous \
- && chmod 4755 /sbin/sudo \
- && mkdir -p /etc/pam.d \
- && chmod 555 /etc/pam.d \
- && echo auth requisite pam_permit.so > /etc/pam.d/sudo \
- && echo account requisite pam_permit.so >> /etc/pam.d/sudo \
- && echo session requisite pam_permit.so >> /etc/pam.d/sudo \
- && chmod 444 /etc/pam.d/* \
- && echo 'root:x:0:0::/root:/bin/bash' > /etc/passwd \
- && echo 'root:x:0:' > /etc/group \
- && echo 'runner:x:1000:1000::/home/runner:/bin/bash' >> /etc/passwd \
- && echo 'runner:x:1000:' >> /etc/group \
- && chown root:root /etc/passwd \
- && chown root:root /etc/group \
- && chmod 544 /etc/passwd \
- && chmod 544 /etc/group
+ && chmod 4755 /sbin/sudo
 
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
-
-# TODO: move os-release to a nix package.  This is just a hack to get CI working.
-COPY ./os-release /etc/os-release
-
-ENV __bold=1
-ENV __prompt_env_color=99
-ENV __prompt_dir_color=116
-ENV __prompt_cmd_color=154
-ENV __prompt_root_cmd_color=160
-ENV _bold="\\033[${__bold}m"
-ENV _prompt_env_color="\\033[38;5;${__prompt_env_color}m"
-ENV _prompt_dir_color="\\033[38;5;${__prompt_dir_color}m"
-ENV _prompt_cmd_color="\\033[38;5;${__prompt_cmd_color}m"
-ENV _prompt_root_cmd_color="\\033[38;5;${__prompt_root_cmd_color}m"
-ENV _end_color="\\033[0m"
-ENV _red_if_root="\$(if [ \$(whoami) == root ]; then echo '${_prompt_root_cmd_color}'; else echo '${_prompt_cmd_color}'; fi)"
-ENV _sigil="\$(if [ \$(whoami) == root ]; then echo -e ＃; else echo ＄; fi)"
-ENV _env_propt="${_bold}${_prompt_env_color}⟪dataplane:dev-env:\$(whoami)⟫${_end_color}"
-ENV _pwd_prompt="${_bold}${_prompt_dir_color}⟪\$(pwd)⟫${_end_color}"
-ENV _cmd_prompt="${_bold}${_red_if_root}⟪$_sigil⟫${_end_color} "
-ENV PS1="\n${_env_propt}\n${_pwd_prompt}\n${_cmd_prompt}"
 
 RUN rm /bin/ldconfig
 RUN mkdir -p /home/runner
 RUN chown -R runner:runner /home/runner
 USER runner
+CMD ["/bin/bash", "--login"]

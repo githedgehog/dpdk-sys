@@ -15,9 +15,6 @@
     sha256 = versions.nixpkgs.hash.nar.sha256;
   }) {
     overlays = [
-      (self: super: {
-        dataplane-test-runner = super.callPackage ./nix/test-runner { };
-      })
       llvm-overlay
       rust-overlay
     ];
@@ -232,9 +229,7 @@
     sysroot
   ]);
 
-  testEnvPackageList = [ ];
-
-  devEnvPackageList = compileEnvPackageList ++ testEnvPackageList ++ [ tmpdir usr ]
+  devEnvPackageList = compileEnvPackageList ++ [ tmpdir usr shell-fixup ]
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive
@@ -247,6 +242,7 @@
       freetype # for jetbrains
       gawk
       gdb
+      gettext # for envsubst
       git
       glibc
       glibc.bin # for ldd
@@ -311,10 +307,6 @@
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
     };
-    test = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-env-test";
-      paths = testEnvPackageList;
-    };
     dev = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
       paths = devEnvPackageList;
@@ -358,6 +350,8 @@
     '';
   };
 
+  shell-fixup = toolchainPkgs.callPackage ./nix/shell-fixup {};
+
   maxLayers = 110;
 
   container = {
@@ -370,7 +364,7 @@
         Cmd = [ "/bin/sh" ];
         WorkingDir = "/";
         Env = [
-          "DEV_ENV=/"
+          "COMPILE_ENV=/"
           "LD_LIBRARY_PATH=/lib"
           "LIBCLANG_PATH=/lib"
           "PATH=/bin"
@@ -378,22 +372,6 @@
           "SYSROOT=/sysroot"
         ];
       };
-    };
-    test-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/test-env";
-      tag = "${image-tag}";
-      contents = [ env.test ];
-      config = {
-        Cmd = [ "/bin/bash" ];
-        WorkingDir = "/";
-        Env = [
-          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
-          "PATH=/bin"
-          "LD_LIBRARY_PATH=/lib"
-          "LIBCLANG_PATH=/lib"
-        ];
-      };
-      inherit maxLayers;
     };
     dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/dev-env";
@@ -403,10 +381,10 @@
         Cmd = [ "/bin/bash" ];
         WorkingDir = "/";
         Env = [
-          "DEV_ENV=/"
-          "LD_LIBRARY_PATH=/lib"
+          "COMPILE_ENV=/"
+          "LD_LIBRARY_PATH=/lib:/lib/openjdk/lib"
           "LIBCLANG_PATH=/lib"
-          "PATH=/bin"
+          "PATH=/bin:/lib/openjdk/bin"
           "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
           "SYSROOT=/sysroot"
         ];
