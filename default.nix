@@ -264,7 +264,6 @@
       llvmPackages.lldb
       nodejs_22 # for github ci
       numactl
-      openjdk.out # for jetbrains
       openssh # for git
       openssl.all # for git
       pam.out # for sudo
