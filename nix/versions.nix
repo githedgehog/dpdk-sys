@@ -3,6 +3,7 @@
   nixpkgs = {
     branch = "nixpkgs-unstable";
     commit = "41dea55321e5a999b17033296ac05fe8a8b5a257";
+    commit_date = "2024-10-25T10:07:37+00:00";
     source_url = "https://github.com/NixOS/nixpkgs/archive/41dea55321e5a999b17033296ac05fe8a8b5a257.tar.gz";
     hash = {
       nar = {
