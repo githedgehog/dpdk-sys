@@ -6,7 +6,7 @@
     source_url = "$NIXPKGS_SOURCE_URL";
     hash = {
       nar = {
-        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive";
+        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive (not unpacked)";
         sha256 = "$NIXPKGS_NIX_HASH";
       };
       tar = {

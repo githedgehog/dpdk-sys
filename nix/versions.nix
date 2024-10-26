@@ -6,8 +6,8 @@
     source_url = "https://github.com/NixOS/nixpkgs/archive/41dea55321e5a999b17033296ac05fe8a8b5a257.tar.gz";
     hash = {
       nar = {
-        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive";
-        sha256 = "0wd5h8na7dlqdyvcvqlkgw84sj956yiq39jkljm0z7v7sg6dgwjs";
+        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive (not unpacked)";
+        sha256 = "1wif6xbdj1gcrarvb4r6qldb7hnafp6xqmbi461hyi2z3727yrp5";
       };
       tar = {
         comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";

@@ -22,7 +22,14 @@ declare nixpkgs_repo
 nixpkgs_repo="$(mktemp --directory --suffix=.nixpkgs)"
 declare -r nixpkgs_repo
 
-git clone --depth=1 --branch "${NIXPKGS_BRANCH}" "https://github.com/NixOS/nixpkgs" "${nixpkgs_repo}"
+git clone \
+  --filter=blob:none \
+  --no-checkout \
+  --single-branch \
+  --depth=1 \
+  --branch="${NIXPKGS_BRANCH}" \
+  "https://github.com/NixOS/nixpkgs" \
+  "${nixpkgs_repo}"
 cleanup_actions+=("rm -rf ${nixpkgs_repo}")
 pushd "${nixpkgs_repo}"
 
@@ -38,7 +45,26 @@ declare NIXPKGS_SOURCE_URL
 NIXPKGS_SOURCE_URL="https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz"
 declare -rx NIXPKGS_SOURCE_URL
 
-wget --quiet --output-document="${nixpkgs_repo}/${NIXPKGS_BRANCH}.tar.gz" "${NIXPKGS_SOURCE_URL}"
+declare -rx NIXPKGS_NIX_HASH_TYPE=sha256
+declare NIXPKGS_NIX_HASH
+NIXPKGS_NIX_HASH="$(
+  nix-prefetch-url \
+    --name "${NIXPKGS_BRANCH}" \
+    --type "${NIXPKGS_NIX_HASH_TYPE}" \
+    "${NIXPKGS_SOURCE_URL}"
+)"
+declare -rx NIXPKGS_NIX_HASH
+
+declare NIXPKGS_PATH
+NIXPKGS_PATH="$(
+  nix-prefetch-url \
+    --print-path \
+    --name "${NIXPKGS_BRANCH}" \
+    --type "${NIXPKGS_NIX_HASH_TYPE}" \
+    "${NIXPKGS_SOURCE_URL}" \
+    "${NIXPKGS_NIX_HASH}" | tail -n 1
+)"
+declare -rx NIXPKGS_PATH
 
 hash_file() {
   declare -r algo="$1"
@@ -52,8 +78,10 @@ declare NIXPKGS_TAR_SHA512
 declare NIXPKGS_TAR_SHA3_256
 declare NIXPKGS_TAR_SHA3_384
 declare NIXPKGS_TAR_SHA3_512
+declare NIXPKGS_TAR_B2B512
+declare NIXPKGS_TAR_B2S512
 
-declare -r nixpkgs_tar_file="${nixpkgs_repo}/${NIXPKGS_BRANCH}.tar.gz"
+declare -r nixpkgs_tar_file="${NIXPKGS_PATH}"
 
 NIXPKGS_TAR_SHA256="$(hash_file sha256 "${nixpkgs_tar_file}")"
 NIXPKGS_TAR_SHA384="$(hash_file sha384 "${nixpkgs_tar_file}")"
@@ -61,6 +89,8 @@ NIXPKGS_TAR_SHA512="$(hash_file sha512 "${nixpkgs_tar_file}")"
 NIXPKGS_TAR_SHA3_256="$(hash_file sha3-256 "${nixpkgs_tar_file}")"
 NIXPKGS_TAR_SHA3_384="$(hash_file sha3-384 "${nixpkgs_tar_file}")"
 NIXPKGS_TAR_SHA3_512="$(hash_file sha3-512 "${nixpkgs_tar_file}")"
+NIXPKGS_TAR_B2B512="$(hash_file blake2b512 "${nixpkgs_tar_file}")"
+NIXPKGS_TAR_B2S512="$(hash_file blake2s256 "${nixpkgs_tar_file}")"
 
 declare -rx NIXPKGS_TAR_SHA256
 declare -rx NIXPKGS_TAR_SHA384
@@ -68,14 +98,10 @@ declare -rx NIXPKGS_TAR_SHA512
 declare -rx NIXPKGS_TAR_SHA3_256
 declare -rx NIXPKGS_TAR_SHA3_384
 declare -rx NIXPKGS_TAR_SHA3_512
-
-declare -rx NIXPKGS_NIX_HASH_TYPE=sha256
-declare NIXPKGS_NIX_HASH
-NIXPKGS_NIX_HASH="$(nix-prefetch-url --name "${NIXPKGS_BRANCH}" --type "${NIXPKGS_NIX_HASH_TYPE}" --unpack "${NIXPKGS_SOURCE_URL}")"
-declare -rx NIXPKGS_NIX_HASH
+declare -rx NIXPKGS_TAR_B2B512
+declare -rx NIXPKGS_TAR_B2S512
 
 pushd "${project_dir}"
-
 
 # We pick the nightly from 36 hours ago because tonight's nightly might not be available yet :)
 declare RUST_NIGHTLY_PIN

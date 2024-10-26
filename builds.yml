@@ -5,7 +5,7 @@
 env:
   rust_pins:
     stable: &rust_stable "1.82.0"
-    nightly: &nightly_pin "nightly-2024-10-24"
+    nightly: &nightly_pin "nightly-2024-10-25"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
     nightly: &llvm_nightly "19"
