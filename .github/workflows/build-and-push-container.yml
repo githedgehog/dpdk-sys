@@ -29,6 +29,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: install nix
         uses: cachix/install-nix-action@v30
+      - name: confirm sources
+        run: ./scripts/confirm-sources.sh
       - name: login to ghcr.io
         uses: docker/login-action@v3
         with:
@@ -44,10 +46,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nixpkgs/${{ matrix.nixpkgs }}/rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}
+          key: /nixpkgs/${{ matrix.nixpkgs }}/rust/${{ matrix.toolchain.key }}/${{matrix.toolchain.rust.version}}
       - name: build
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} build
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} build
       - name: push
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} push
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
       - name: garbage collect
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} nix-garbage-collector
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} nix-garbage-collector

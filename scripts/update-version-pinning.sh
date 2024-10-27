@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -euxo pipefail
 
 declare -rx NIXPKGS_BRANCH="nixpkgs-unstable"
 
@@ -78,7 +78,6 @@ nix_multi_hash() {
     dict["openssl_${hash}"]="$(hash_file "${hash_algos[${hash}]}" "${file}")"
     declare -rxg "${1}_openssl_${hash}"="${dict["openssl_${hash}"]}"
   done
-  set -x
   for hash in "${!nix32_packed_hash_algos[@]}"; do
     dict["expected_nix32_packed_${hash}"]="$(nix hash convert --from base16 --to nix32 --hash-algo "${hash}" "${dict["openssl_${hash}"]}")"
     dict["nix32_packed_${hash}"]="$(nix-prefetch-url --type "${hash}" "file://${file}" "${dict["expected_nix32_packed_${hash}"]}")"
@@ -89,7 +88,6 @@ nix_multi_hash() {
     nix-prefetch-url --unpack --type "${hash}" "${source_url}" "${dict["nix32_unpacked_${hash}"]}"
     declare -rxg "${1}_nix32_unpacked_${hash}"="${dict["nix32_unpacked_${hash}"]}"
   done
-  set +x
 }
 
 declare -A NIXPKGS_ARCHIVE
@@ -97,21 +95,18 @@ nix_multi_hash NIXPKGS_ARCHIVE "${nixpkgs_repo}/${NIXPKGS_COMMIT}.tar.gz" "${NIX
 
 pushd "${project_dir}"
 
-# We pick the nightly from 36 hours ago because tonight's nightly might not be available yet :)
-declare RUST_NIGHTLY_PIN
-RUST_NIGHTLY_PIN="nightly-$(date --utc --iso-8601 --date="@$(($(date --utc '+%s') - 36 * 60 * 60))")"
-declare -rx RUST_NIGHTLY_PIN
-
 rustup update
 rustup toolchain install "stable"
-rustup toolchain install "${RUST_NIGHTLY_PIN}"
+rustup toolchain install "nightly"
 rustup update
 
-declare RUST_STABLE_PIN_LLVM RUST_NIGHTLY_PIN_LLVM
+declare RUST_STABLE_PIN RUST_NIGHTLY_PIN RUST_STABLE_PIN_LLVM RUST_NIGHTLY_PIN_LLVM
 RUST_STABLE_PIN="$(rustc "+stable" -vV | grep 'release:' | awk '{print $NF}')"
+RUST_NIGHTLY_PIN="$(rustc "+nightly" -vV | grep 'commit-date:' | awk '{print $NF}')"
 RUST_STABLE_PIN_LLVM="$(rustc "+stable" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
-RUST_NIGHTLY_PIN_LLVM="$(rustc "+$RUST_NIGHTLY_PIN" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
+RUST_NIGHTLY_PIN_LLVM="$(rustc "+nightly" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
 declare -rx RUST_STABLE_PIN
+declare -rx RUST_NIGHTLY_PIN
 declare -rx RUST_STABLE_PIN_LLVM
 declare -rx RUST_NIGHTLY_PIN_LLVM
 

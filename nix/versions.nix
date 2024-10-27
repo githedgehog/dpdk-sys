@@ -31,24 +31,10 @@
     };
   };
   rust = {
-    pinned = {
+    stable = {
       channel = "stable";
       version = "1.82.0";
       llvm = "19";
-      profile = "minimal";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
-    stable = {
-      channel = "stable";
-      version = "latest";
-      llvm = "latest";
-      profile = "minimal";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
-    beta = {
-      channel = "beta";
-      version = "latest";
-      llvm = "latest";
       profile = "minimal";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };

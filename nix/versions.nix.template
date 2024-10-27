@@ -31,31 +31,17 @@
     };
   };
   rust = {
-    pinned = {
+    stable = {
       channel = "stable";
       version = "$RUST_STABLE_PIN";
       llvm = "$RUST_STABLE_PIN_LLVM";
       profile = "minimal";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };
-    stable = {
-      channel = "stable";
-      version = "latest";
-      llvm = "latest";
-      profile = "minimal";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
-    beta = {
-      channel = "beta";
-      version = "latest";
-      llvm = "latest";
-      profile = "minimal";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
     nightly = {
       channel = "nightly";
-      version = "latest";
-      llvm = "latest";
+      version = "$RUST_NIGHTLY_PIN";
+      llvm = "$RUST_NIGHTLY_PIN_LLVM";
       profile = "minimal";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };

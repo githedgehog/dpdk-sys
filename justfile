@@ -5,8 +5,10 @@ set script-interpreter := ["bash", "-euo", "pipefail"]
 # Turn on debug_mode if you want to `set -x` all the just [script] recipes
 debug := "false"
 
-# The version of the rust compiler to include.  Pick "pinned" to use the pinned version.
-rust := "pinned"
+# The version of the rust compiler to include.
+# These versions are pinned by the `./nix/versions.nix`
+# file (which is managed by `./scripts/update-version-pinning.sh`)
+rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 
 # This is the maximum number of builds nix will start at a time.
@@ -144,7 +146,6 @@ _build-container target container-name: (_nix_build ("container." + target))
     --label "nixpkgs.hash.tar.blake2b512=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.blake2b512')" \
     --label "nixpkgs.hash.tar.blake2s256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.blake2s256')" \
     --label "versions.json=$(nix eval --json -f '{{versions}}')" \
-    --build-arg IMAGE="{{container-name}}" \
     --build-arg TAG="{{_build-id}}" \
     --tag "{{container-name}}:post-{{_build-id}}" \
     --target "{{target}}" \
