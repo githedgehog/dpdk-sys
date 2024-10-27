@@ -14,7 +14,7 @@ jobs:
       - name: Setup jq
         # TODO: find a better way to get jq
         uses: vegardit/gha-setup-jq@v1
-      - run: cargo install whyq
+      - run: cargo install whyq --locked
       - id: matrix
         run: echo "matrix=$(yq -c '.matrix' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
   build-on-lab:
