@@ -1,6 +1,0 @@
-ARG IMAGE="ghcr.io/githedgehog/dpdk-sys/ci-env"
-ARG TAG="latest"
-FROM ${IMAGE}:${TAG} AS ci-env
-
-# TODO: move os-release to a nix package.  This is just a hack to get CI working.
-COPY ./os-release /etc/os-release

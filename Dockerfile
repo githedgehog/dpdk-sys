@@ -1,7 +1,6 @@
-ARG IMAGE="ghcr.io/githedgehog/dpdk-sys/dev-env"
 ARG TAG="latest"
-FROM ${IMAGE}:${TAG} AS dev-env
-
+FROM ghcr.io/githedgehog/dpdk-sys/compile-env:${TAG} AS compile-env
+FROM ghcr.io/githedgehog/dpdk-sys/dev-env:${TAG} AS dev-env
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 # I can't properly set permissions in nix because of the way it works.

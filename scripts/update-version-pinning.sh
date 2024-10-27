@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
 declare -rx NIXPKGS_BRANCH="nixpkgs-unstable"
 
@@ -17,6 +17,30 @@ _cleanup() {
   done
 }
 trap _cleanup EXIT
+
+hash_file() {
+  declare -r algo="$1"
+  declare -r file="$2"
+  openssl dgst "-${algo}" < "${file}" | cut -d' ' -f2
+}
+
+declare -Ar hash_algos=(
+  ["sha256"]="sha256"
+  ["sha384"]="sha384"
+  ["sha512"]="sha512"
+  ["sha3_256"]="sha3-256"
+  ["sha3_384"]="sha3-384"
+  ["sha3_512"]="sha3-512"
+  ["blake2b512"]="blake2b512"
+  ["blake2s256"]="blake2s256"
+)
+declare -Ar nix32_packed_hash_algos=(
+  ["sha256"]="sha256"
+  ["sha512"]="sha512"
+)
+declare -Ar nix32_unpacked_hash_algos=(
+  ["sha256"]="sha256"
+)
 
 declare nixpkgs_repo
 nixpkgs_repo="$(mktemp --directory --suffix=.nixpkgs)"
@@ -45,67 +69,37 @@ declare NIXPKGS_SOURCE_URL
 NIXPKGS_SOURCE_URL="https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz"
 declare -rx NIXPKGS_SOURCE_URL
 
-declare -rx NIXPKGS_NIX_HASH_TYPE=sha256
-declare NIXPKGS_NIX_HASH
-NIXPKGS_NIX_HASH="$(
-  nix-prefetch-url \
-    --name "${NIXPKGS_BRANCH}" \
-    --type "${NIXPKGS_NIX_HASH_TYPE}" \
-    "${NIXPKGS_SOURCE_URL}"
-)"
-declare -rx NIXPKGS_NIX_HASH
-
-declare NIXPKGS_PATH
-NIXPKGS_PATH="$(
-  nix-prefetch-url \
-    --print-path \
-    --name "${NIXPKGS_BRANCH}" \
-    --type "${NIXPKGS_NIX_HASH_TYPE}" \
-    "${NIXPKGS_SOURCE_URL}" \
-    "${NIXPKGS_NIX_HASH}" | tail -n 1
-)"
-declare -rx NIXPKGS_PATH
-
-hash_file() {
-  declare -r algo="$1"
-  declare -r file="$2"
-  openssl dgst "-${algo}" < "${file}" | cut -d' ' -f2
+wget "${NIXPKGS_SOURCE_URL}" -O "${nixpkgs_repo}/${NIXPKGS_COMMIT}.tar.gz"
+nix_multi_hash() {
+  declare -n dict="${1}"
+  declare -r file="${2}"
+  declare -r source_url="${3}"
+  for hash in "${!hash_algos[@]}"; do
+    dict["openssl_${hash}"]="$(hash_file "${hash_algos[${hash}]}" "${file}")"
+    declare -rxg "${1}_openssl_${hash}"="${dict["openssl_${hash}"]}"
+  done
+  set -x
+  for hash in "${!nix32_packed_hash_algos[@]}"; do
+    dict["expected_nix32_packed_${hash}"]="$(nix hash convert --from base16 --to nix32 --hash-algo "${hash}" "${dict["openssl_${hash}"]}")"
+    dict["nix32_packed_${hash}"]="$(nix-prefetch-url --type "${hash}" "file://${file}" "${dict["expected_nix32_packed_${hash}"]}")"
+    declare -rxg "${1}_nix32_packed_${hash}"="${dict["nix32_packed_${hash}"]}"
+  done
+  for hash in "${!nix32_unpacked_hash_algos[@]}"; do
+    dict["nix32_unpacked_${hash}"]="$(nix-prefetch-url --unpack --type "${hash}" "file://${file}")"
+    nix-prefetch-url --unpack --type "${hash}" "${source_url}" "${dict["nix32_unpacked_${hash}"]}"
+    declare -rxg "${1}_nix32_unpacked_${hash}"="${dict["nix32_unpacked_${hash}"]}"
+  done
+  set +x
 }
 
-declare NIXPKGS_TAR_SHA256
-declare NIXPKGS_TAR_SHA384
-declare NIXPKGS_TAR_SHA512
-declare NIXPKGS_TAR_SHA3_256
-declare NIXPKGS_TAR_SHA3_384
-declare NIXPKGS_TAR_SHA3_512
-declare NIXPKGS_TAR_B2B512
-declare NIXPKGS_TAR_B2S512
-
-declare -r nixpkgs_tar_file="${NIXPKGS_PATH}"
-
-NIXPKGS_TAR_SHA256="$(hash_file sha256 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_SHA384="$(hash_file sha384 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_SHA512="$(hash_file sha512 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_SHA3_256="$(hash_file sha3-256 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_SHA3_384="$(hash_file sha3-384 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_SHA3_512="$(hash_file sha3-512 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_B2B512="$(hash_file blake2b512 "${nixpkgs_tar_file}")"
-NIXPKGS_TAR_B2S512="$(hash_file blake2s256 "${nixpkgs_tar_file}")"
-
-declare -rx NIXPKGS_TAR_SHA256
-declare -rx NIXPKGS_TAR_SHA384
-declare -rx NIXPKGS_TAR_SHA512
-declare -rx NIXPKGS_TAR_SHA3_256
-declare -rx NIXPKGS_TAR_SHA3_384
-declare -rx NIXPKGS_TAR_SHA3_512
-declare -rx NIXPKGS_TAR_B2B512
-declare -rx NIXPKGS_TAR_B2S512
+declare -A NIXPKGS_ARCHIVE
+nix_multi_hash NIXPKGS_ARCHIVE "${nixpkgs_repo}/${NIXPKGS_COMMIT}.tar.gz" "${NIXPKGS_SOURCE_URL}"
 
 pushd "${project_dir}"
 
 # We pick the nightly from 36 hours ago because tonight's nightly might not be available yet :)
 declare RUST_NIGHTLY_PIN
-RUST_NIGHTLY_PIN="nightly-$(date --utc --iso-8601 --date="@$(( $(date --utc '+%s') - 36 * 60 * 60))")"
+RUST_NIGHTLY_PIN="nightly-$(date --utc --iso-8601 --date="@$(($(date --utc '+%s') - 36 * 60 * 60))")"
 declare -rx RUST_NIGHTLY_PIN
 
 rustup update

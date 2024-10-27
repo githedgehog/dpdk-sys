@@ -6,20 +6,27 @@
     commit_date = "$NIXPKGS_COMMIT_DATE";
     source_url = "$NIXPKGS_SOURCE_URL";
     hash = {
-      nar = {
-        comment = "nix-prefetch-url generated hash of the tar.gz file obtained from github archive (not unpacked)";
-        sha256 = "$NIXPKGS_NIX_HASH";
+      nix32 = {
+        packed = {
+          comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (packed)";
+          sha256 = "$NIXPKGS_ARCHIVE_nix32_packed_sha256";
+          sha512 = "$NIXPKGS_ARCHIVE_nix32_packed_sha512";
+        };
+        unpacked = {
+          comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (unpacked)";
+          sha256 = "$NIXPKGS_ARCHIVE_nix32_unpacked_sha256";
+        };
       };
       tar = {
         comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";
-        sha256 = "$NIXPKGS_TAR_SHA256";
-        sha384 = "$NIXPKGS_TAR_SHA384";
-        sha512 = "$NIXPKGS_TAR_SHA512";
-        sha3_256 = "$NIXPKGS_TAR_SHA3_256";
-        sha3_384 = "$NIXPKGS_TAR_SHA3_384";
-        sha3_512 = "$NIXPKGS_TAR_SHA3_512";
-        blake2b512 ="$NIXPKGS_TAR_B2B512";
-        blake2s512 ="$NIXPKGS_TAR_B2S512";
+        sha256 = "$NIXPKGS_ARCHIVE_openssl_sha256";
+        sha384 = "$NIXPKGS_ARCHIVE_openssl_sha384";
+        sha512 = "$NIXPKGS_ARCHIVE_openssl_sha512";
+        sha3_256 = "$NIXPKGS_ARCHIVE_openssl_sha3_256";
+        sha3_384 = "$NIXPKGS_ARCHIVE_openssl_sha3_384";
+        sha3_512 = "$NIXPKGS_ARCHIVE_openssl_sha3_512";
+        blake2b512 = "$NIXPKGS_ARCHIVE_openssl_blake2b512";
+        blake2s256 ="$NIXPKGS_ARCHIVE_openssl_blake2s256";
       };
     };
   };

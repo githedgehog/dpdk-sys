@@ -9,10 +9,9 @@
   };
   rust-overlay = (import (builtins.fetchTarball
     "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"));
-  toolchainPkgs = import (fetchTarball {
-    url =
-      "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
-    sha256 = versions.nixpkgs.hash.nar.sha256;
+  toolchainPkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
+    sha256 = versions.nixpkgs.hash.nix32.unpacked.sha256;
   }) {
     overlays = [
       llvm-overlay

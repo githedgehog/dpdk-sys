@@ -59,42 +59,9 @@ _compile_env_container_name := container_repo + "/compile-env"
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
 # not retagging or pushing some other container.
-_build-id := `uuidgen --random`
-
-environments := "environments.yml"
-
+_build-id := uuid()
 _just_debug_ := if debug == "true" { "set -x" } else { "" }
-
-# NOTE: we parse the returned date from the worldtimeapi.org API to ensure that
-# we actually got a valid iso-8601 date.
-#
-# We also diff the official worldtimeapi.org time with the system time to see if we are off by more than 5 seconds
-# If we are, then we should fail the build as either
-# 1. the system is incorrectly configured
-# 2. someone is messing with the system clock (which makes me think CA cert issues are afoot)
-# 3. the worldtimeapi.org API is down or inacurate (very unlikely)
-export _build_time := ```
-  set -euo pipefail
-  declare official_unparsed
-  #  official_unparsed="$(curl "http://worldtimeapi.org/api/timezone/utc" 2>/dev/null | jq --raw-output '.utc_datetime')"
-  official_unparsed="$(date --iso-8601=seconds --utc)"
-  declare -r official_unparsed
-  declare official
-  official="$(date --iso-8601=seconds --utc --date="${official_unparsed}")"
-  declare -r official
-  declare system_epoch
-  system_epoch="$(date --utc +%s)"
-  declare -ri system_epoch
-  declare official_epoch
-  official_epoch="$(date --utc --date="${official}" +%s)"
-  declare -ri official_epoch
-  declare -ri clock_skew=$((system_epoch - official_epoch))
-  if [ "${clock_skew}" -gt 5 ] || [ "${clock_skew}" -lt -5 ]; then
-    >&2 echo "Clock skew detected: system time: ${system_epoch} official time: ${official_epoch}"
-    exit 1
-  fi
-  printf -- "%s" "${official}"
-```
+_build_time := datetime_utc("%+")
 
 # Compute the default number of jobs to use as a guess to try and keep the build within the memory limits
 # of the system
@@ -137,12 +104,12 @@ build-sysroot: (_nix_build "sysroot")
 # Builds and post processes a container from the nix build
 [private]
 [script]
-_build-container dockerfile container-name attribute: (_nix_build attribute)
+_build-container target container-name: (_nix_build ("container." + target))
   {{_just_debug_}}
   declare build_date
   build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
-  docker load --input /tmp/dpdk-sys/builds/{{attribute}}
+  docker load --input /tmp/dpdk-sys/builds/container.{{target}}
   docker tag \
     "{{container-name}}:{{_build-id}}" \
     "{{container-name}}:{{_slug}}-rust-{{rust}}"
@@ -155,18 +122,33 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
     --label "git.tree-state={{_clean}}" \
     --label "build.date=${build_date}" \
     --label "build.timestamp={{_build_time}}" \
-    --label "version.rust={{rust}}" \
-    --label "version.nixpkgs.hash.nar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.nar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
-    --label "version.nixpkgs.hash.tar.sha384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
-    --label "version.nixpkgs.hash.tar.sha512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
-    --label "version.nixpkgs.hash.tar.sha3_256=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
-    --label "version.nixpkgs.hash.tar.sha3_384=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
-    --label "version.nixpkgs.hash.tar.sha3_512=$(nix eval -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
+    --label "rust={{rust}}" \
+    --label "rust.version=$(nix eval --raw -f '{{versions}}' 'rust.{{rust}}.version')" \
+    --label "rust.channel=$(nix eval --raw -f '{{versions}}' 'rust.{{rust}}.channel')" \
+    --label "rust.profile=$(nix eval --raw -f '{{versions}}' 'rust.{{rust}}.profile')" \
+    --label "rust.targets=$(nix eval --json -f '{{versions}}' 'rust.{{rust}}.targets')" \
+    --label "llvm.version=$(nix eval --raw -f '{{versions}}' 'rust.{{rust}}.llvm')" \
+    --label "nixpkgs.git.commit=$(nix eval --raw -f '{{versions}}' 'nixpkgs.commit')" \
+    --label "nixpkgs.git.branch=$(nix eval --raw -f '{{versions}}' 'nixpkgs.branch')" \
+    --label "nixpkgs.git.commit_date=$(nix eval --raw -f '{{versions}}' 'nixpkgs.commit_date')" \
+    --label "nixpkgs.git.source_url=$(nix eval --raw -f '{{versions}}' 'nixpkgs.source_url')" \
+    --label "nixpkgs.hash.nix32.packed.sha256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.nix32.packed.sha256')" \
+    --label "nixpkgs.hash.nix32.packed.sha512=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.nix32.packed.sha512')" \
+    --label "nixpkgs.hash.nix32.unpacked.sha256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.nix32.unpacked.sha256')" \
+    --label "nixpkgs.hash.tar.sha256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha256')" \
+    --label "nixpkgs.hash.tar.sha384=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha384')" \
+    --label "nixpkgs.hash.tar.sha512=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha512')" \
+    --label "nixpkgs.hash.tar.sha3_256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha3_256')" \
+    --label "nixpkgs.hash.tar.sha3_384=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha3_384')" \
+    --label "nixpkgs.hash.tar.sha3_512=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.sha3_512')" \
+    --label "nixpkgs.hash.tar.blake2b512=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.blake2b512')" \
+    --label "nixpkgs.hash.tar.blake2s256=$(nix eval --raw -f '{{versions}}' 'nixpkgs.hash.tar.blake2s256')" \
+    --label "versions.json=$(nix eval --json -f '{{versions}}')" \
     --build-arg IMAGE="{{container-name}}" \
     --build-arg TAG="{{_build-id}}" \
     --tag "{{container-name}}:post-{{_build-id}}" \
-    -f {{dockerfile}} \
+    --target "{{target}}" \
+    -f Dockerfile \
     .
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
@@ -181,10 +163,10 @@ _build-container dockerfile container-name attribute: (_nix_build attribute)
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
 # Build and tag the dev-env container
-build-dev-env-container: (_build-container "Dockerfile.dev-env" _dev_env_container_name "container.dev-env")
+build-dev-env-container: (_build-container "dev-env" _dev_env_container_name)
 
 # Build and tag the dev-env container
-build-compile-env-container: (_build-container "Dockerfile.compile-env" _compile_env_container_name "container.compile-env")
+build-compile-env-container: (_build-container "compile-env" _compile_env_container_name)
 
 # Build the sysroot, compile-env, and dev-env containers
 build: build-sysroot build-compile-env-container build-dev-env-container

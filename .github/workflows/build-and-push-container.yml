@@ -45,10 +45,6 @@ jobs:
         with:
           path: /nix
           key: /nixpkgs/${{ matrix.nixpkgs }}/rust/${{ matrix.toolchain.rust.channel }}/${{matrix.toolchain.rust.version}}
-      - name: install uuid-runtime # needed for justfile
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends uuid-runtime
       - name: build
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.rust.channel}} build
       - name: push
