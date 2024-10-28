@@ -226,6 +226,7 @@
     llvmPackages.lld
     rust-toolchain
     sysroot
+    cargo-nextest
   ]);
 
   devEnvPackageList = compileEnvPackageList ++ [ tmpdir usr shell-fixup ]
