@@ -40,7 +40,7 @@
     };
     nightly = {
       channel = "nightly";
-      version = "2024-10-26";
+      version = "2024-10-27";
       llvm = "19";
       profile = "minimal";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
