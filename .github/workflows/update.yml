@@ -10,7 +10,6 @@
 
 name: Update Version
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: '3 10 * * *'
