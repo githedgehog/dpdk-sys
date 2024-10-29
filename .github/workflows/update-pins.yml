@@ -11,7 +11,7 @@ name: update version pins
 on:
   workflow_dispatch:
   schedule:
-    - cron: "3 10 * * 0"
+    - cron: "3 10 * * *"
 
 permissions:
   contents: "write"
@@ -35,8 +35,6 @@ jobs:
         with:
           branch: "pin/update"
           title: "update version pins"
-          assignees: |
-            daniel-noland
           labels: |
             automated
             dependencies
@@ -44,3 +42,5 @@ jobs:
           commit-message: "bump version pinning"
           sign-commits: "true"
           body: "bump version pinning"
+          team-reviewers: |
+            daniel-noland
