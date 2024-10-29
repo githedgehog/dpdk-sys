@@ -18,6 +18,9 @@
       rust-overlay
     ];
   };
+
+  mdbook-alerts = toolchainPkgs.callPackage ./nix/mdbook-alerts {};
+
   project-name = "dpdk-sys";
   crossOverlay = { build-flags, crossEnv }:
     self: super: rec {
@@ -229,7 +232,7 @@
     cargo-nextest
   ]);
 
-  devEnvPackageList = compileEnvPackageList ++ [ tmpdir usr shell-fixup ]
+  devEnvPackageList = compileEnvPackageList ++ [ tmpdir usr shell-fixup mdbook-alerts ]
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive

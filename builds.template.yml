@@ -11,6 +11,8 @@ env:
     nightly: &llvm_nightly "${RUST_NIGHTLY_PIN_LLVM}"
   nixpkgs:
     unstable: &nixpkgs_unstable "${NIXPKGS_COMMIT}"
+  just:
+    version: &just_version "${JUST_STABLE_PIN}"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
@@ -30,6 +32,7 @@ matrix:
         target:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
+      just: *just_version
     - # pinned nightly
       <<: *default
       key: "nightly"

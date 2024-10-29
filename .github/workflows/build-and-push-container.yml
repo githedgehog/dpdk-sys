@@ -11,12 +11,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Setup jq
-        # TODO: find a better way to get jq
-        uses: vegardit/gha-setup-jq@v1
-      - run: cargo install whyq --locked
-      - id: matrix
-        run: echo "matrix=$(yq -c '.matrix' builds.yml)" | tee -a "${GITHUB_OUTPUT}"
+      - uses: cargo-bins/cargo-binstall@main
+      - name: install whyq
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends jq
+          cargo binstall --no-confirm whyq
+      - name: generate test matrix
+        id: matrix
+        run: |
+          set -euxo pipefail
+          yq \
+            --compact-output \
+            --raw-output \
+            '"matrix=" + (.matrix | tostring)' builds.yml \
+          | tee -a "${GITHUB_OUTPUT}"
   build-on-lab:
     name: build-containers
     needs: build-matrix

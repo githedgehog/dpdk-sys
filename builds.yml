@@ -11,6 +11,8 @@ env:
     nightly: &llvm_nightly "19"
   nixpkgs:
     unstable: &nixpkgs_unstable "86e78d3d2084ff87688da662cf78c2af085d8e73"
+  just:
+    version: &just_version "1.36.0"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   nixpkgs:
@@ -30,6 +32,7 @@ matrix:
         target:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
+      just: *just_version
     - # pinned nightly
       <<: *default
       key: "nightly"
