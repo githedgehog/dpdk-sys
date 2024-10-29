@@ -27,6 +27,59 @@ jobs:
             --raw-output \
             '"matrix=" + (.matrix | tostring)' builds.yml \
           | tee -a "${GITHUB_OUTPUT}"
+      - name: report build plan
+        run: |
+          cat >> "${GITHUB_STEP_SUMMARY}" <<EOF
+          # Action plan
+          
+          ## Build matrix
+          
+          \`\`\`yml
+          $(yq --yaml-output '.matrix' builds.yml)
+          \`\`\`
+          
+          ## Raw build flags file
+          
+          \`\`\`yml
+          $(< ./nix/flags.nix)
+          \`\`\`
+          
+          ## Build versions
+          
+          ### env
+          
+          \`\`\`yml
+          $(yq --yaml-output '.env' builds.yml)
+          \`\`\`
+          
+          <details>
+          <summary>
+
+          ## Raw \`builds.yml\` file
+
+          </summary>
+          
+          \`\`\`yml
+          $(< builds.yml)
+          \`\`\`
+          
+          </details>
+          
+          <details>
+          <summary>
+          
+          ## Raw \`versions.nix\` file
+          
+          </summary>
+          
+          \`\`\`nix
+          $(< nix/versions.nix)
+          \`\`\`
+          
+          </details>
+          
+          EOF
+
   build-on-lab:
     name: build-containers
     needs: build-matrix
