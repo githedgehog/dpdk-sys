@@ -19,7 +19,6 @@
     ];
   };
 
-  mdbook-alerts = toolchainPkgs.callPackage ./nix/mdbook-alerts {};
 
   project-name = "dpdk-sys";
   crossOverlay = { build-flags, crossEnv }:
@@ -232,7 +231,18 @@
     cargo-nextest
   ]);
 
-  devEnvPackageList = compileEnvPackageList ++ [ tmpdir usr shell-fixup mdbook-alerts ]
+  docEnvPackageList = (with toolchainPkgs; [
+    (callPackage ./nix/mdbook-alerts {})
+    coreutils
+    mdbook
+    mdbook-katex
+    mdbook-mermaid
+    mdbook-plantuml
+    plantuml # needed for mdbook-plantuml to work (runtime exe dep)
+    tmpdir
+  ]);
+
+  devEnvPackageList = compileEnvPackageList ++ docEnvPackageList ++ [ tmpdir usr shell-fixup ]
     ++ (with toolchainPkgs; [
       bash-completion
       bashInteractive
@@ -265,7 +275,6 @@
       llvmPackages.libclang.lib
       llvmPackages.lld
       llvmPackages.lldb
-      nodejs_22 # for github ci
       numactl
       openssh # for git
       openssl.all # for git
@@ -308,6 +317,10 @@
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
+    };
+    doc = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-doc";
+      paths = docEnvPackageList;
     };
     dev = toolchainPkgs.symlinkJoin {
       name = "${project-name}-toolchain";
@@ -372,6 +385,21 @@
           "PATH=/bin"
           "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
           "SYSROOT=/sysroot"
+        ];
+      };
+    };
+    doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/doc-env";
+      tag = "${image-tag}";
+      contents = docEnvPackageList;
+      inherit maxLayers;
+      config = {
+        Entrypoint = [
+          "/bin/mdbook"
+        ];
+        Env = [
+          "LD_LIBRARY_PATH=/lib"
+          "PATH=/bin:/lib/openjdk/bin"
         ];
       };
     };

@@ -1,5 +1,6 @@
 ARG TAG="latest"
 FROM ghcr.io/githedgehog/dpdk-sys/compile-env:${TAG} AS compile-env
+FROM ghcr.io/githedgehog/dpdk-sys/doc-env:${TAG} AS doc-env
 FROM ghcr.io/githedgehog/dpdk-sys/dev-env:${TAG} AS dev-env
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 

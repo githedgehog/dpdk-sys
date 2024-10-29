@@ -55,6 +55,8 @@ _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 
 # The name of the dev-env container
 _dev_env_container_name := container_repo + "/dev-env"
+# The name of the doc-env container
+_doc_env_container_name := container_repo + "/doc-env"
 # The name of the compile-env container
 _compile_env_container_name := container_repo + "/compile-env"
 
@@ -166,11 +168,14 @@ _build-container target container-name: (_nix_build ("container." + target))
 # Build and tag the dev-env container
 build-dev-env-container: (_build-container "dev-env" _dev_env_container_name)
 
+# Build and tag the doc-env container
+build-doc-env-container: (_build-container "doc-env" _doc_env_container_name)
+
 # Build and tag the dev-env container
 build-compile-env-container: (_build-container "compile-env" _compile_env_container_name)
 
 # Build the sysroot, compile-env, and dev-env containers
-build: build-sysroot build-compile-env-container build-dev-env-container
+build: build-sysroot build-compile-env-container build-dev-env-container build-doc-env-container
 
 # Push the compile-env and dev-env containers to the container registry
 [script]
@@ -185,6 +190,9 @@ push: build
   docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}"
   docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_doc_env_container_name}}:{{_slug}}-rust-{{rust}}"
+  docker push "{{_doc_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_doc_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
