@@ -111,7 +111,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /nix
-          key: /nixpkgs/${{ matrix.nixpkgs }}/rust/${{ matrix.toolchain.key }}/${{matrix.toolchain.rust.version}}
+          key: /nixpkgs/${{ matrix.nixpkgs }}
       - name: build
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} build
       - name: push
