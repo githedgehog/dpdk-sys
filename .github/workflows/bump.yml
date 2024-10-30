@@ -7,7 +7,7 @@
 
 # Production artifacts are produced in a sterile environment (in another CI workflow).
 
-name: update version pins
+name: bump/versions
 on:
   workflow_dispatch:
   schedule:
@@ -33,14 +33,13 @@ jobs:
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v7"
         with:
-          branch: "pin/update"
-          title: "update version pins"
+          branch: "bump/versions"
+          title: "update version pinning"
           labels: |
             automated
             dependencies
+            bump/versions
           signoff: "true"
-          commit-message: "bump version pinning"
+          commit-message: "bump/versions"
           sign-commits: "true"
-          body: "bump version pinning"
-          team-reviewers: |
-            daniel-noland
+          body: "update version pinning"
