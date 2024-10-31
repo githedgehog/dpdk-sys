@@ -1,15 +1,23 @@
-name: Build
+name: build
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
   pull_request:
     branches: "*"
   push:
     branches:
       - "main"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'main' }}
+
 jobs:
-  build-matrix:
-    name: generate build matrix
+  matrix:
+    name: "matrix"
     runs-on:
       - lab
     outputs:
@@ -86,20 +94,19 @@ jobs:
           
           EOF
 
-  build-and-push:
-    name: build
-    needs: build-matrix
+  run:
+    name: run
+    needs: matrix
     runs-on:
       - lab
     timeout-minutes: 300
     strategy:
-      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: install nix
         uses: cachix/install-nix-action@v30
-      - name: confirm sources
-        run: ./scripts/confirm-sources.sh
       - name: login to ghcr.io
         uses: docker/login-action@v3
         with:
@@ -108,40 +115,39 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
-      - run: "cargo binstall --no-confirm just"
-      - run: "cargo binstall --no-confirm csview"
       - run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends graphviz
-      - name: setup nix cache
-        id: nix-package-cache
-        uses: actions/cache@v4
+          cargo binstall --no-confirm just
+      - name: nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
         with:
-          path: /nix
-          key: /nixpkgs/${{ matrix.nixpkgs }}
+          diff-store: true
+      - name: confirm sources
+        run: ./scripts/confirm-sources.sh
       - name: build
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} build
-      - name: Generate SBOM
-        run: ./scripts/sbom.sh
-      - name: push
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
-      - name: garbage collect
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} nix-garbage-collector
-      - name: clean up symlinks in /tmp/dpdk-sys/builds
+      - name: Install SBOM generator dependencies
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
             [ -h "$f" ] && rm "$f"
           done
+          cargo binstall --no-confirm csview
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends graphviz
+      - name: Generate SBOM
+        run: ./scripts/sbom.sh
+      - name: push
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
+      - name: remove links from /tmp/dpdk-sys/builds
+        run: |
+          for f in /tmp/dpdk-sys/builds/*; do
+              [ -h "$f" ] && rm "$f"
+          done
       - name: step summary
+        continue-on-error: true # might fail due to $GITHUB_STEP_SUMMARY size limit of 1MB
         run: |
           echo "# Outdated packages:" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.outdated.md >> $GITHUB_STEP_SUMMARY
-          
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "# Runtime SBOM (gnu64):" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.runtime.sbom.md >> $GITHUB_STEP_SUMMARY
           
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "# Vuln scan (gnu64):" >> "$GITHUB_STEP_SUMMARY"
@@ -149,13 +155,31 @@ jobs:
           cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.vulns.triage.md >> $GITHUB_STEP_SUMMARY
           
           echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "# Runtime SBOM (gnu64):" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.runtime.sbom.md >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         with:
           name: builds-${{ matrix.toolchain.key }}
           path: /tmp/dpdk-sys/builds
-#      - name: Setup tmate session for debug
-#        if: ${{ failure() }}
-#        uses: mxschmitt/action-tmate@v3
-#        timeout-minutes: 30
-#        with:
-#          limit-access-to-actor: true
+      - name: Setup tmate session for debug
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 30
+        with:
+          limit-access-to-actor: true
+
+  summary:
+    name: summary
+    if: ${{ always() }}
+    runs-on:
+      - lab
+    needs:
+      - run
+    steps:
+      - name: Flag any build matrix failures
+        if: ${{ needs.run.result != 'success' }}
+        run: exit 1

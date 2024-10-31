@@ -10,11 +10,9 @@ declare -r builds="/tmp/dpdk-sys/builds"
 pushd "${builds}"
 declare -r package="env.sysroot"
 
-for libc in "musl64" "gnu64"; do
-  # shellcheck disable=SC2043
-  for profile in "release"; do
-    # shellcheck disable=SC2043
-    for dep_type in "runtime"; do
+for libc in "gnu64" "musl64"; do
+  for profile in "release" "debug"; do
+    for dep_type in "runtime" "buildtime"; do
       # shellcheck disable=SC2046,SC2006
       nix run \
         "${sbomnix}#sbomnix" \
@@ -35,8 +33,6 @@ for libc in "musl64" "gnu64"; do
         --verbose=1 \
         $([ "$dep_type" = "buildtime" ] && echo --buildtime) \
         "${builds}/${package}.${libc}.${profile}"
-      csview --style markdown "${builds}/${package}.${libc}.${profile}.vulns.csv" \
-        > "${builds}/${package}.${libc}.${profile}.vulns.md"
       # shellcheck disable=SC2046,SC2006
       nix run \
         "${sbomnix}#nix_outdated" \
@@ -59,7 +55,7 @@ for libc in "musl64" "gnu64"; do
       "${sbomnix}#nixgraph" \
       -- \
       --out "${builds}/${package}.${libc}.${profile}.${dep_type}.nixgraph.dot" \
-      --depth=10 \
+      --depth=15 \
       --verbose=1 \
       "${builds}/${package}.${libc}.${profile}"
   done
@@ -71,4 +67,5 @@ done
 
 for file in "${builds}/"*.dot; do
   dot -Tsvg "$file" > "${file%.dot}.svg"
+  dot -Gdpi=300 -Tpng "$file" > "${file%.dot}.png"
 done
