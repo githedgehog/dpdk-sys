@@ -102,7 +102,12 @@ _nix_build attribute:
 
 # Build only the sysroot
 [script]
-build-sysroot: (_nix_build "sysroot")
+build-sysroot: \
+  (_nix_build "env.sysroot.gnu64.debug") \
+  (_nix_build "env.sysroot.gnu64.release") \
+  (_nix_build "env.sysroot.musl64.debug") \
+  (_nix_build "env.sysroot.musl64.release") \
+  (_nix_build "sysroot")
   {{_just_debug_}}
 
 # Builds and post processes a container from the nix build
