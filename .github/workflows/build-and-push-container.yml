@@ -85,8 +85,8 @@ jobs:
           
           EOF
 
-  build-on-lab:
-    name: build-containers
+  build-and-push:
+    name: build
     needs: build-matrix
     runs-on:
       - lab
@@ -105,10 +105,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: install just
-        uses: extractions/setup-just@v2
-        with:
-          just-version: ${{ matrix.just }}
+      - uses: "dtolnay/rust-toolchain@stable"
+      - uses: "cargo-bins/cargo-binstall@main"
+      - run: "cargo binstall --no-confirm just"
+      - run: "cargo binstall --no-confirm csview"
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends graphviz
       - name: setup nix cache
         id: nix-package-cache
         uses: actions/cache@v4
@@ -117,7 +120,24 @@ jobs:
           key: /nixpkgs/${{ matrix.nixpkgs }}
       - name: build
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} build
+      - name: Generate SBOM
+        run: ./scripts/sbom.sh
       - name: push
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
       - name: garbage collect
         run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} nix-garbage-collector
+      - name: clean up symlinks in /tmp/dpdk-sys/builds
+        run: |
+          for f in /tmp/dpdk-sys/builds/*; do
+            [ -h "$f" ] && rm "$f"
+          done
+      - name: step summary
+        run: |
+          for f in /tmp/dpdk-sys/builds/*.md; do
+            echo "# $f" >> $GITHUB_STEP_SUMMARY
+            cat "$f" >> $GITHUB_STEP_SUMMARY
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds-"${{ matrix.rust.toolchain  }}"
+          path: /tmp/dpdk-sys/builds
