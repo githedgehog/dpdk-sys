@@ -1,5 +1,6 @@
 name: Build
 on:
+  workflow_dispatch:
   pull_request:
     branches: "*"
   push:
@@ -133,11 +134,28 @@ jobs:
           done
       - name: step summary
         run: |
-          for f in /tmp/dpdk-sys/builds/*.md; do
-            echo "# $f" >> $GITHUB_STEP_SUMMARY
-            cat "$f" >> $GITHUB_STEP_SUMMARY
-          done
+          echo "# Outdated packages:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.outdated.md >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "# Runtime SBOM (gnu64):" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.runtime.sbom.md >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "# Vuln scan (gnu64):" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.vulns.triage.md >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: builds-"${{ matrix.rust.toolchain  }}"
+          name: builds-${{ matrix.toolchain.key }}
           path: /tmp/dpdk-sys/builds
+#      - name: Setup tmate session for debug
+#        if: ${{ failure() }}
+#        uses: mxschmitt/action-tmate@v3
+#        timeout-minutes: 30
+#        with:
+#          limit-access-to-actor: true
