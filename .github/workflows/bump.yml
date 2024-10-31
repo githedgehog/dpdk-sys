@@ -7,11 +7,14 @@
 
 # Production artifacts are produced in a sterile environment (in another CI workflow).
 
-name: bump/versions
+name: "bump/versions"
 on:
   workflow_dispatch:
   schedule:
     - cron: "3 10 * * *"
+  push:
+    branches:
+      - "main"
 
 permissions:
   contents: "write"
