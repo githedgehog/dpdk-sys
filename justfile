@@ -49,7 +49,7 @@ _clean := ```
 # The git commit hash of the last commit to HEAD
 _commit := `git rev-parse HEAD`
 # The git branch we are currnetly on
-_branch := `git rev-parse --abbrev-ref HEAD`
+_branch := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g'`
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 
