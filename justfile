@@ -124,7 +124,7 @@ _build-container target container-name: (_nix_build ("container." + target))
     "{{container-name}}:{{_slug}}-rust-{{rust}}"
   docker tag \
     "{{container-name}}:{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
+    "{{container-name}}:{{_commit}}-rust-{{rust}}"
   docker build \
     --label "git.commit={{_commit}}" \
     --label "git.branch={{_branch}}" \
@@ -163,13 +163,7 @@ _build-container target container-name: (_nix_build ("container." + target))
     "{{container-name}}:{{_slug}}-rust-{{rust}}"
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
-  docker tag \
-    "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
-  docker tag \
-    "{{container-name}}:post-{{_build-id}}" \
-    "{{container-name}}:{{rust}}-{{_commit}}"
+    "{{container-name}}:{{_commit}}-rust-{{rust}}"
   docker rmi "{{container-name}}:{{_build-id}}"
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
@@ -189,19 +183,12 @@ build: build-sysroot build-compile-env-container build-dev-env-container build-d
 [script]
 push: build
   {{_just_debug_}}
-  declare build_date
-  build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
-  declare -r build_date
-  docker push "{{_compile_env_container_name}}:rust-{{rust}}-{{_commit}}"
   docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}"
-  docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
-  docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_compile_env_container_name}}:{{_commit}}-rust-{{rust}}"
   docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}"
-  docker push "{{_dev_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
-  docker push "{{_dev_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_dev_env_container_name}}:{{_commit}}-rust-{{rust}}"
   docker push "{{_doc_env_container_name}}:{{_slug}}-rust-{{rust}}"
-  docker push "{{_doc_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
-  docker push "{{_doc_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker push "{{_doc_env_container_name}}:{{_commit}}-rust-{{rust}}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
