@@ -10,6 +10,11 @@
 name: "bump"
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        type: "string"
+        default: "main"
+        description: "which branch to bump"
   schedule:
     - cron: "3 10 * * *"
   push:
@@ -36,8 +41,8 @@ jobs:
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v7"
         with:
-          branch: "bump/versions"
-          title: "bump"
+          branch: "bump/${{ github.event.inputs.branch }}"
+          title: "bump/${{ github.event.inputs.branch }}"
           labels: |
             automated
             dependencies
