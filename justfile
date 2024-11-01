@@ -167,6 +167,9 @@ _build-container target container-name: (_nix_build ("container." + target))
   docker tag \
     "{{container-name}}:post-{{_build-id}}" \
     "{{container-name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
+  docker tag \
+    "{{container-name}}:post-{{_build-id}}" \
+    "{{container-name}}:{{rust}}-{{_commit}}"
   docker rmi "{{container-name}}:{{_build-id}}"
   docker rmi "{{container-name}}:post-{{_build-id}}"
 
@@ -189,6 +192,7 @@ push: build
   declare build_date
   build_date="$(date --utc --iso-8601=date --date="{{_build_time}}")"
   declare -r build_date
+  docker push "{{_compile_env_container_name}}:rust-{{rust}}-{{_commit}}"
   docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}"
   docker push "{{_compile_env_container_name}}:{{_slug}}-rust-{{rust}}-{{_commit}}"
   docker push "{{_compile_env_container_name}}:${build_date}-{{_slug}}-rust-{{rust}}-{{_commit}}"
