@@ -5,15 +5,14 @@ on:
       debug_enabled:
         type: boolean
         description: "Run the build with tmate debugging enabled"
+  merge_group:
   pull_request:
-    branches: "*"
   push:
     branches:
       - "main"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'main' }}
+  group: ${{ github.workflow }}
 
 jobs:
   matrix:
