@@ -5,7 +5,7 @@
 env:
   rust_pins:
     stable: &rust_stable "1.82.0"
-    nightly: &nightly_pin "2024-10-30"
+    nightly: &nightly_pin "2024-10-31"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
     nightly: &llvm_nightly "19"
@@ -15,8 +15,6 @@ env:
     version: &just_version "1.36.0"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
-  nixpkgs:
-    - *nixpkgs_unstable
   toolchain:
     - # pinned stable
       &default
@@ -40,3 +38,5 @@ matrix:
       rust:
         channel: "nightly"
         version: *nightly_pin
+  nixpkgs:
+    - *nixpkgs_unstable
