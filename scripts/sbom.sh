@@ -19,35 +19,37 @@ for libc in "gnu64" "musl64"; do
     --spdx "${builds}/${package}.${libc}.sbom.spdx.json" \
     --verbose=1 \
     --include-vulns \
-    "${builds}/${package}.${libc}.release"
+    "${builds}/${package}.${libc}.release" &
   nix run \
     "${sbomnix}#vulnxscan" \
     -- \
     --out "${builds}/${package}.${libc}.vulns.csv" \
     --triage \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release"
+    "${builds}/${package}.${libc}.release" &
   nix run \
     "${sbomnix}#nix_outdated" \
     -- \
     --out "${builds}/${package}.${libc}.outdated.csv" \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release"
+    "${builds}/${package}.${libc}.release" &
   nix run \
     "${sbomnix}#provenance" \
     -- \
     --out "${builds}/${package}.${libc}.provenance.json" \
     --verbose=1 \
     --recursive \
-    "${builds}/${package}.${libc}.release"
+    "${builds}/${package}.${libc}.release" &
   nix run \
     "${sbomnix}#nixgraph" \
     -- \
     --out "${builds}/${package}.${libc}.nixgraph.dot" \
     --depth=15 \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release"
+    "${builds}/${package}.${libc}.release" &
 done
+
+wait
 
 for file in "${builds}/"*.csv; do
   csview --style markdown "$file" > "${file%.csv}.md"
