@@ -15,6 +15,7 @@ on:
         type: "string"
         default: "main"
         description: "which branch to bump"
+        required: true
   schedule:
     - cron: "3 10 * * *"
   push:
@@ -32,6 +33,8 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
+        with:
+          ref: "${{ github.event.inputs.branch || 'main' }}"
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
       - run: "cargo binstall --no-confirm just"
@@ -41,8 +44,8 @@ jobs:
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v7"
         with:
-          branch: "bump/${{ github.event.inputs.branch }}"
-          title: "bump/${{ github.event.inputs.branch }}"
+          branch: "bump/${{ github.event.inputs.branch || 'main' }}"
+          title: "bump/${{ github.event.inputs.branch || 'main' }}"
           labels: |
             automated
             dependencies
