@@ -35,14 +35,14 @@
       channel = "stable";
       version = "1.82.0";
       llvm = "19";
-      profile = "minimal";
+      profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };
     nightly = {
       channel = "nightly";
-      version = "2024-11-01";
+      version = "2024-11-02";
       llvm = "19";
-      profile = "minimal";
+      profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };
   };

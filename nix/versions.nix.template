@@ -35,14 +35,14 @@
       channel = "stable";
       version = "$RUST_STABLE_PIN";
       llvm = "$RUST_STABLE_PIN_LLVM";
-      profile = "minimal";
+      profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };
     nightly = {
       channel = "nightly";
       version = "$RUST_NIGHTLY_PIN";
       llvm = "$RUST_NIGHTLY_PIN_LLVM";
-      profile = "minimal";
+      profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
     };
   };
