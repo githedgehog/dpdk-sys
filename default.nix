@@ -212,6 +212,13 @@
 
   rust-toolchain = with rust-version;
     (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
+      extensions = [
+        "cargo"
+        "clippy"
+        "rust-src"
+        "rust-std"
+        "rustfmt"
+      ];
       targets = targets;
     });
 
