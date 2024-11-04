@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec /lib/openjdk/bin/java -jar /lib/plantuml.jar "$@"
