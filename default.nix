@@ -245,6 +245,7 @@
     mdbook-katex
     mdbook-mermaid
     mdbook-plantuml
+    openjdk # needed for mdbook-plantuml to work (runtime exe dep)
     plantuml # needed for mdbook-plantuml to work (runtime exe dep)
     tmpdir
   ]);
