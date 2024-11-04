@@ -240,6 +240,7 @@
 
   docEnvPackageList = (with toolchainPkgs; [
     (callPackage ./nix/mdbook-alerts {})
+    (callPackage ./nix/plantuml-wrapper {})
     bash
     coreutils
     mdbook
