@@ -240,6 +240,7 @@
 
   docEnvPackageList = (with toolchainPkgs; [
     (callPackage ./nix/mdbook-alerts {})
+    bash
     coreutils
     mdbook
     mdbook-katex
