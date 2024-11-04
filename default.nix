@@ -227,15 +227,16 @@
   # We can just add bash to the complete environment at the end
   compileEnvPackageList = (with toolchainPkgs; [
     cacert
+    cargo-nextest
     coreutils
     glibc.static # for linking the tests
     just
+    libz
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
     rust-toolchain
     sysroot
-    cargo-nextest
   ]);
 
   docEnvPackageList = (with toolchainPkgs; [
