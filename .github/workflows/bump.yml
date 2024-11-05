@@ -11,7 +11,7 @@ name: "bump"
 on:
   workflow_dispatch:
     inputs:
-      branch:
+      dpdk_sys_branch:
         type: "string"
         default: "main"
         description: "which branch to bump"
@@ -21,6 +21,9 @@ on:
   push:
     branches:
       - "main"
+
+env:
+  dpdk_sys_branch: ${{ github.event.inputs.dpdk_sys_branch || 'main' }}
 
 permissions:
   contents: "write"
@@ -34,18 +37,21 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v4"
         with:
-          ref: "${{ github.event.inputs.branch || 'main' }}"
+          ref: "${{ env.dpdk_sys_branch }}"
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
-      - run: "cargo binstall --no-confirm just"
+      - run: |
+          cargo binstall --no-confirm just
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
-      - run: "./scripts/update-version-pinning.sh"
+      - name: "bump"
+        run: |
+          just dpdk_sys_branch="${{ env.dpdk_sys_branch }}" bump
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v7"
         with:
-          branch: "bump/${{ github.event.inputs.branch || 'main' }}"
-          title: "bump/${{ github.event.inputs.branch || 'main' }}"
+          branch: "bump/${{ env.dpdk_sys_branch }}"
+          title: "bump/${{ env.dpdk_sys_branch }}"
           labels: |
             automated
             dependencies
