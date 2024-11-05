@@ -118,8 +118,6 @@ jobs:
           cargo binstall --no-confirm just
       - name: nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
-        with:
-          diff-store: true
       - name: confirm sources
         run: ./scripts/confirm-sources.sh
       - name: build + push
