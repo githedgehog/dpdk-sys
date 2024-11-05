@@ -4,7 +4,7 @@ set -euxo pipefail
 
 declare -r sbomnix="github:tiiuae/sbomnix"
 
-#just build-sysroot
+just build-sysroot
 
 declare -r builds="/tmp/dpdk-sys/builds"
 pushd "${builds}"
@@ -13,6 +13,7 @@ declare -r package="env.sysroot"
 nix build "${sbomnix}" --out-link /tmp/sbomnix
 
 for libc in "gnu64" "musl64"; do
+  cd "$(mktemp -d)"
   nix run \
     "${sbomnix}#sbomnix" \
     -- \
@@ -22,6 +23,7 @@ for libc in "gnu64" "musl64"; do
     --verbose=1 \
     --include-vulns \
     "${builds}/${package}.${libc}.release" &
+  cd "$(mktemp -d)"
   nix run \
     "${sbomnix}#vulnxscan" \
     -- \
@@ -29,12 +31,14 @@ for libc in "gnu64" "musl64"; do
     --triage \
     --verbose=1 \
     "${builds}/${package}.${libc}.release" &
+  cd "$(mktemp -d)"
   nix run \
     "${sbomnix}#nix_outdated" \
     -- \
     --out "${builds}/${package}.${libc}.outdated.csv" \
     --verbose=1 \
     "${builds}/${package}.${libc}.release" &
+  cd "$(mktemp -d)"
   nix run \
     "${sbomnix}#provenance" \
     -- \
@@ -42,6 +46,7 @@ for libc in "gnu64" "musl64"; do
     --verbose=1 \
     --recursive \
     "${builds}/${package}.${libc}.release" &
+  cd "$(mktemp -d)"
   nix run \
     "${sbomnix}#nixgraph" \
     -- \

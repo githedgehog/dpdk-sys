@@ -31,12 +31,12 @@ matrix:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
       just: *just_version
-    - # pinned nightly
-      <<: *default
-      key: "nightly"
-      llvm: *llvm_nightly
-      rust:
-        channel: "nightly"
-        version: *nightly_pin
+    # - # pinned nightly
+    #   <<: *default
+    #   key: "nightly"
+    #   llvm: *llvm_nightly
+    #   rust:
+    #     channel: "nightly"
+    #     version: *nightly_pin
   nixpkgs:
     - *nixpkgs_unstable
