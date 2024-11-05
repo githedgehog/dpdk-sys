@@ -122,8 +122,8 @@ jobs:
           diff-store: true
       - name: confirm sources
         run: ./scripts/confirm-sources.sh
-      - name: build
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} build
+      - name: build + push
+        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
       - name: Install SBOM generator dependencies
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
@@ -134,32 +134,29 @@ jobs:
           sudo apt-get install --yes --no-install-recommends graphviz
       - name: Generate SBOM
         run: ./scripts/sbom.sh
-      - name: push
-        run: just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
-      - name: remove links from /tmp/dpdk-sys/builds
-        run: |
-          for f in /tmp/dpdk-sys/builds/*; do
-              [ -h "$f" ] && rm "$f"
-          done
       - name: step summary
         continue-on-error: true # might fail due to $GITHUB_STEP_SUMMARY size limit of 1MB
         run: |
           echo "# Outdated packages:" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.outdated.md >> $GITHUB_STEP_SUMMARY
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.outdated.md >> $GITHUB_STEP_SUMMARY
           
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "# Vuln scan (gnu64):" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.vulns.triage.md >> $GITHUB_STEP_SUMMARY
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.vulns.triage.md >> $GITHUB_STEP_SUMMARY
           
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "# Runtime SBOM (gnu64):" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.release.runtime.sbom.md >> $GITHUB_STEP_SUMMARY
+          cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.sbom.md >> $GITHUB_STEP_SUMMARY
           
           echo "" >> "$GITHUB_STEP_SUMMARY"
-
+      - name: remove links from /tmp/dpdk-sys/builds
+        run: |
+          for f in /tmp/dpdk-sys/builds/*; do
+              [ -h "$f" ] && rm "$f"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: builds-${{ matrix.toolchain.key }}

@@ -4,11 +4,13 @@ set -euxo pipefail
 
 declare -r sbomnix="github:tiiuae/sbomnix"
 
-just build-sysroot
+#just build-sysroot
 
 declare -r builds="/tmp/dpdk-sys/builds"
 pushd "${builds}"
 declare -r package="env.sysroot"
+
+nix build "${sbomnix}" --out-link /tmp/sbomnix
 
 for libc in "gnu64" "musl64"; do
   nix run \
