@@ -118,26 +118,35 @@ jobs:
       id-token: "write"
     steps:
       - uses: "actions/checkout@v4"
+
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
+
       - name: "login to ghcr.io"
         uses: "docker/login-action@v3"
         with:
           registry: "ghcr.io"
           username: "${{ github.actor }}"
           password: "${{ secrets.GITHUB_TOKEN }}"
+
       - uses: "dtolnay/rust-toolchain@stable"
+
       - uses: "cargo-bins/cargo-binstall@main"
+
       - run: |
           cargo binstall --no-confirm just
+
       - name: "nix cache"
         uses: "DeterminateSystems/magic-nix-cache-action@main"
+
       - name: "confirm sources"
         run: |
           ./scripts/confirm-sources.sh
+
       - name: "build + push"
         run: |
           just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
+
       - name: "Install SBOM generator dependencies"
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
@@ -146,50 +155,26 @@ jobs:
           cargo binstall --no-confirm csview
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends graphviz
+
       - name: "Generate SBOM"
         run: |
           ./scripts/sbom.sh
-      - name: "SBOM upload"
-        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: "advanced-security/spdx-dependency-submission-action@v0.1.1"
-        with:
-          filePattern: '/tmp/dpdk-sys/builds/*.spdx.json'
+
       - name: "step summary"
         continue-on-error: true # might fail due to $GITHUB_STEP_SUMMARY size limit of 1MB
         run: |
-          {
-            echo "# Outdated packages (gnu64):";
-            echo "";
-            cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.outdated.md;
-            echo "";
-            echo "# Outdated packages (musl64):";
-            echo "";
-            cat /tmp/dpdk-sys/builds/env.sysroot.musl64.outdated.md;
-            echo "";
-            echo "# Vuln scan (gnu64):";
-            echo "";
-            cat /tmp/dpdk-sys/builds/env.sysroot.gnu64.vulns.triage.md;
-            echo "";
-            echo "# Vuln scan (musl64):";
-            echo "";
-            cat /tmp/dpdk-sys/builds/env.sysroot.musl64.vulns.triage.md;
-            echo "";
-          } >> $GITHUB_STEP_SUMMARY
+          cat "/tmp/dpdk-sys/builds/env.sysroot.summary.md" >> "${GITHUB_STEP_SUMMARY}"
+
       - name: "remove links from /tmp/dpdk-sys/builds"
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
               [ -h "$f" ] && rm "$f"
           done
+
       - uses: "actions/upload-artifact@v4"
         with:
           name: "builds-${{ matrix.toolchain.key }}"
           path: "/tmp/dpdk-sys/builds"
-      - name: "Setup tmate session for debug"
-        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        uses: "mxschmitt/action-tmate@v3"
-        timeout-minutes: 60
-        with:
-          limit-access-to-actor: true
 
       - name: "outdated packages (gnu64)"
         uses: "actions/github-script@v7"
@@ -199,8 +184,12 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
             let fs = require('fs');
-            let body = "# Outdated packages (gnu64):\n";
+            let body = "<details>\n";
+            body += "<summary>\n\n";
+            body += "## Outdated packages (gnu64):\n\n";
+            body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.gnu64.outdated.md');
+            body += "\n</details>\n";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -216,8 +205,12 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
             let fs = require('fs');
-            let body = "# Outdated packages (musl64):\n";
+            let body = "<details>\n";
+            body += "<summary>\n\n";
+            body = "## Outdated packages (musl64):\n";
+            body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.outdated.md');
+            body += "\n</details>\n";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -233,8 +226,12 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
             let fs = require('fs');
-            let body = "# Vulnerable packages (gnu64):\n";
+            let body = "<details>\n";
+            body += "<summary>\n\n";
+            body = "## Vulnerable packages (gnu64):\n";
+            body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.gnu64.vulns.triage.md');
+            body += "\n</details>\n";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -250,14 +247,26 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
             let fs = require('fs');
-            let body = "# Vulnerable packages (musl64):\n";
+            let body = "<details>\n";
+            body += "<summary>\n\n";
+            body = "## Vulnerable packages (musl64):\n";
+            body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.vulns.triage.md');
+            body += "\n</details>\n";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: body
             });
+
+      - name: "Setup tmate session for debug"
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: "mxschmitt/action-tmate@v3"
+        timeout-minutes: 60
+        with:
+          limit-access-to-actor: true
+
 
   summary:
     name: "summary"

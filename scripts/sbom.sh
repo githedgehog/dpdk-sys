@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
 declare -r sbomnix="github:tiiuae/sbomnix"
 
@@ -12,8 +12,20 @@ declare -r package="env.sysroot"
 
 nix build "${sbomnix}" --out-link /tmp/sbomnix
 
+declare -a cleanup_cmds=()
+cleanup() {
+  declare cmd
+  for cmd in "${cleanup_cmds[@]}"; do
+    ${cmd}
+  done
+}
+trap cleanup EXIT
+
+declare summary="${builds}/${package}.summary.md"
+truncate --size 0 "${summary}"
+
 for libc in "gnu64" "musl64"; do
-  cd "$(mktemp -d)"
+  pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#sbomnix" \
     -- \
@@ -22,47 +34,80 @@ for libc in "gnu64" "musl64"; do
     --spdx "${builds}/${package}.${libc}.sbom.spdx.json" \
     --verbose=1 \
     --include-vulns \
-    "${builds}/${package}.${libc}.release" &
-  cd "$(mktemp -d)"
+    "${builds}/${package}.${libc}.release"
+  pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#vulnxscan" \
     -- \
     --out "${builds}/${package}.${libc}.vulns.csv" \
     --triage \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release" &
-  cd "$(mktemp -d)"
+    "${builds}/${package}.${libc}.release"
+  pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#nix_outdated" \
     -- \
     --out "${builds}/${package}.${libc}.outdated.csv" \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release" &
-  cd "$(mktemp -d)"
+    "${builds}/${package}.${libc}.release"
+  pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#provenance" \
     -- \
     --out "${builds}/${package}.${libc}.provenance.json" \
     --verbose=1 \
     --recursive \
-    "${builds}/${package}.${libc}.release" &
-  cd "$(mktemp -d)"
+    "${builds}/${package}.${libc}.release"
+  pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#nixgraph" \
     -- \
     --out "${builds}/${package}.${libc}.nixgraph.dot" \
-    --depth=15 \
+    --depth=99 \
     --verbose=1 \
-    "${builds}/${package}.${libc}.release" &
-done
+    "${builds}/${package}.${libc}.release"
 
-wait
+  for file in "${builds}/${package}.${libc}."*".csv"; do
+    csview --style markdown "$file" > "${file%.csv}.md"
+  done
 
-for file in "${builds}/"*.csv; do
-  csview --style markdown "$file" > "${file%.csv}.md"
-done
+  for file in "${builds}/${package}.${libc}."*".dot"; do
+    dot -Tsvg "$file" > "${file%.dot}.svg"
+  done
 
-for file in "${builds}/"*.dot; do
-  dot -Tsvg "$file" > "${file%.dot}.svg"
-  dot -Gdpi=300 -Tpng "$file" > "${file%.dot}.png"
+  {
+    echo "<details>";
+    echo "<summary>";
+    echo "";
+    echo "## Vuln scan (${libc}):";
+    echo "";
+    echo "</summary>";
+    echo "";
+    cat ${builds}/${package}.${libc}.vulns.triage.md;
+    echo "";
+    echo "</details>";
+    echo "";
+    echo "<details>";
+    echo "<summary>";
+    echo "";
+    echo "## Outdated packages (${libc}):";
+    echo "";
+    echo "</summary>";
+    echo "";
+    cat ${builds}/${package}.${libc}.outdated.md;
+    echo "";
+    echo "</details>";
+    echo "";
+    echo "<details>";
+    echo "<summary>";
+    echo "";
+    echo "## SBOM (${libc}):";
+    echo "";
+    echo "</summary>";
+    echo "";
+    cat ${builds}/${package}.${libc}.sbom.md;
+    echo "";
+    echo "</details>";
+    echo "";
+  } >> "${summary}"
 done
