@@ -238,18 +238,18 @@
     cargo-nextest
   ]);
 
-  docEnvPackageList = (with toolchainPkgs; [
+  docEnvPackageList = [tmpdir] ++ (with toolchainPkgs; [
     (callPackage ./nix/mdbook-alerts {})
     (callPackage ./nix/plantuml-wrapper {})
     bash
     coreutils
+    graphviz # needed for mdbook-plantuml to work (runtime exe dep)
     mdbook
     mdbook-katex
     mdbook-mermaid
     mdbook-plantuml
     openjdk # needed for mdbook-plantuml to work (runtime exe dep)
     plantuml # needed for mdbook-plantuml to work (runtime exe dep)
-    tmpdir
   ]);
 
   devEnvPackageList = compileEnvPackageList ++ docEnvPackageList ++ [ tmpdir usr shell-fixup ]
