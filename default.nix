@@ -377,7 +377,7 @@
 
   shell-fixup = toolchainPkgs.callPackage ./nix/shell-fixup {};
 
-  maxLayers = 110;
+  maxLayers = 120;
 
   container = {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
