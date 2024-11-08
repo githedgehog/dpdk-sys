@@ -7,7 +7,7 @@
 
 # Production artifacts are produced in a sterile environment (in another CI workflow).
 
-name: "bump"
+name: "bump.yml"
 on:
   workflow_dispatch:
     inputs:
