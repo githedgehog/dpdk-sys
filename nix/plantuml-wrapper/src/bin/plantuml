@@ -1,3 +1,4 @@
 #!/bin/bash
 
+export GRAPHVIZ_DOT=/bin/dot
 exec /lib/openjdk/bin/java -jar /lib/plantuml.jar "$@"
