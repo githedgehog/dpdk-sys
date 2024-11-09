@@ -11,9 +11,9 @@ on:
     branches:
       - "main"
 
-#concurrency:
-#  group: "${{ github.workflow }}"
-#  cancel-in-progress: true
+concurrency:
+  group: "${{ github.workflow }}:${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   matrix:
@@ -49,57 +49,7 @@ jobs:
           | tee -a "${GITHUB_OUTPUT}"
       - name: "report build plan"
         run: |
-          cat >> "${GITHUB_STEP_SUMMARY}" <<EOF
-          # Action plan
-          
-          ## Build matrix
-          
-          \`\`\`yml
-          $(yq --yaml-output '.matrix' builds.yml)
-          \`\`\`
-          
-          ## Raw build flags file
-          
-          \`\`\`yml
-          $(< ./nix/flags.nix)
-          \`\`\`
-          
-          ## Build versions
-          
-          ### env
-          
-          \`\`\`yml
-          $(yq --yaml-output '.env' builds.yml)
-          \`\`\`
-          
-          <details>
-          <summary>
-
-          ## Raw \`builds.yml\` file
-
-          </summary>
-          
-          \`\`\`yml
-          $(< builds.yml)
-          \`\`\`
-          
-          </details>
-          
-          <details>
-          <summary>
-          
-          ## Raw \`versions.nix\` file
-          
-          </summary>
-          
-          \`\`\`nix
-          $(< nix/versions.nix)
-          \`\`\`
-          
-          </details>
-          
-          EOF
-
+          ./scripts/plan.sh "${GITHUB_STEP_SUMMARY}"
   run:
     name: "run"
     needs:
@@ -108,13 +58,13 @@ jobs:
       - "lab"
     timeout-minutes: 300
     strategy:
-      max-parallel: 3
+      max-parallel: 2
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     permissions:
       issues: "write"
       pull-requests: "write"
       packages: "write"
-      contents: "write"
+      contents: "read"
       id-token: "write"
     steps:
       - uses: "actions/checkout@v4"
@@ -145,7 +95,7 @@ jobs:
 
       - name: "build + push"
         run: |
-          just --yes debug=true max_nix_builds=1 rust=${{matrix.toolchain.key}} push
+          just --yes debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
 
       - name: "Install SBOM generator dependencies"
         run: |
@@ -156,7 +106,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends graphviz
 
-      - name: "Generate SBOM"
+      - name: "generate SBOM"
         run: |
           ./scripts/sbom.sh
 
@@ -179,7 +129,6 @@ jobs:
       - name: "outdated packages (gnu64)"
         uses: "actions/github-script@v7"
         if: ${{ github.event_name == 'pull_request' }}
-        continue-on-error: true
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
@@ -190,6 +139,11 @@ jobs:
             body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.gnu64.outdated.md');
             body += "\n</details>\n";
+            const maxLength = 65535;
+            if (body.length > maxLength) {
+              const warning = "\n...output truncated due to length limits...\n";
+              body = body.slice(0, maxLength - warning.length) + warning;
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -200,7 +154,6 @@ jobs:
       - name: "outdated packages (musl64)"
         uses: "actions/github-script@v7"
         if: ${{ github.event_name == 'pull_request' }}
-        continue-on-error: true
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
@@ -211,6 +164,11 @@ jobs:
             body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.outdated.md');
             body += "\n</details>\n";
+            const maxLength = 65535;
+            if (body.length > maxLength) {
+              const warning = "\n...output truncated due to length limits...\n";
+              body = body.slice(0, maxLength - warning.length) + warning;
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -221,7 +179,6 @@ jobs:
       - name: "Vulnerable packages (gnu64)"
         uses: "actions/github-script@v7"
         if: ${{ github.event_name == 'pull_request' }}
-        continue-on-error: true
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
@@ -232,6 +189,11 @@ jobs:
             body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.gnu64.vulns.triage.md');
             body += "\n</details>\n";
+            const maxLength = 65535;
+            if (body.length > maxLength) {
+              const warning = "\n...output truncated due to length limits...\n";
+              body = body.slice(0, maxLength - warning.length) + warning;
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -242,7 +204,6 @@ jobs:
       - name: "Vulnerable packages (musl64)"
         uses: "actions/github-script@v7"
         if: ${{ github.event_name == 'pull_request' }}
-        continue-on-error: true
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
@@ -253,6 +214,11 @@ jobs:
             body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.vulns.triage.md');
             body += "\n</details>\n";
+            const maxLength = 65535;
+            if (body.length > maxLength) {
+              const warning = "\n...output truncated due to length limits...\n";
+              body = body.slice(0, maxLength - warning.length) + warning;
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
