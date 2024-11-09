@@ -212,14 +212,7 @@
 
   rust-toolchain = with rust-version;
     (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
-      extensions = [
-        "cargo"
-        "clippy"
-        "rust-src"
-        "rust-std"
-        "rustfmt"
-      ];
-      targets = targets;
+      inherit targets extensions;
     });
 
   # Don't add in a shell here or it may override the shell in the

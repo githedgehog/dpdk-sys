@@ -5,10 +5,8 @@
 env:
   rust_pins:
     stable: &rust_stable "1.82.0"
-    nightly: &nightly_pin "2024-11-07"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
-    nightly: &llvm_nightly "19"
   nixpkgs:
     unstable: &nixpkgs_unstable "85f7e662eda4fa3a995556527c87b2524b691933"
   just:
@@ -31,12 +29,5 @@ matrix:
           - "x86_64-unknown-linux-gnu"
           - "x86_64-unknown-linux-musl"
       just: *just_version
-    - # pinned nightly
-      <<: *default
-      key: "nightly"
-      llvm: *llvm_nightly
-      rust:
-        channel: "nightly"
-        version: *nightly_pin
   nixpkgs:
     - *nixpkgs_unstable

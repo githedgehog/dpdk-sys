@@ -37,13 +37,13 @@
       llvm = "19";
       profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
-    nightly = {
-      channel = "nightly";
-      version = "2024-11-07";
-      llvm = "19";
-      profile = "default";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+      extensions = [
+        "cargo"
+        "clippy"
+        "rust-src"
+        "rust-std"
+        "rustfmt"
+      ];
     };
   };
 }

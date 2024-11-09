@@ -99,18 +99,13 @@ pushd "${project_dir}"
 
 rustup update
 rustup toolchain install "stable"
-rustup toolchain install "nightly"
 rustup update
 
-declare RUST_STABLE_PIN RUST_NIGHTLY_PIN RUST_STABLE_PIN_LLVM RUST_NIGHTLY_PIN_LLVM
+declare RUST_STABLE_PIN RUST_STABLE_PIN_LLVM
 RUST_STABLE_PIN="$(rustc "+stable" -vV | grep 'release:' | awk '{print $NF}')"
-RUST_NIGHTLY_PIN="$(rustc "+nightly" -vV | grep 'commit-date:' | awk '{print $NF}')"
 RUST_STABLE_PIN_LLVM="$(rustc "+stable" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
-RUST_NIGHTLY_PIN_LLVM="$(rustc "+nightly" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
 declare -rx RUST_STABLE_PIN
-declare -rx RUST_NIGHTLY_PIN
 declare -rx RUST_STABLE_PIN_LLVM
-declare -rx RUST_NIGHTLY_PIN_LLVM
 
 declare JUST_STABLE_PIN
 JUST_STABLE_PIN="$(just --version | grep '^just ' | awk '{print $NF}')"

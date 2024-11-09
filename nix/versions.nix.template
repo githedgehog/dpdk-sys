@@ -37,13 +37,13 @@
       llvm = "$RUST_STABLE_PIN_LLVM";
       profile = "default";
       targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
-    };
-    nightly = {
-      channel = "nightly";
-      version = "$RUST_NIGHTLY_PIN";
-      llvm = "$RUST_NIGHTLY_PIN_LLVM";
-      profile = "default";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+      extensions = [
+        "cargo"
+        "clippy"
+        "rust-src"
+        "rust-std"
+        "rustfmt"
+      ];
     };
   };
 }
