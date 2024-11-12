@@ -162,6 +162,7 @@ _build-container target container-name: (_nix_build ("container." + target))
       --label "versions.json=$(nix eval --json -f '{{ versions }}')" \
       --build-arg IMAGE="{{ container-name }}:{{ _build-id }}" \
       --tag "{{ container-name }}:post-{{ _build-id }}" \
+      --target {{ target }} \
       -f Dockerfile \
       .
     docker tag \
