@@ -4,8 +4,8 @@
   rust-version = versions.rust.${rust-channel};
   llvm-version = rust-version.llvm;
   llvm-overlay = self: super: rec {
-    llvmPackagesVersion = "llvmPackages_${llvm-version}";
     llvmPackages = super.${llvmPackagesVersion};
+    llvmPackagesVersion = "llvmPackages_${llvm-version}";
   };
   rust-overlay = (import (builtins.fetchTarball
     "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"));
@@ -18,7 +18,6 @@
       rust-overlay
     ];
   };
-
 
   project-name = "dpdk-sys";
   crossOverlay = { build-flags, crossEnv }:
@@ -66,9 +65,29 @@
       fatLto = pkg:
         pkg.overrideAttrs
         (orig: { CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects"; });
+
+      at-spi2-atk = null; # no users in container
+      at-spi2-core = null; # no users in container
+      dbus = super.dbus.override { enableSystemd = false; };
+      libusb = null;
+      libusb1 = null;
+      gtk3 = null;
+      tinysparql = null;
+      systemd = null;
+      systemdLibs = null;
+      systemdMinimal = null;
+      util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs
         (orig: {
-          cmakeFlags = orig.cmakeFlags ++ [ "-DENABLE_STATIC=1" ];
+          outputs = [ "out" "dev" ];
+          perl = null;
+          cmakeFlags = orig.cmakeFlags ++ [
+            "-DENABLE_STATIC=1"
+            "-DNO_PYVERBS=1"
+            "-DNO_MAN_PAGES=1"
+            "-DIOCTL_MODE=write"
+            "-DNO_COMPAT_SYMS=1"
+          ];
           patches = (orig.patches or []) ++ (if crossEnv == "musl64" then [] else [(super.fetchpatch {
             # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortifying
             # this function with clang.
@@ -121,14 +140,14 @@
       }));
     };
 
-  pkgs.debug = (import toolchainPkgs.path {
+  pkgs.dev = (import toolchainPkgs.path {
     overlays = [
       (self: prev: {
         pkgsCross.gnu64 = import prev.path {
           overlays = [
             llvm-overlay
             (crossOverlay {
-              build-flags = build-flags.debug;
+              build-flags = build-flags.dev;
               crossEnv = "gnu64";
             })
           ];
@@ -137,7 +156,7 @@
           overlays = [
             llvm-overlay
             (crossOverlay {
-              build-flags = build-flags.debug;
+              build-flags = build-flags.dev;
               crossEnv = "musl64";
             })
           ];
@@ -171,7 +190,7 @@
     ];
   }).pkgsCross;
 
-  sysrootPackageListFn = crossEnv: pkgs:
+  sysrootPackageListFn = libc: pkgs:
     with pkgs;
     ([
       customLibbsd
@@ -185,15 +204,14 @@
       libpcap
       numactl
       rdma-core
-    ] ++ (if crossEnv == "gnu64" then [
+    ] ++ (if libc == "gnu64" then [
       glibc
       glibc.out
       libgcc.libgcc
       glibc.dev
       glibc.static
     ] else
-      [ ]) ++ (if crossEnv == "musl64" then [
-        mimalloc
+      [ ]) ++ (if libc == "musl64" then [
         musl.out
         musl.dev
       ] else
@@ -201,11 +219,11 @@
 
   sysrootPackageList = {
     gnu64 = {
-      debug = sysrootPackageListFn "gnu64" pkgs.debug.gnu64;
+      dev = sysrootPackageListFn "gnu64" pkgs.dev.gnu64;
       release = sysrootPackageListFn "gnu64" pkgs.release.gnu64;
     };
     musl64 = {
-      debug = sysrootPackageListFn "musl64" pkgs.debug.musl64;
+      dev = sysrootPackageListFn "musl64" pkgs.dev.musl64;
       release = sysrootPackageListFn "musl64" pkgs.release.musl64;
     };
   };
@@ -215,21 +233,21 @@
       inherit targets extensions;
     });
 
-  # Don't add in a shell here or it may override the shell in the
-  # dev-env container
-  # We can just add bash to the complete environment at the end
-  compileEnvPackageList = (with toolchainPkgs; [
+  compileEnvPackageList = with toolchainPkgs; [
+    (toolchainPkgs.callPackage ./nix/shell-fixup {})
+    bash-completion
+    bashInteractive
     cacert
+    cargo-nextest
     coreutils
-    glibc.static # for linking the tests
     just
+    libcap # for test runner
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
     rust-toolchain
-    sysroot
-    cargo-nextest
-  ]);
+    sudo # for test runner
+  ];
 
   docEnvPackageList = [tmpdir] ++ (with toolchainPkgs; [
     (callPackage ./nix/mdbook-alerts {})
@@ -245,77 +263,22 @@
     plantuml # needed for mdbook-plantuml to work (runtime exe dep)
   ]);
 
-  devEnvPackageList = compileEnvPackageList ++ docEnvPackageList ++ [ tmpdir usr shell-fixup ]
-    ++ (with toolchainPkgs; [
-      bash-completion
-      bashInteractive
-      cacert
-      coreutils
-      curl
-      docker-client
-      ethtool
-      findutils
-      freetype # for jetbrains
-      gawk
-      gdb
-      gettext # for envsubst
-      git
-      glibc
-      glibc.bin # for ldd
-      gnugrep
-      gnused
-      gnutar
-      gzip
-      htop
-      hwloc
-      iproute2
-      jq
-      just
-      less
-      libcap
-      llvmPackages.bintools-unwrapped
-      llvmPackages.clang
-      llvmPackages.libclang.lib
-      llvmPackages.lld
-      llvmPackages.lldb
-      numactl
-      openssh # for git
-      openssl.all # for git
-      pam.out # for sudo
-      pciutils
-      pcre.out # for jetbrains
-      pcre2.out # for jetbrains
-      procps # for jetbrains
-      ps # for jetbrains
-      stdenv.cc.cc.lib # for github ci
-      strace
-      sudo
-      unzip # for jetbrains
-      util-linux
-      vim
-      wget
-      xorg.libXext # for jetbrains
-      xorg.libXi # for jetbrains
-      xorg.libXrender # for jetbrains
-      xorg.libXtst # for jetbrains
-    ]);
-
   env = {
-    sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-env-debug-sysroot-gnu64";
-      paths = sysrootPackageList.gnu64.debug;
+    sysroot.gnu64.dev = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-dev-sysroot-gnu64";
+      paths = sysrootPackageListFn "gnu64" pkgs.dev.gnu64;
     };
     sysroot.gnu64.release = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-release-sysroot-gnu64";
-      paths = sysrootPackageList.gnu64.release;
+      paths = sysrootPackageListFn "gnu64" pkgs.release.gnu64;
     };
-    sysroot.musl64.debug = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-env-debug-sysroot-musl64";
-      paths = sysrootPackageList.musl64.debug;
+    sysroot.musl64.dev = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-dev-sysroot-musl64";
+      paths = sysrootPackageListFn "musl64" pkgs.dev.musl64;
     };
     sysroot.musl64.release = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-release-sysroot-musl64";
-      paths = sysrootPackageList.musl64.release;
+      paths = sysrootPackageListFn "musl64" pkgs.release.musl64;
     };
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
@@ -325,28 +288,57 @@
       name = "${project-name}-doc";
       paths = docEnvPackageList;
     };
-    dev = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-toolchain";
-      paths = devEnvPackageList;
-    };
   };
 
-  sysroot = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-sysroot";
+  sysrootFn = libc: profile: let libcShortName = (if libc == "gnu64" then "gnu" else "musl"); in
+    toolchainPkgs.stdenv.mkDerivation {
+    name = "${project-name}-sysroot.${libc}.${profile}";
+    nativeBuildInputs = [toolchainPkgs.rsync];
     src = null;
     dontUnpack = true;
     installPhase = ''
-      mkdir --parent "$out/sysroot/x86_64-unknown-linux-"{musl,gnu}/{debug,release}
-      cp -r "${env.sysroot.gnu64.debug}"/* "$out/sysroot/x86_64-unknown-linux-gnu/debug"
-      cp -r "${env.sysroot.gnu64.release}"/* "$out/sysroot/x86_64-unknown-linux-gnu/release"
-      cp -r "${env.sysroot.musl64.debug}"/* "$out/sysroot/x86_64-unknown-linux-musl/debug"
-      cp -r "${env.sysroot.musl64.release}"/* "$out/sysroot/x86_64-unknown-linux-musl/release"
-      ln -s /nix "$out/sysroot/x86_64-unknown-linux-gnu/debug"
-      ln -s /nix "$out/sysroot/x86_64-unknown-linux-gnu/release"
-      ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/debug"
-      ln -s /nix "$out/sysroot/x86_64-unknown-linux-musl/release"
+      mkdir --parent "$out/sysroot/x86_64-unknown-linux-${libcShortName}/${profile}/"{lib,include}
+      rsync -rLhP \
+        "${env.sysroot.${libc}.${profile}}/lib/" \
+        "$out/sysroot/x86_64-unknown-linux-${libcShortName}/${profile}/lib/"
+      rsync -rLhP \
+        "${env.sysroot.${libc}.${profile}}/include/" \
+        "$out/sysroot/x86_64-unknown-linux-${libcShortName}/${profile}/include/"
     '';
+    # Rust can't decided if the profile is called dev or debug so we need a fixup
+    postFixup = (if profile == "dev" then ''
+      ln -s dev $out/sysroot/x86_64-unknown-linux-${libcShortName}/debug
+    '' else "") + (if libc == "gnu64" then ''
+      export lib="$out/sysroot/x86_64-unknown-linux-${libcShortName}/${profile}/lib"
+      cd $lib
+      cat > libm.a <<EOF
+      OUTPUT_FORMAT(elf64-x86-64)
+      /* GNU ld script
+      */
+      OUTPUT_FORMAT(elf64-x86-64)
+      GROUP ( libm-${pkgs.dev.gnu64.glibc.version}.a libmvec.a )
+      EOF
+      cat > libm.so <<EOF
+      /* GNU ld script
+      */
+      OUTPUT_FORMAT(elf64-x86-64)
+      GROUP ( libm.so.6 AS_NEEDED ( libmvec.so.1 ) )
+      EOF
+      cat > libc.so <<EOF
+      /* GNU ld script
+      */
+      OUTPUT_FORMAT(elf64-x86-64)
+      GROUP ( libc.so.6 libc_nonshared.a AS_NEEDED ( ld-linux-x86-64.so.2 ) )
+      EOF
+    '' else "");
   };
+
+  sysroot.gnu64.dev = sysrootFn "gnu64" "dev";
+  sysroot.gnu64.release = sysrootFn "gnu64" "release";
+  sysroot.musl64.dev = sysrootFn "musl64" "dev";
+  sysroot.musl64.release = sysrootFn "musl64" "release";
+
+  sysroots = with sysroot; [ gnu64.dev gnu64.release musl64.dev musl64.release ];
 
   tmpdir = toolchainPkgs.stdenv.mkDerivation {
     name = "${project-name}-tmpdir";
@@ -357,39 +349,29 @@
     '';
   };
 
-  usr = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-usr-bin";
-    src = null;
-    dontUnpack = true;
-    installPhase = ''
-      mkdir --parent "$out"/{usr,lib}
-      ln -s /bin "$out/usr/bin"
-      ln -s /lib "$out/usr/lib"
-    '';
-  };
-
-  shell-fixup = toolchainPkgs.callPackage ./nix/shell-fixup {};
+  clearDeps = obj: with builtins; (
+    /. + "${unsafeDiscardStringContext(unsafeDiscardOutputDependency(obj))}"
+  );
 
   maxLayers = 120;
 
   container = {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/compile-env";
-      tag = "${image-tag}";
-      contents = [ toolchainPkgs.bash ] ++ compileEnvPackageList;
-      inherit maxLayers;
-      config = {
-        Cmd = [ "/bin/sh" ];
-        WorkingDir = "/";
-        Env = [
-          "COMPILE_ENV=/"
-          "LD_LIBRARY_PATH=/lib"
-          "LIBCLANG_PATH=/lib"
-          "PATH=/bin"
-          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
-          "SYSROOT=/sysroot"
-        ];
-      };
+        name = "${contianer-repo}/compile-env";
+        tag = "${image-tag}";
+        # glibc is needed as an explicit dependency due to the use of linker script in the libm.a file.
+        # Specifically, the libm.a file contains a GROUP instruction which contains absolute paths to /nix
+        # and those paths are not preserved by the rsync and clearDeps commands.
+        contents = [
+          env.compile
+          pkgs.dev.gnu64.glibc.static
+          pkgs.release.gnu64.glibc.static
+          pkgs.dev.gnu64.glibc.dev
+          pkgs.release.gnu64.glibc.dev
+          pkgs.dev.gnu64.glibc.out
+          pkgs.release.gnu64.glibc.out
+        ] ++ (map clearDeps sysroots);
+        inherit maxLayers;
     };
     doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/doc-env";
@@ -405,24 +387,6 @@
           "PATH=/bin:/lib/openjdk/bin"
         ];
       };
-    };
-    dev-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/dev-env";
-      tag = "${image-tag}";
-      contents = [ env.dev ];
-      config = {
-        Cmd = [ "/bin/bash" ];
-        WorkingDir = "/";
-        Env = [
-          "COMPILE_ENV=/"
-          "LD_LIBRARY_PATH=/lib:/lib/openjdk/lib"
-          "LIBCLANG_PATH=/lib"
-          "PATH=/bin:/lib/openjdk/bin"
-          "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
-          "SYSROOT=/sysroot"
-        ];
-      };
-      inherit maxLayers;
     };
   };
 }

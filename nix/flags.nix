@@ -5,7 +5,7 @@
     LDFLAGS="-Wl,-O3 -Wl,--gc-sections -Wl,-z,relro,-z,now -Wl,--thinlto-jobs=1 -Wl,-plugin-opt,jobs=1 -Qunused-arguments";
   };
 
-  debug = rec {
+  dev = rec {
     CFLAGS="-Og -ggdb3 -fno-inline -Qunused-arguments";
     CXXFLAGS=CFLAGS;
     LDFLAGS="";

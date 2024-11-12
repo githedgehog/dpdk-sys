@@ -62,10 +62,6 @@ _branch := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g'`
 
 _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 
-# The name of the dev-env container
-
-_dev_env_container_name := container_repo + "/dev-env"
-
 # The name of the doc-env container
 
 _doc_env_container_name := container_repo + "/doc-env"
@@ -118,7 +114,7 @@ _nix_build attribute:
 
 # Build only the sysroot
 [script]
-build-sysroot: (_nix_build "env.sysroot.gnu64.debug") (_nix_build "env.sysroot.gnu64.release") (_nix_build "env.sysroot.musl64.debug") (_nix_build "env.sysroot.musl64.release") (_nix_build "sysroot")
+build-sysroot: (_nix_build "sysroots") (_nix_build "env.sysroot.gnu64.dev") (_nix_build "env.sysroot.gnu64.release") (_nix_build "env.sysroot.musl64.dev") (_nix_build "env.sysroot.musl64.release") (_nix_build "sysroot")
     {{ _just_debug_ }}
 
 # Builds and post processes a container from the nix build
@@ -132,10 +128,10 @@ _build-container target container-name: (_nix_build ("container." + target))
     docker load --input /tmp/dpdk-sys/builds/container.{{ target }}
     docker tag \
       "{{ container-name }}:{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}-rust-{{ rust }}"
+      "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
     docker tag \
       "{{ container-name }}:{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}-rust-{{ rust }}"
+      "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
     docker build \
       --label "git.commit={{ _commit }}" \
       --label "git.branch={{ _branch }}" \
@@ -164,42 +160,36 @@ _build-container target container-name: (_nix_build ("container." + target))
       --label "nixpkgs.hash.tar.blake2b512=$(nix eval --raw -f '{{ versions }}' 'nixpkgs.hash.tar.blake2b512')" \
       --label "nixpkgs.hash.tar.blake2s256=$(nix eval --raw -f '{{ versions }}' 'nixpkgs.hash.tar.blake2s256')" \
       --label "versions.json=$(nix eval --json -f '{{ versions }}')" \
-      --build-arg TAG="{{ _build-id }}" \
+      --build-arg IMAGE="{{ container-name }}:{{ _build-id }}" \
       --tag "{{ container-name }}:post-{{ _build-id }}" \
-      --target "{{ target }}" \
       -f Dockerfile \
       .
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}-rust-{{ rust }}"
+      "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}-rust-{{ rust }}"
+      "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
     docker rmi "{{ container-name }}:{{ _build-id }}"
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
-
-# Build and tag the dev-env container
-build-dev-env-container: (_build-container "dev-env" _dev_env_container_name)
 
 # Build and tag the doc-env container
 build-doc-env-container: (_build-container "doc-env" _doc_env_container_name)
 
-# Build and tag the dev-env container
+# Build and tag the compile-env container
 build-compile-env-container: (_build-container "compile-env" _compile_env_container_name)
 
-# Build the sysroot, compile-env, and dev-env containers
-build: build-sysroot build-compile-env-container build-dev-env-container build-doc-env-container
+# Build the sysroot, and compile-env containers
+build: build-sysroot build-compile-env-container build-doc-env-container
 
-# Push the compile-env and dev-env containers to the container registry
+# Push the compile-env and doc-env containers to the container registry
 [script]
 push: build
     {{ _just_debug_ }}
-    docker push "{{ _compile_env_container_name }}:{{ _slug }}-rust-{{ rust }}"
-    docker push "{{ _compile_env_container_name }}:{{ _commit }}-rust-{{ rust }}"
-    docker push "{{ _dev_env_container_name }}:{{ _slug }}-rust-{{ rust }}"
-    docker push "{{ _dev_env_container_name }}:{{ _commit }}-rust-{{ rust }}"
-    docker push "{{ _doc_env_container_name }}:{{ _slug }}-rust-{{ rust }}"
-    docker push "{{ _doc_env_container_name }}:{{ _commit }}-rust-{{ rust }}"
+    docker push "{{ _compile_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
+    docker push "{{ _compile_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
+    docker push "{{ _doc_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
+    docker push "{{ _doc_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
@@ -223,4 +213,4 @@ generate-todo-list param=".":
 [script]
 bump dpdk_sys_branch="main":
     {{ _just_debug_ }}
-    ./scripts/bump.sh {{dpdk_sys_branch}}
+    ./scripts/bump.sh {{ dpdk_sys_branch }}

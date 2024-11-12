@@ -40,9 +40,7 @@
       extensions = [
         "cargo"
         "clippy"
-        "rust-src"
         "rust-std"
-        "rustfmt"
       ];
     };
   };

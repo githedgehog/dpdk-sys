@@ -151,30 +151,6 @@ jobs:
               body: body
             });
 
-      - name: "outdated packages (musl64)"
-        uses: "actions/github-script@v7"
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            let fs = require('fs');
-            let body = "<details>\n";
-            body += "<summary>\n\n";
-            body = "## Outdated packages (musl64):\n";
-            body += "</summary>\n\n";
-            body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.outdated.md');
-            body += "\n</details>\n";
-            const maxLength = 65535;
-            if (body.length > maxLength) {
-              const warning = "\n...output truncated due to length limits...\n";
-              body = body.slice(0, maxLength - warning.length) + warning;
-            }
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
 
       - name: "Vulnerable packages (gnu64)"
         uses: "actions/github-script@v7"
@@ -188,31 +164,6 @@ jobs:
             body = "## Vulnerable packages (gnu64):\n";
             body += "</summary>\n\n";
             body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.gnu64.vulns.triage.md');
-            body += "\n</details>\n";
-            const maxLength = 65535;
-            if (body.length > maxLength) {
-              const warning = "\n...output truncated due to length limits...\n";
-              body = body.slice(0, maxLength - warning.length) + warning;
-            }
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
-
-      - name: "Vulnerable packages (musl64)"
-        uses: "actions/github-script@v7"
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            let fs = require('fs');
-            let body = "<details>\n";
-            body += "<summary>\n\n";
-            body = "## Vulnerable packages (musl64):\n";
-            body += "</summary>\n\n";
-            body += fs.readFileSync('/tmp/dpdk-sys/builds/env.sysroot.musl64.vulns.triage.md');
             body += "\n</details>\n";
             const maxLength = 65535;
             if (body.length > maxLength) {
