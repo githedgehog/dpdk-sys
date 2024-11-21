@@ -29,8 +29,7 @@
           CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
           LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
         }));
-      customStdenv = self.stdenvAdapters.makeStaticLibraries
-        (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
+      fancy.stdenvDynamic = (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
         # TODO: It doesn't really make any sense to me that I need
         # to use pkgsMusl here.
         # In my mind that is implied by the fact that super is a
@@ -38,22 +37,23 @@
           self.pkgsMusl.${self.llvmPackagesVersion}.libcxxStdenv
         else
           self.llvmPackages.libcxxStdenv));
+      fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild = pkg:
-        (buildWithMyFlags (pkg.override { stdenv = customStdenv; })).overrideAttrs {
+        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs {
           withDoc = false;
           doCheck = false;
         };
-      customLibmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
+      fancy.libmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
         configureFlags = orig.configureFlags
           ++ [ "--enable-static" "--disable-shared" ];
         postFixup = (orig.postFixup or "") + ''
           rm $out/lib/*.la
         '';
       });
-      customLibbsd = ((optimizedBuild super.libbsd).override {
-        libmd = customLibmd;
+      fancy.libbsd = ((optimizedBuild super.libbsd).override {
+        libmd = fancy.libmd;
       }).overrideAttrs (orig: {
         doCheck = false;
         configureFlags = orig.configureFlags
@@ -130,14 +130,63 @@
         '';
       });
       dpdk = (optimizedBuild (self.callPackage ./nix/dpdk {
-        libbsd = customLibbsd;
-        libmd = customLibmd;
+        libbsd = fancy.libbsd;
+        libmd = fancy.libmd;
       }));
       dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
         inherit dpdk;
-        libbsd = customLibbsd;
+        libbsd = fancy.libbsd;
         bintools = self.llvmPackages.bintools;
       }));
+      libyang = ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" "-DBUILD_SHARED_LIBS=ON" ];
+      });
+      libcap = ((optimizedBuild super.libcap).override {
+        usePam = false;
+      }).overrideAttrs (orig: {
+        nativeBuildInputs = (orig.nativeBuildInputs or []) ++ [ self.llvmPackages.bintools ];
+        LD = "lld";
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" ];
+        makeFlags = orig.makeFlags ++ [ "GOLANG=no" ];
+        postInstall = orig.postInstall + ''
+          # extant postInstall removes .a files for no reason
+          rm $lib/lib/*.so*;
+          cp ./libcap/*.a $lib/lib;
+        '';
+      });
+      json_c = (optimizedBuild super.json_c).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" ];
+        postInstall = (orig.postInstall or "") + ''
+          mkdir -p $dev/lib
+          cp libjson-c.a $dev/lib;
+        '';
+      });
+      rtrlib = (optimizedBuild super.rtrlib).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" ];
+      });
+      c-ares = (optimizedBuild super.c-ares).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DCARES_STATIC=ON" ];
+      });
+      abseil-cpp = (optimizedBuild super.abseil-cpp);
+      protobuf_25 = (optimizedBuild super.protobuf_25).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
+      });
+      protobufc = (optimizedBuild super.protobufc).overrideAttrs(orig: {
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" "--disable-shared" ];
+      });
+      fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs(orig: {
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" "--disable-shared" ];
+      });
+      frr = (buildWithMyFlags (self.callPackage ./nix/frr {
+        stdenv = fancy.stdenvDynamic;
+        json_c = json_c.dev;
+      })).overrideAttrs(orig: {
+        nativeBuildInputs = (orig.nativeBuildInputs or []) ++ [
+          self.fancy.pcre2
+          self.protobufc
+        ];
+        LDFLAGS = (orig.LDFLAGS or "") + " -L${self.protobufc}/lib -Wl,-lprotobuf-c -L${self.fancy.pcre2}/lib -Wl,-lpcre2-8";
+      });
     };
 
   pkgs.dev = (import toolchainPkgs.path {
@@ -193,11 +242,11 @@
   sysrootPackageListFn = libc: pkgs:
     with pkgs;
     ([
-      customLibbsd
-      customLibbsd.dev
-      customLibmd
+      fancy.libbsd
+      fancy.libbsd.dev
       dpdk
       dpdk-wrapper
+      fancy.libmd
       libmnl
       libnftnl
       libnl.out
@@ -234,7 +283,7 @@
     });
 
   compileEnvPackageList = with toolchainPkgs; [
-    (toolchainPkgs.callPackage ./nix/shell-fixup {})
+    (callPackage ./nix/shell-fixup {})
     bash-completion
     bashInteractive
     cacert
@@ -355,7 +404,41 @@
 
   maxLayers = 120;
 
+  initfrr = toolchainPkgs.stdenv.mkDerivation {
+    name = "${project-name}-initfrr";
+    src = ./nix/frr/bin;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir -p $out/bin
+      cp $src/init.sh $out/bin/init.sh
+      chmod +x $out/bin/init.sh
+    '';
+  };
+
   container = {
+    frr = toolchainPkgs.dockerTools.buildLayeredImage {
+        name = "${contianer-repo}/frr";
+        tag = "${image-tag}";
+        contents = (map clearDeps (with pkgs.release.gnu64; [
+          bash
+          coreutils
+          glibc.bin
+          glibc.out
+          gnugrep
+          libxcrypt
+          ncurses
+          readline
+          frr
+        ])) ++ [ initfrr ];
+        config = {
+          Env = [
+            "LD_LIBRARY_PATH=/lib"
+            "PATH=/bin:/libexec/frr"
+          ];
+          Entrypoint = ["/bin/init.sh"];
+        };
+        inherit maxLayers;
+    };
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
         name = "${contianer-repo}/compile-env";
         tag = "${image-tag}";
