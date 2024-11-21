@@ -70,6 +70,8 @@ _doc_env_container_name := container_repo + "/doc-env"
 
 _compile_env_container_name := container_repo + "/compile-env"
 
+_frr_container_name := container_repo + "/frr"
+
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
 # not retagging or pushing some other container.
@@ -106,16 +108,27 @@ _nix_build attribute:
       -f default.nix \
       "{{ attribute }}" \
       --out-link "/tmp/dpdk-sys/builds/{{ attribute }}" \
+      --argstr onlyRunDeps false \
       --argstr container-repo "{{ container_repo }}" \
       --argstr image-tag "{{ _build-id }}" \
       --argstr rust-channel "{{ rust }}" \
       "-j{{ max_nix_builds }}" \
       `if [ "{{ cores }}" != "all" ]; then echo --cores "{{ cores }}"; fi`
 
-# Build only the sysroot
-[script]
-build-sysroot: (_nix_build "sysroots") (_nix_build "env.sysroot.gnu64.dev") (_nix_build "env.sysroot.gnu64.release") (_nix_build "env.sysroot.musl64.dev") (_nix_build "env.sysroot.musl64.release") (_nix_build "sysroot")
-    {{ _just_debug_ }}
+# Build the sysroot
+build-sysroot: \
+  (_nix_build "sysroots") \
+  (_nix_build "env.sysroot.gnu64.dev") \
+  (_nix_build "env.sysroot.gnu64.release") \
+  (_nix_build "env.sysroot.musl64.dev") \
+  (_nix_build "env.sysroot.musl64.release") \
+  (_nix_build "sysroot")
+
+# Build doc env packages
+build-docEnvPackageList: (_nix_build "docEnvPackageList")
+
+# Build FRR
+build-frr-contents: (_nix_build "frrContainerContents")
 
 # Builds and post processes a container from the nix build
 [private]
@@ -175,13 +188,16 @@ _build-container target container-name: (_nix_build ("container." + target))
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
 
 # Build and tag the doc-env container
-build-doc-env-container: (_build-container "doc-env" _doc_env_container_name)
+build-doc-env-container: build-docEnvPackageList (_build-container "doc-env" _doc_env_container_name)
 
 # Build and tag the compile-env container
-build-compile-env-container: (_build-container "compile-env" _compile_env_container_name)
+build-compile-env-container: build-sysroot (_build-container "compile-env" _compile_env_container_name)
+
+# Build and tag the frr container
+build-frr-container: build-frr-contents (_build-container "frr" _frr_container_name)
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-compile-env-container build-doc-env-container
+build: build-sysroot build-frr-container build-compile-env-container build-doc-env-container
 
 # Push the compile-env and doc-env containers to the container registry
 [script]
@@ -191,6 +207,8 @@ push: build
     docker push "{{ _compile_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
     docker push "{{ _doc_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
     docker push "{{ _doc_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
+    docker push "{{ _frr_container_name }}:{{ _slug }}.rust-{{ rust }}"
+    docker push "{{ _frr_container_name }}:{{ _commit }}.rust-{{ rust }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]

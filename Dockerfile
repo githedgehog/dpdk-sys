@@ -1,6 +1,11 @@
 ARG IMAGE=scratch
-FROM ${IMAGE} as doc-env
-FROM ${IMAGE} as compile-env
+FROM ${IMAGE} AS frr
+# size reduction hack
+RUN for frr in /nix/store/*-frr-*; do \
+  ln -s "${frr}" "$(sed 's|/nix/store/.*-\(.*-frr-.*\)|/nix/store/\1|' <<<"${frr}")"; \
+done
+FROM ${IMAGE} AS doc-env
+FROM ${IMAGE} AS compile-env
 
 # I can't properly set permissions in nix because of the way it works.
 # So I have to do this hacky thing to get sudo to work.
