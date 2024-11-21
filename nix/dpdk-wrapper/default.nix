@@ -15,8 +15,6 @@
     bintools
   ];
 
-  CFLAGS=""; # in case no override is provided
-
   buildPhase = ''
     set euxo pipefail
     mkdir -p $out/{lib,include}

@@ -12,7 +12,7 @@ declare -ri free_memory;
 
 # guess the worst case memory load per core for build (GiB)
 declare max_mem_per_core_guess;
-max_mem_per_core_guess=12;
+max_mem_per_core_guess=7;
 declare -ri max_mem_per_core_guess;
 
 # guess the max number of cores we can safely use

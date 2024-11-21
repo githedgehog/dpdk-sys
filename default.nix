@@ -16,7 +16,28 @@
     overlays = [
       llvm-overlay
       rust-overlay
+      helpersOverlay
     ];
+  };
+
+  helpersOverlay = self: super: rec {
+    tmpdir = self.stdenv.mkDerivation {
+      name = "${project-name}-tmpdir";
+      src = null;
+      dontUnpack = true;
+      installPhase = ''
+        mkdir --parent "$out/tmp"
+      '';
+    };
+    graphviz-links = self.stdenv.mkDerivation {
+      name = "${project-name}-tmpdir";
+      src = null;
+      dontUnpack = true;
+      installPhase = ''
+        mkdir -p $out/opt/local/bin
+        ln -s "${self.graphviz}/bin/dot" "$out/opt/local/bin/dot"
+      '';
+    };
   };
 
   project-name = "dpdk-sys";
@@ -29,8 +50,7 @@
           CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
           LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
         }));
-      customStdenv = self.stdenvAdapters.makeStaticLibraries
-        (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
+      fancy.stdenvDynamic = (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
         # TODO: It doesn't really make any sense to me that I need
         # to use pkgsMusl here.
         # In my mind that is implied by the fact that super is a
@@ -38,22 +58,23 @@
           self.pkgsMusl.${self.llvmPackagesVersion}.libcxxStdenv
         else
           self.llvmPackages.libcxxStdenv));
+      fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       # TODO: consider ways to LTO optimize musl (this one might be a bit tricky)
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild = pkg:
-        (buildWithMyFlags (pkg.override { stdenv = customStdenv; })).overrideAttrs {
+        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs {
           withDoc = false;
           doCheck = false;
         };
-      customLibmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
+      fancy.libmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
         configureFlags = orig.configureFlags
           ++ [ "--enable-static" "--disable-shared" ];
         postFixup = (orig.postFixup or "") + ''
           rm $out/lib/*.la
         '';
       });
-      customLibbsd = ((optimizedBuild super.libbsd).override {
-        libmd = customLibmd;
+      fancy.libbsd = ((optimizedBuild super.libbsd).override {
+        libmd = fancy.libmd;
       }).overrideAttrs (orig: {
         doCheck = false;
         configureFlags = orig.configureFlags
@@ -130,14 +151,60 @@
         '';
       });
       dpdk = (optimizedBuild (self.callPackage ./nix/dpdk {
-        libbsd = customLibbsd;
-        libmd = customLibmd;
+        libbsd = fancy.libbsd;
+        libmd = fancy.libmd;
       }));
       dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
         inherit dpdk;
-        libbsd = customLibbsd;
+        libbsd = fancy.libbsd;
         bintools = self.llvmPackages.bintools;
       }));
+      libyang = ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" "-DBUILD_SHARED_LIBS=ON" ];
+      });
+      libcap = ((optimizedBuild super.libcap).override {
+        usePam = false;
+      }).overrideAttrs (orig: {
+        nativeBuildInputs = (orig.nativeBuildInputs or []) ++ [ self.llvmPackages.bintools ];
+        LD = "lld";
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" ];
+        makeFlags = orig.makeFlags ++ [ "GOLANG=no" ];
+        postInstall = orig.postInstall + ''
+          # extant postInstall removes .a files for no reason
+          rm $lib/lib/*.so*;
+          cp ./libcap/*.a $lib/lib;
+        '';
+      });
+      json_c = (optimizedBuild super.json_c).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" ];
+        postInstall = (orig.postInstall or "") + ''
+          mkdir -p $dev/lib
+          cp libjson-c.a $dev/lib;
+        '';
+      });
+      rtrlib = (optimizedBuild super.rtrlib).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-DENABLE_STATIC=1" ];
+      });
+      abseil-cpp = (optimizedBuild super.abseil-cpp);
+      protobuf_25 = (optimizedBuild super.protobuf_25).overrideAttrs(orig: {
+        cmakeFlags = (orig.cmakeFlags or []) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
+      });
+      protobufc = (optimizedBuild super.protobufc).overrideAttrs(orig: {
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" "--disable-shared" ];
+      });
+      fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs(orig: {
+        configureFlags = (orig.configureFlags or []) ++ [ "--enable-static" "--disable-shared" ];
+      });
+      frr = (buildWithMyFlags (self.callPackage ./nix/frr {
+        stdenv = fancy.stdenvDynamic;
+        json_c = json_c.dev;
+      })).overrideAttrs(orig: {
+        nativeBuildInputs = (orig.nativeBuildInputs or []) ++ [
+          self.fancy.pcre2
+          self.protobufc
+        ];
+        LDFLAGS = (orig.LDFLAGS or "") + " -L${self.protobufc}/lib -Wl,-lprotobuf-c -L${self.fancy.pcre2}/lib -Wl,-lpcre2-8";
+      });
     };
 
   pkgs.dev = (import toolchainPkgs.path {
@@ -146,6 +213,7 @@
         pkgsCross.gnu64 = import prev.path {
           overlays = [
             llvm-overlay
+            helpersOverlay
             (crossOverlay {
               build-flags = build-flags.dev;
               crossEnv = "gnu64";
@@ -155,6 +223,7 @@
         pkgsCross.musl64 = import prev.path {
           overlays = [
             llvm-overlay
+            helpersOverlay
             (crossOverlay {
               build-flags = build-flags.dev;
               crossEnv = "musl64";
@@ -171,6 +240,7 @@
         pkgsCross.gnu64 = import prev.path {
           overlays = [
             llvm-overlay
+            helpersOverlay
             (crossOverlay {
               build-flags = build-flags.release;
               crossEnv = "gnu64";
@@ -180,6 +250,7 @@
         pkgsCross.musl64 = import prev.path {
           overlays = [
             llvm-overlay
+            helpersOverlay
             (crossOverlay {
               build-flags = build-flags.release;
               crossEnv = "musl64";
@@ -193,11 +264,11 @@
   sysrootPackageListFn = libc: pkgs:
     with pkgs;
     ([
-      customLibbsd
-      customLibbsd.dev
-      customLibmd
+      fancy.libbsd
+      fancy.libbsd.dev
       dpdk
       dpdk-wrapper
+      fancy.libmd
       libmnl
       libnftnl
       libnl.out
@@ -234,7 +305,7 @@
     });
 
   compileEnvPackageList = with toolchainPkgs; [
-    (toolchainPkgs.callPackage ./nix/shell-fixup {})
+    (callPackage ./nix/shell-fixup {})
     bash-completion
     bashInteractive
     cacert
@@ -247,20 +318,30 @@
     llvmPackages.lld
     rust-toolchain
     sudo # for test runner
+    tmpdir
   ];
 
-  docEnvPackageList = [tmpdir] ++ (with toolchainPkgs; [
+  docEnvPackageList = (with toolchainPkgs; [
     (callPackage ./nix/mdbook-alerts {})
     (callPackage ./nix/plantuml-wrapper {})
     bash
     coreutils
+    cups.lib # needed for mdbook-plantuml to work (runtime exe dep)
+    file # needed for mdbook-plantuml to work (runtime exe dep)
+    fontconfig.lib # needed for mdbook-plantuml to work (runtime exe dep)
+    glibc.out
     graphviz # needed for mdbook-plantuml to work (runtime exe dep)
+    graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
     mdbook
     mdbook-katex
     mdbook-mermaid
     mdbook-plantuml
     openjdk # needed for mdbook-plantuml to work (runtime exe dep)
+    openssl.out # needed for mdbook-plantuml to work (runtime exe dep)
     plantuml # needed for mdbook-plantuml to work (runtime exe dep)
+    tmpdir
+    xorg.libXinerama # needed for mdbook-plantuml to work (runtime exe dep)
+    xorg.libXrandr # needed for mdbook-plantuml to work (runtime exe dep)
   ]);
 
   env = {
@@ -313,20 +394,13 @@
       cd $lib
       cat > libm.a <<EOF
       OUTPUT_FORMAT(elf64-x86-64)
-      /* GNU ld script
-      */
-      OUTPUT_FORMAT(elf64-x86-64)
       GROUP ( libm-${pkgs.dev.gnu64.glibc.version}.a libmvec.a )
       EOF
       cat > libm.so <<EOF
-      /* GNU ld script
-      */
       OUTPUT_FORMAT(elf64-x86-64)
       GROUP ( libm.so.6 AS_NEEDED ( libmvec.so.1 ) )
       EOF
       cat > libc.so <<EOF
-      /* GNU ld script
-      */
       OUTPUT_FORMAT(elf64-x86-64)
       GROUP ( libc.so.6 libc_nonshared.a AS_NEEDED ( ld-linux-x86-64.so.2 ) )
       EOF
@@ -340,38 +414,68 @@
 
   sysroots = with sysroot; [ gnu64.dev gnu64.release musl64.dev musl64.release ];
 
-  tmpdir = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-tmpdir";
-    src = null;
-    dontUnpack = true;
-    installPhase = ''
-      mkdir --parent "$out/tmp"
-    '';
-  };
-
   clearDeps = obj: with builtins; (
     /. + "${unsafeDiscardStringContext(unsafeDiscardOutputDependency(obj))}"
   );
 
   maxLayers = 120;
 
+  initfrr = toolchainPkgs.stdenv.mkDerivation {
+    name = "${project-name}-initfrr";
+    src = ./nix/frr/bin;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir -p $out/bin
+      cp $src/init.sh $out/bin/init.sh
+      chmod +x $out/bin/init.sh
+    '';
+  };
+
+  frrContainerContents = (with pkgs.release.gnu64; [
+    bash
+    coreutils
+    frr
+    glibc.bin
+    glibc.out
+    gnugrep
+    gnused
+    initfrr
+    libxcrypt
+    ncurses
+    readline
+    tmpdir
+  ]);
+
   container = {
+    frr = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/frr";
+      tag = "${image-tag}";
+      contents = map clearDeps frrContainerContents;
+      config = {
+        Env = [
+          "LD_LIBRARY_PATH=/lib"
+          "PATH=/bin:/libexec/frr"
+        ];
+        Entrypoint = ["/bin/init.sh"];
+      };
+      inherit maxLayers;
+    };
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-        name = "${contianer-repo}/compile-env";
-        tag = "${image-tag}";
-        # glibc is needed as an explicit dependency due to the use of linker script in the libm.a file.
-        # Specifically, the libm.a file contains a GROUP instruction which contains absolute paths to /nix
-        # and those paths are not preserved by the rsync and clearDeps commands.
-        contents = [
-          env.compile
-          pkgs.dev.gnu64.glibc.static
-          pkgs.release.gnu64.glibc.static
-          pkgs.dev.gnu64.glibc.dev
-          pkgs.release.gnu64.glibc.dev
-          pkgs.dev.gnu64.glibc.out
-          pkgs.release.gnu64.glibc.out
-        ] ++ (map clearDeps sysroots);
-        inherit maxLayers;
+      name = "${contianer-repo}/compile-env";
+      tag = "${image-tag}";
+      # glibc is needed as an explicit dependency due to the use of linker script in the libm.a file.
+      # Specifically, the libm.a file contains a GROUP instruction which contains absolute paths to /nix
+      # and those paths are not preserved by the rsync and clearDeps commands.
+      contents = [
+        env.compile
+        pkgs.dev.gnu64.glibc.static
+        pkgs.release.gnu64.glibc.static
+        pkgs.dev.gnu64.glibc.dev
+        pkgs.release.gnu64.glibc.dev
+        pkgs.dev.gnu64.glibc.out
+        pkgs.release.gnu64.glibc.out
+      ] ++ (map clearDeps sysroots);
+      inherit maxLayers;
     };
     doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/doc-env";
