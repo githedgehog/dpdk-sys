@@ -17,10 +17,7 @@ on:
         description: "which branch to bump"
         required: true
   schedule:
-    - cron: "3 10 * * *"
-  push:
-    branches:
-      - "main"
+    - cron: "3 10 * * 0"
 
 env:
   dpdk_sys_branch: ${{ github.event.inputs.dpdk_sys_branch || 'main' }}
