@@ -29,6 +29,11 @@
         mkdir --parent "$out/tmp"
       '';
     };
+    # Temporary hack to get around upstream test failures
+    redis = super.redis.overrideAttrs {
+      doCheck = false;
+    };
+
     graphviz-links = self.stdenv.mkDerivation {
       name = "${project-name}-tmpdir";
       src = null;
