@@ -1,12 +1,16 @@
 name: "build.yml"
 on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
   workflow_dispatch:
     inputs:
       debug_enabled:
         type: "boolean"
         description: "Run the build with tmate debugging enabled"
   merge_group:
-  pull_request:
   push:
     branches:
       - "main"
