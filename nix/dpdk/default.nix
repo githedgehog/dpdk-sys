@@ -9,11 +9,11 @@
 
 stdenv.mkDerivation rec {
   pname = "dpdk";
-  version = "24.07";
+  version = "24.11";
 
   src = fetchurl {
     url = "https://fast.dpdk.org/rel/dpdk-${version}.tar.xz";
-    sha256 = "sha256-mUT35fJo56ybQZPizVTvbZj24dfd3JZ8d65PZhbW+70=";
+    sha256 = "sha256-Cxq8H9pDAZKsfrKsn42D8mijLNG7eZWx1u6ACcZ/j48";
   };
 
   nativeBuildInputs = [
