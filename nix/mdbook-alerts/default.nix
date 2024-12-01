@@ -7,16 +7,16 @@
 }: rustPlatform.buildRustPackage rec {
   owner = "lambdalisue";
   pname = "rs-mdbook-alerts";
-  version = "0.6.8";
+  version = "0.6.10";
 
   src = fetchFromGitHub {
   	inherit owner;
   	repo = pname;
     rev = "v${version}";
-    hash = "sha256-4rDC/7xpck7jQMQO+ALx20AHOO6ZUXtQxEIbpR6fnDs=";
+    hash = "sha256-xyjLrqNb/YC2FWQXsCFJgiIDZz4xWACnrUiBuXS2Nio";
   };
 
-  cargoHash = "sha256-5WoUkOVQhjMsSp1lwqcCfAQo2OyBBnXqPL+yTchuj20=";
+  cargoHash = "sha256-kzp1bpP4yHfu0BakN/O5OxdO/tLs/kWNmnaUopIlBVM";
 
   meta = {
     description = "mdBook preprocessor to add GitHub Flavored Markdown's Alerts to your book";
