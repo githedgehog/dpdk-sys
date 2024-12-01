@@ -1,10 +1,27 @@
 # This is copied from nixpkgs and modified significantly
-{ stdenv, lib
-, fetchurl
-, pkg-config, meson, ninja, makeWrapper
-, libbsd, numactl, libbpf, zlib, elfutils, jansson, openssl, libpcap, rdma-core, libnl, libmd
-, doxygen, python3, pciutils
-, withExamples ? []
+{
+  stdenv,
+  lib,
+  fetchurl,
+  pkg-config,
+  meson,
+  ninja,
+  makeWrapper,
+  libbsd,
+  numactl,
+  libbpf,
+  zlib,
+  elfutils,
+  jansson,
+  openssl,
+  libpcap,
+  rdma-core,
+  libnl,
+  libmd,
+  doxygen,
+  python3,
+  pciutils,
+  withExamples ? [ ],
 }:
 
 stdenv.mkDerivation rec {
@@ -257,30 +274,41 @@ stdenv.mkDerivation rec {
     "-Db_lto_mode=thin"
     "-Doptimization=3"
     "-Ddebug=true"
-   ''-Ddisable_drivers=${lib.concatStringsSep "," disabledDrivers}''
-   ''-Denable_drivers=${lib.concatStringsSep "," enabledDrivers}''
-   ''-Ddisable_libs=${lib.concatStringsSep "," disabledLibs}''
+    ''-Ddisable_drivers=${lib.concatStringsSep "," disabledDrivers}''
+    ''-Denable_drivers=${lib.concatStringsSep "," enabledDrivers}''
+    ''-Ddisable_libs=${lib.concatStringsSep "," disabledLibs}''
   ];
 
-  postInstall = ''
-    # Remove Sphinx cache files. Not only are they not useful, but they also
-    # contain store paths causing spurious dependencies.
-    rm -rf $out/share/doc/dpdk/html/.doctrees
+  postInstall =
+    ''
+      # Remove Sphinx cache files. Not only are they not useful, but they also
+      # contain store paths causing spurious dependencies.
+      rm -rf $out/share/doc/dpdk/html/.doctrees
 
-    wrapProgram $out/bin/dpdk-devbind.py \
-      --prefix PATH : "${lib.makeBinPath [ pciutils ]}"
-  '' + lib.optionalString (withExamples != []) ''
-    mkdir -p $examples/bin
-    find examples -type f -executable -exec install {} $examples/bin \;
-  '';
+      wrapProgram $out/bin/dpdk-devbind.py \
+        --prefix PATH : "${lib.makeBinPath [ pciutils ]}"
+    ''
+    + lib.optionalString (withExamples != [ ]) ''
+      mkdir -p $examples/bin
+      find examples -type f -executable -exec install {} $examples/bin \;
+    '';
 
-  outputs = [ "out" ] ++ lib.optional (withExamples != []) "examples";
+  outputs = [ "out" ] ++ lib.optional (withExamples != [ ]) "examples";
 
   meta = with lib; {
     description = "Set of libraries and drivers for fast packet processing";
     homepage = "http://dpdk.org/";
-    license = with licenses; [ lgpl21 gpl2 bsd2 ];
-    platforms =  platforms.linux;
-    maintainers = with maintainers; [ magenbluten orivej mic92 zhaofengli ];
+    license = with licenses; [
+      lgpl21
+      gpl2
+      bsd2
+    ];
+    platforms = platforms.linux;
+    maintainers = with maintainers; [
+      magenbluten
+      orivej
+      mic92
+      zhaofengli
+    ];
   };
 }

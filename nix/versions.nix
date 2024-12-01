@@ -26,7 +26,7 @@
         sha3_384 = "1b4d4f07b7ace08f033774fdd0c1ba13fd2d8f9b080b65cf7ae2218b67e3f6bef96c834d10861d59b5660c3b1ac2bfa7";
         sha3_512 = "75e01b6b8a7f13e0f720a2a6c4f9d61c8d44556fa1a9048a65da04cf02e25f250463584902b621be04658152a97cf2f0f348c53b52d7efa6366c533f0cc26a30";
         blake2b512 = "afd1fe765ca3fa7d8be547480ffc53cf798a4f59a58b065201b00389143bc93cce091cb93cca2a372ff67a0b6261794c794ace23aa43a556db083dc6ed9fe4fc";
-        blake2s256 ="0e64fe9146a0bf785af5ebc1e71e0055bb7fbca6d27ffe8788ffe4f3b994743c";
+        blake2s256 = "0e64fe9146a0bf785af5ebc1e71e0055bb7fbca6d27ffe8788ffe4f3b994743c";
       };
     };
   };
@@ -36,7 +36,10 @@
       version = "1.83.0";
       llvm = "19";
       profile = "default";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+      targets = [
+        "x86_64-unknown-linux-gnu"
+        "x86_64-unknown-linux-musl"
+      ];
       extensions = [
         "cargo"
         "clippy"
