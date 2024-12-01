@@ -26,7 +26,7 @@
         sha3_384 = "$NIXPKGS_ARCHIVE_openssl_sha3_384";
         sha3_512 = "$NIXPKGS_ARCHIVE_openssl_sha3_512";
         blake2b512 = "$NIXPKGS_ARCHIVE_openssl_blake2b512";
-        blake2s256 ="$NIXPKGS_ARCHIVE_openssl_blake2s256";
+        blake2s256 = "$NIXPKGS_ARCHIVE_openssl_blake2s256";
       };
     };
   };
@@ -36,7 +36,10 @@
       version = "$RUST_STABLE_PIN";
       llvm = "$RUST_STABLE_PIN_LLVM";
       profile = "default";
-      targets = ["x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl"];
+      targets = [
+        "x86_64-unknown-linux-gnu"
+        "x86_64-unknown-linux-musl"
+      ];
       extensions = [
         "cargo"
         "clippy"

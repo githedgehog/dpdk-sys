@@ -2,16 +2,17 @@
 # I like this more than mdbook-admonish in that it uses the same syntax as
 # github (which makes our docs more portable)
 {
-  fetchFromGitHub
-, rustPlatform
-}: rustPlatform.buildRustPackage rec {
+  fetchFromGitHub,
+  rustPlatform,
+}:
+rustPlatform.buildRustPackage rec {
   owner = "lambdalisue";
   pname = "rs-mdbook-alerts";
   version = "0.6.10";
 
   src = fetchFromGitHub {
-  	inherit owner;
-  	repo = pname;
+    inherit owner;
+    repo = pname;
     rev = "v${version}";
     hash = "sha256-xyjLrqNb/YC2FWQXsCFJgiIDZz4xWACnrUiBuXS2Nio";
   };

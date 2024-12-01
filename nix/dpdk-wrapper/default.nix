@@ -3,7 +3,8 @@
   dpdk,
   bintools,
   libbsd,
-}: stdenv.mkDerivation {
+}:
+stdenv.mkDerivation {
   pname = "dpdk-wrapper";
   version = "24.11.0";
 
