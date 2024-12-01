@@ -329,6 +329,7 @@
     cups.lib # needed for mdbook-plantuml to work (runtime exe dep)
     file # needed for mdbook-plantuml to work (runtime exe dep)
     fontconfig.lib # needed for mdbook-plantuml to work (runtime exe dep)
+    fontconfig.out # needed for mdbook-plantuml to work (runtime exe dep)
     glibc.out
     graphviz # needed for mdbook-plantuml to work (runtime exe dep)
     graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
