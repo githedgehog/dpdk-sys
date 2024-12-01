@@ -58,7 +58,7 @@
       fancy.stdenvDynamic = (self.stdenvAdapters.useMoldLinker (if crossEnv == "musl64" then
         # TODO: It doesn't really make any sense to me that I need
         # to use pkgsMusl here.
-        # In my mind that is implied by the fact that super is a
+        # In my mind that is implied by the fact that self is a
         # crossEnv.
           self.pkgsMusl.${self.llvmPackagesVersion}.libcxxStdenv
         else
@@ -94,14 +94,15 @@
 
       at-spi2-atk = null; # no users in container
       at-spi2-core = null; # no users in container
+      bluez = null;
       dbus = super.dbus.override { enableSystemd = false; };
+      gtk3 = null;
       libusb = null;
       libusb1 = null;
-      gtk3 = null;
-      tinysparql = null;
       systemd = null;
       systemdLibs = null;
       systemdMinimal = null;
+      tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs
         (orig: {
@@ -331,23 +332,20 @@
     (callPackage ./nix/plantuml-wrapper {})
     bash
     coreutils
-    cups.lib # needed for mdbook-plantuml to work (runtime exe dep)
     file # needed for mdbook-plantuml to work (runtime exe dep)
     fontconfig.lib # needed for mdbook-plantuml to work (runtime exe dep)
     fontconfig.out # needed for mdbook-plantuml to work (runtime exe dep)
     glibc.out
     graphviz # needed for mdbook-plantuml to work (runtime exe dep)
     graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
+    jre # needed for mdbook-plantuml to work (runtime exe dep)
     mdbook
     mdbook-katex
     mdbook-mermaid
     mdbook-plantuml
-    openjdk # needed for mdbook-plantuml to work (runtime exe dep)
     openssl.out # needed for mdbook-plantuml to work (runtime exe dep)
     plantuml # needed for mdbook-plantuml to work (runtime exe dep)
     tmpdir
-    xorg.libXinerama # needed for mdbook-plantuml to work (runtime exe dep)
-    xorg.libXrandr # needed for mdbook-plantuml to work (runtime exe dep)
   ]);
 
   env = {
@@ -494,7 +492,7 @@
         ];
         Env = [
           "LD_LIBRARY_PATH=/lib"
-          "PATH=/bin:/lib/openjdk/bin"
+          "PATH=/bin"
         ];
       };
     };
