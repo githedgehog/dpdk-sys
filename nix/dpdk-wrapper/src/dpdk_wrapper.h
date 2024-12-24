@@ -281,3 +281,81 @@ uint16_t wrte_eth_rx_burst(uint16_t const port_id, uint16_t const queue_id, stru
 __rte_hot
 __rte_warn_unused_result
 uint16_t wrte_eth_tx_burst(uint16_t const port_id, uint16_t const queue_id, struct rte_mbuf **tx_pkts, uint16_t const nb_pkts);
+
+/**
+ * Thin wrapper around [`rte_pktmbuf_alloc`]
+ *
+ * Allocate a new mbuf from a mempool.
+ *
+ * This new mbuf contains one segment, which has a length of 0. The pointer
+ * to data is initialized to have some bytes of headroom in the buffer
+ * (if buffer size allows).
+ *
+ * @param mp
+ *   The mempool from which the mbuf is allocated.
+ * @return
+ *   - The pointer to the new mbuf on success.
+ *   - NULL if allocation failed.
+ */
+struct rte_mbuf *wrte_pktmbuf_alloc(struct rte_mempool *mp);
+
+/**
+ * Thin wrapper around [`rte_pktmbuf_alloc_bulk`]
+ *
+ * Allocate a bulk of mbufs, initialize refcnt and reset the fields to default
+ * values.
+ *
+ *  @param pool
+ *    The mempool from which mbufs are allocated.
+ *  @param mbufs
+ *    Array of pointers to mbufs
+ *  @param count
+ *    Array size
+ *  @return
+ *   - 0: Success
+ *   - -ENOENT: Not enough entries in the mempool; no mbufs are retrieved.
+ */
+__rte_hot
+__rte_warn_unused_result
+int wrte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs, unsigned count);
+
+
+/**
+ * Thin wrapper around [`rte_pktmbuf_free`]
+ *
+ * Free a packet mbuf back into its original mempool.
+ *
+ * Free an mbuf, and all its segments in case of chained buffers. Each
+ * segment is added back into its original mempool.
+ *
+ * @param m
+ *   The packet mbuf to be freed. If NULL, the function does nothing.
+ */
+__rte_hot
+void wrte_pktmbuf_free(struct rte_mbuf *m);
+
+/**
+ * Thin wrapper around [`rte_pktmbuf_read`].
+ *
+ * Read len data bytes in a mbuf at specified offset.
+ *
+ * If the data is contiguous, return the pointer in the mbuf data, else
+ * copy the data in the buffer provided by the user and return its
+ * pointer.
+ *
+ * @param m
+ *   The pointer to the mbuf.
+ * @param off
+ *   The offset of the data in the mbuf.
+ * @param len
+ *   The amount of bytes to read.
+ * @param buf
+ *   The buffer where data is copied if it is not contiguous in mbuf
+ *   data. Its length should be at least equal to the len parameter.
+ * @return
+ *   The pointer to the data, either in the mbuf if it is contiguous,
+ *   or in the user buffer. If mbuf is too small, NULL is returned.
+ */
+__rte_hot
+__rte_warn_unused_result
+void *wrte_pktmbuf_read(const struct rte_mbuf *m, uint32_t off, uint32_t len, void *buf);

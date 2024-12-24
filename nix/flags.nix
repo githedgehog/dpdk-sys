@@ -6,7 +6,7 @@
   };
 
   dev = rec {
-    CFLAGS = "-Og -ggdb3 -fno-inline -Qunused-arguments";
+    CFLAGS = "-Og -ggdb3 -fno-inline -Qunused-arguments -mssse3 -msse3";
     CXXFLAGS = CFLAGS;
     LDFLAGS = "";
   };
