@@ -6,12 +6,13 @@
 
   # build time
   autoreconfHook,
-  flex,
+  bash,
   bison,
+  buildPackages,
+  flex,
   perl,
   pkg-config,
   texinfo,
-  buildPackages,
 
   # runtime
   c-ares,
@@ -87,7 +88,7 @@ lib.warnIf (!(stdenv.buildPlatform.canExecute stdenv.hostPlatform))
   stdenv.mkDerivation
   (finalAttrs: {
     pname = "frr";
-    version = "10.2";
+    version = "10.2.1";
     dontPatchShebangs = true;
     dontFixup = true;
     dontPatchElf = true;
@@ -96,11 +97,12 @@ lib.warnIf (!(stdenv.buildPlatform.canExecute stdenv.hostPlatform))
       owner = "FRRouting";
       repo = finalAttrs.pname;
       rev = "${finalAttrs.pname}-${finalAttrs.version}";
-      hash = "sha256-X0pyV7pvFcSyrBM2c3wQyBfGoZBtTBB31zIJoyBKEsY=";
+      hash = "sha256-TWqW6kI5dDl6IW2Ql6eeySDSyxp0fPgcJOOX1JxjAxs=";
     };
 
     nativeBuildInputs = [
       autoreconfHook
+      bash
       bison
       flex
       perl
