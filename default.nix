@@ -133,6 +133,12 @@ rec {
       tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs (orig: {
+        src = super.fetchFromGitHub {
+          owner = "linux-rdma";
+          repo = "rdma-core";
+          rev = "v55.0";
+          hash = "sha256-ZXs0yxwL00Kyp8b516sKslm4yvyQEm/UMtag2a2X+5c=";
+        };
         outputs = [
           "out"
           "dev"
