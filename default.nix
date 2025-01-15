@@ -270,22 +270,6 @@ rec {
           "--disable-shared"
         ];
       });
-      frr =
-        (buildWithMyFlags (
-          self.callPackage ./nix/frr {
-            stdenv = fancy.stdenvDynamic;
-            json_c = json_c.dev;
-          }
-        )).overrideAttrs
-          (orig: {
-            nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [
-              self.fancy.pcre2
-              self.protobufc
-            ];
-            LDFLAGS =
-              (orig.LDFLAGS or "")
-              + " -L${self.protobufc}/lib -Wl,-lprotobuf-c -L${self.fancy.pcre2}/lib -Wl,-lpcre2-8";
-          });
     };
 
   pkgs.dev =
@@ -538,49 +522,7 @@ rec {
 
   maxLayers = 120;
 
-  initfrr = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-initfrr";
-    src = ./nix/frr/bin;
-    dontUnpack = true;
-    installPhase = ''
-      mkdir -p $out/bin
-      cp $src/init.sh $out/bin/init.sh
-      chmod +x $out/bin/init.sh
-    '';
-  };
-
-  frrContainerContents = (
-    with pkgs.release.gnu64;
-    [
-      bash
-      coreutils
-      frr
-      glibc.bin
-      glibc.out
-      gnugrep
-      gnused
-      initfrr
-      libxcrypt
-      ncurses
-      readline
-      tmpdir
-    ]
-  );
-
   container = {
-    frr = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/frr";
-      tag = "${image-tag}";
-      contents = map clearDeps frrContainerContents;
-      config = {
-        Env = [
-          "LD_LIBRARY_PATH=/lib"
-          "PATH=/bin:/libexec/frr"
-        ];
-        Entrypoint = [ "/bin/init.sh" ];
-      };
-      inherit maxLayers;
-    };
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/compile-env";
       tag = "${image-tag}";
