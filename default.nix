@@ -217,59 +217,6 @@ rec {
           }
         )
       );
-      libyang =
-        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs
-          (orig: {
-            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
-              "-DENABLE_STATIC=1"
-              "-DBUILD_SHARED_LIBS=ON"
-            ];
-          });
-      libcap =
-        ((optimizedBuild super.libcap).override {
-          usePam = false;
-        }).overrideAttrs
-          (orig: {
-            nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ self.llvmPackages.bintools ];
-            LD = "lld";
-            configureFlags = (orig.configureFlags or [ ]) ++ [ "--enable-static" ];
-            makeFlags = orig.makeFlags ++ [ "GOLANG=no" ];
-            postInstall =
-              orig.postInstall
-              + ''
-                # extant postInstall removes .a files for no reason
-                rm $lib/lib/*.so*;
-                cp ./libcap/*.a $lib/lib;
-              '';
-          });
-      json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
-        postInstall =
-          (orig.postInstall or "")
-          + ''
-            mkdir -p $dev/lib
-            cp libjson-c.a $dev/lib;
-          '';
-      });
-      rtrlib = (optimizedBuild super.rtrlib).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
-      });
-      abseil-cpp = (optimizedBuild super.abseil-cpp);
-      protobuf_25 = (optimizedBuild super.protobuf_25).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
-      });
-      protobufc = (optimizedBuild super.protobufc).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ]) ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-      });
-      fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ]) ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-      });
     };
 
   pkgs.dev =
