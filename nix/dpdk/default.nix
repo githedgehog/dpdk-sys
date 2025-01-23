@@ -67,6 +67,10 @@ stdenv.mkDerivation rec {
 
   postPatch = ''
     patchShebangs config/arm buildtools
+    # We have no use for RTE_TRACE at all and it makes things more difficult from a security POV so disable it
+    sed -i 's/#define RTE_TRACE 1/#undef RTE_TRACE/g' config/rte_config.h
+    # We have no use for receive or transmit callbacks at this time so disable them
+    sed -i 's/#define RTE_ETHDEV_RXTX_CALLBACKS 1/#undef RTE_ETHDEV_RXTX_CALLBACKS/g' config/rte_config.h
   '';
 
   LDFLAGS = ''-Wl,--push-state -Wl,--as-needed -l:libibverbs.a -l:libmlx5.a -l:libjansson.a -l:libnl-route-3.a -l:libnl-3.a -l:libbsd.a -l:libmd.a -Wl,--pop-state'';
