@@ -14,20 +14,21 @@
   buildPackages,
 
   # runtime
+  #, libunwind
+  #, pam
+  #, zeromq
   c-ares,
+  elfutils,
   json_c,
   libcap,
-  elfutils,
-  #, libunwind
+  libxcrypt,
   libyang,
   net-snmp,
-  #, pam
   pcre2,
+  protobufc,
   python3,
   readline,
   rtrlib,
-  protobufc,
-  #, zeromq
 
   # tests
   nettools,
@@ -118,6 +119,7 @@ lib.warnIf (!(stdenv.buildPlatform.canExecute stdenv.hostPlatform))
         # zeromq
         c-ares
         json_c
+        libxcrypt
         libyang
         pcre2
         protobufc
