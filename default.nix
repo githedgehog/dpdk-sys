@@ -272,22 +272,35 @@ rec {
           "--disable-shared"
         ];
       });
+      fancy.readline = optimizedBuild super.readline;
+      fancy.libxcrypt = optimizedBuild super.libxcrypt;
       frr =
-        (buildWithMyFlags (
-          self.callPackage ./nix/frr {
-            stdenv = fancy.stdenvDynamic;
-            json_c = fancy.json_c.dev;
-          }
-        )).overrideAttrs
-          (orig: {
-            nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [
-              self.fancy.pcre2
-              self.protobufc
-            ];
-            LDFLAGS =
-              (orig.LDFLAGS or "")
-              + " -L${self.protobufc}/lib -Wl,-lprotobuf-c -L${self.fancy.pcre2}/lib -Wl,-lpcre2-8";
-          });
+      (optimizedBuild (
+        self.callPackage ./nix/frr {
+          stdenv = fancy.stdenv;
+          readline = fancy.readline;
+          json_c = fancy.json_c.dev;
+          libxcrypt = fancy.libxcrypt;
+        }
+      )).overrideAttrs
+        (orig: {
+          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [
+            fancy.libxcrypt
+            self.fancy.pcre2
+            self.protobufc
+          ];
+          LDFLAGS =
+            (orig.LDFLAGS or "")
+            + " -L${fancy.libxcrypt}/lib -lcrypt "
+            + " -L${self.protobufc}/lib -lprotobuf-c "
+            + " -L${self.fancy.pcre2}/lib -lpcre2-8 "
+            + " -L${self.libgccjit}/lib -latomic ";
+          configureFlags = orig.configureFlags ++ [
+            "--enable-shared"
+            "--enable-static"
+            "--enable-static-bin"
+          ];
+        });
     };
 
   pkgs.dev =
