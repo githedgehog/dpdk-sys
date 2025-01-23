@@ -253,6 +253,7 @@ stdenv.mkDerivation rec {
   ];
 
   mesonFlags = [
+    "--buildtype=release"
     "-Dauto_features=disabled"
     "-Db_colorout=never"
     "-Db_coverage=false"
@@ -272,7 +273,6 @@ stdenv.mkDerivation rec {
     "-Dtests=false" # Running DPDK tests in CI is usually silly
     "-Duse_hpet=false" # TODO: compile kernel with CONFIG_HPET_MMAP=Y
     "-Db_lto_mode=thin"
-    "-Doptimization=3"
     "-Ddebug=true"
     ''-Ddisable_drivers=${lib.concatStringsSep "," disabledDrivers}''
     ''-Denable_drivers=${lib.concatStringsSep "," enabledDrivers}''
