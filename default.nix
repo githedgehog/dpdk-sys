@@ -242,12 +242,14 @@ rec {
                 cp ./libcap/*.a $lib/lib;
               '';
           });
-      json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
+      fancy.json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
+        CFLAGS = (orig.CFLAGS or "") + " -ffat-lto-objects ";
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
         postInstall =
           (orig.postInstall or "")
           + ''
             mkdir -p $dev/lib
+            $RANLIB libjson-c.a;
             cp libjson-c.a $dev/lib;
           '';
       });
@@ -274,7 +276,7 @@ rec {
         (buildWithMyFlags (
           self.callPackage ./nix/frr {
             stdenv = fancy.stdenvDynamic;
-            json_c = json_c.dev;
+            json_c = fancy.json_c.dev;
           }
         )).overrideAttrs
           (orig: {
