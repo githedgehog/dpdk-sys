@@ -1,3 +1,0 @@
-auth requisite pam_permit.so
-account requisite pam_permit.so
-session requisite pam_permit.so
