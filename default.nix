@@ -417,19 +417,15 @@ rec {
     });
 
   compileEnvPackageList = with toolchainPkgs; [
-    (callPackage ./nix/shell-fixup { })
-    bash-completion
-    bashInteractive
+    bash
     cacert
     cargo-nextest
     coreutils
     just
-    libcap # for test runner
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
     rust-toolchain
-    sudo # for test runner
     tmpdir
   ];
 
