@@ -423,6 +423,7 @@ rec {
     coreutils
     just
     llvmPackages.clang
+    llvmPackages.llvm.dev # includes llvm-config
     llvmPackages.libclang.lib
     llvmPackages.lld
     rust-toolchain
