@@ -1,5 +1,5 @@
 rec {
-  machine = "-mcrc32 -mrtm -msse4 -mssse3 -march=x86-64-v4 -mtune=znver4";
+  machine = "-mcrc32 -mrtm -msse4 -mssse3 -march=x86-64-v3 -mtune=znver4";
   release = rec {
     CFLAGS = " ${machine} -O3 -ggdb3 -flto=thin -Werror=odr -Werror=strict-aliasing -fstack-protector-strong -Qunused-arguments";
     CXXFLAGS = CFLAGS;
