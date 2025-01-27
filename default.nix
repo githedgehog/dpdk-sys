@@ -421,7 +421,12 @@ rec {
     cacert
     cargo-nextest
     coreutils
+    glibc.dev
+    glibc.out
     just
+    libgcc.libgcc
+    libgccjit
+    libz
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
@@ -511,6 +516,8 @@ rec {
         )
         + (
           if libc == "gnu64" then
+            # libm.a file contains a GROUP instruction which contains absolute paths to /nix
+            # and those paths are not preserved by the rsync commands.
             ''
               export lib="$out/sysroot/x86_64-unknown-linux-${libcShortName}/${profile}/lib"
               cd $lib
@@ -543,9 +550,6 @@ rec {
     musl64.dev
     musl64.release
   ];
-
-  clearDeps =
-    obj: with builtins; (/. + "${unsafeDiscardStringContext (unsafeDiscardOutputDependency (obj))}");
 
   maxLayers = 120;
 
@@ -582,7 +586,7 @@ rec {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/frr";
       tag = "${image-tag}";
-      contents = map clearDeps frrContainerContents;
+      contents = frrContainerContents;
       config = {
         Env = [
           "LD_LIBRARY_PATH=/lib"
@@ -595,9 +599,6 @@ rec {
     compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/compile-env";
       tag = "${image-tag}";
-      # glibc is needed as an explicit dependency due to the use of linker script in the libm.a file.
-      # Specifically, the libm.a file contains a GROUP instruction which contains absolute paths to /nix
-      # and those paths are not preserved by the rsync and clearDeps commands.
       contents = [
         env.compile
         pkgs.dev.gnu64.glibc.static
@@ -606,7 +607,7 @@ rec {
         pkgs.release.gnu64.glibc.dev
         pkgs.dev.gnu64.glibc.out
         pkgs.release.gnu64.glibc.out
-      ] ++ (map clearDeps sysroots);
+      ] ++ (sysroots);
       inherit maxLayers;
     };
     doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
