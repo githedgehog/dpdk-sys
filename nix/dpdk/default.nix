@@ -232,7 +232,6 @@ stdenv.mkDerivation rec {
     "net/vdev"
     "net/vdev_netvsc"
     "net/vhost"
-    "net/virtio"
     "net/vmbus"
     "net/vmxnet3"
     "net/zuc"
@@ -254,6 +253,7 @@ stdenv.mkDerivation rec {
     "net/auxiliary"
     "net/mlx5"
     "net/ring"
+    "net/virtio"
   ];
 
   mesonFlags = [
