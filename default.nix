@@ -544,9 +544,6 @@ rec {
     musl64.release
   ];
 
-  clearDeps =
-    obj: with builtins; (/. + "${unsafeDiscardStringContext (unsafeDiscardOutputDependency (obj))}");
-
   maxLayers = 120;
 
   initfrr = toolchainPkgs.stdenv.mkDerivation {
@@ -582,7 +579,7 @@ rec {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/frr";
       tag = "${image-tag}";
-      contents = map clearDeps frrContainerContents;
+      contents = frrContainerContents;
       config = {
         Env = [
           "LD_LIBRARY_PATH=/lib"
@@ -606,7 +603,7 @@ rec {
         pkgs.release.gnu64.glibc.dev
         pkgs.dev.gnu64.glibc.out
         pkgs.release.gnu64.glibc.out
-      ] ++ (map clearDeps sysroots);
+      ] ++ (sysroots);
       inherit maxLayers;
     };
     doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
