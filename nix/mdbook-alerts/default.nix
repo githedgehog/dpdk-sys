@@ -17,7 +17,8 @@ rustPlatform.buildRustPackage rec {
     hash = "sha256-MZS9TESITj3tzdaXYu5S2QUCW7cZuTpH1skFKeVi/sQ";
   };
 
-  cargoHash = "sha256-Icim4+Gcbh1iQZMI9EqaTV5DBSRx4OE9viNsPjq0jTw=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-ZL8M9Ces8qs8ClayjJTt5FvlG+WcRpJLuZBNATEbLtQ=";
 
   meta = {
     description = "mdBook preprocessor to add GitHub Flavored Markdown's Alerts to your book";
