@@ -554,8 +554,6 @@ rec {
   sysroots = with sysroot; [
     gnu64.dev
     gnu64.release
-    musl64.dev
-    musl64.release
   ];
 
   maxLayers = 120;
