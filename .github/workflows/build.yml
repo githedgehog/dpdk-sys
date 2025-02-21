@@ -76,6 +76,15 @@ jobs:
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
 
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          # restore and save a cache using this key
+          primary-key: nix-${{ hashFiles('nix/versions.nix') }}-${{ hashFiles('nix/flags.nix') }}
+          # collect garbage until Nix store size (in bytes) is at most this number
+          # before trying to save a new cache
+          gc-max-store-size-linux: 17179869184
+
       - name: "login to ghcr.io"
         uses: "docker/login-action@v3"
         with:
