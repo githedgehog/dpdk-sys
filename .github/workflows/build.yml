@@ -76,6 +76,21 @@ jobs:
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
 
+      - name: "install sqlite3"
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends sqlite3
+
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          # restore and save a cache using this key
+          primary-key: nix-${{ hashFiles('nix/flags.nix') }}
+          # collect garbage until Nix store size (in bytes) is at most this number
+          # before trying to save a new cache (128GiB)
+          gc-max-store-size-linux: 137438953472
+
       - name: "login to ghcr.io"
         uses: "docker/login-action@v3"
         with:
