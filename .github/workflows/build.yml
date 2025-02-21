@@ -90,9 +90,6 @@ jobs:
       - run: |
           cargo binstall --no-confirm just
 
-      - name: "nix cache"
-        uses: "DeterminateSystems/magic-nix-cache-action@main"
-
       - name: "confirm sources"
         run: |
           ./scripts/confirm-sources.sh
