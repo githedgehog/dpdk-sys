@@ -43,7 +43,11 @@
       extensions = [
         "cargo"
         "clippy"
+        "rust-analyzer"
+        "rust-docs"
+        "rust-src"
         "rust-std"
+        "rustfmt"
       ];
     };
   };
