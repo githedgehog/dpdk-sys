@@ -29,7 +29,7 @@ jobs:
       id-token: "write"
     name: "matrix"
     runs-on:
-      - "lab"
+      - "ubuntu-latest"
     outputs:
       matrix: "${{ steps.matrix.outputs.matrix }}"
     steps:
@@ -195,7 +195,7 @@ jobs:
     name: "summary"
     if: ${{ always() }}
     runs-on:
-      - "lab"
+      - "ubuntu-latest"
     needs:
       - run
     steps:
