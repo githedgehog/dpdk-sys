@@ -29,13 +29,18 @@ jobs:
       id-token: "write"
     name: "matrix"
     runs-on:
-      - "lab"
+      - "ubuntu-latest"
     outputs:
       matrix: "${{ steps.matrix.outputs.matrix }}"
     steps:
       - uses: "actions/checkout@v4"
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
+      - name: "install sqlite3"
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends sqlite3
       - name: "install whyq"
         run: |
           set -euxo pipefail
@@ -76,6 +81,21 @@ jobs:
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
 
+      - name: "install sqlite3"
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends sqlite3
+
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          # restore and save a cache using this key
+          primary-key: nix-${{ hashFiles('nix/flags.nix') }}
+          # collect garbage until Nix store size (in bytes) is at most this number
+          # before trying to save a new cache (128GiB)
+          gc-max-store-size-linux: 137438953472
+
       - name: "login to ghcr.io"
         uses: "docker/login-action@v3"
         with:
@@ -89,9 +109,6 @@ jobs:
 
       - run: |
           cargo binstall --no-confirm just
-
-      - name: "nix cache"
-        uses: "DeterminateSystems/magic-nix-cache-action@main"
 
       - name: "confirm sources"
         run: |
@@ -193,7 +210,7 @@ jobs:
     name: "summary"
     if: ${{ always() }}
     runs-on:
-      - "lab"
+      - "ubuntu-latest"
     needs:
       - run
     steps:

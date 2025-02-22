@@ -24,7 +24,7 @@ trap cleanup EXIT
 declare summary="${builds}/${package}.summary.md"
 truncate --size 0 "${summary}"
 
-for libc in "gnu64" "musl64"; do
+for libc in "gnu64"; do
   pushd "$(mktemp -d)" && cleanup_cmds+=("rm -rf $(pwd)")
   nix run \
     "${sbomnix}#sbomnix" \

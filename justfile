@@ -120,8 +120,6 @@ build-sysroot: \
   (_nix_build "sysroots") \
   (_nix_build "env.sysroot.gnu64.dev") \
   (_nix_build "env.sysroot.gnu64.release") \
-  (_nix_build "env.sysroot.musl64.dev") \
-  (_nix_build "env.sysroot.musl64.release") \
   (_nix_build "sysroot")
 
 # Build doc env packages
