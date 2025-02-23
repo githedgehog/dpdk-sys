@@ -43,8 +43,6 @@
       extensions = [
         "cargo"
         "clippy"
-        "llvm-bitcode-linker"
-        "llvm-tools"
         "rust-analyzer"
         "rust-docs"
         "rust-src"
