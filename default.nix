@@ -425,20 +425,20 @@ rec {
       src = null;
       dontUnpack = true;
       installPhase = ''
-        mkdir --parent "$out/sysroot/x86_64-unknown-linux-gnu64/${profile}/"{lib,include}
+        mkdir --parent "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/"{lib,include}
         rsync -rLhP \
           "${env.sysroot.gnu64.${profile}}/lib/" \
-          "$out/sysroot/x86_64-unknown-linux-gnu64/${profile}/lib/"
+          "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/lib/"
         rsync -rLhP \
           "${env.sysroot.gnu64.${profile}}/include/" \
-          "$out/sysroot/x86_64-unknown-linux-gnu64/${profile}/include/"
+          "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/include/"
       '';
       # Rust can't decided if the profile is called dev or debug so we need a fixup
       postFixup =
         (
           if profile == "dev" then
             ''
-              ln -s dev $out/sysroot/x86_64-unknown-linux-gnu64/debug
+              ln -s dev $out/sysroot/x86_64-unknown-linux-gnu/debug
             ''
           else
             ""
@@ -447,7 +447,7 @@ rec {
           # libm.a file contains a GROUP instruction which contains absolute paths to /nix
           # and those paths are not preserved by the rsync commands.
           ''
-            export lib="$out/sysroot/x86_64-unknown-linux-gnu64/${profile}/lib"
+            export lib="$out/sysroot/x86_64-unknown-linux-gnu/${profile}/lib"
             cd $lib
             cat > libm.a <<EOF
             OUTPUT_FORMAT(elf64-x86-64)
