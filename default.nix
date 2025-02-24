@@ -285,18 +285,6 @@ rec {
             "--enable-static-bin"
           ];
         });
-
-        # Remove this libxml2 override when nixpkgs updates to 2.13.6
-        # We don't actually need to override libxml2 other than for OSV-2025-74 (which this override
-        # addresses)
-        # See https://osv.dev/vulnerability/OSV-2025-74
-        libxml2 = super.libxml2.overrideAttrs (orig: rec {
-          version = "2.13.6";
-          src = super.fetchurl {
-            url = "mirror://gnome/sources/libxml2/${self.lib.versions.majorMinor version}/libxml2-${version}.tar.xz";
-            hash = "sha256-9FNIAwdSSWj3oE7GXmTyqDqCWXO80mCi52kb6CrnDJY=";
-          };
-        });
     };
 
   pkgs.dev =
