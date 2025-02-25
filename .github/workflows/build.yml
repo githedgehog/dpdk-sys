@@ -76,6 +76,10 @@ jobs:
       contents: "read"
       id-token: "write"
     steps:
+      - name: "log KUBE_NODE"
+        run: |
+          echo "$KUBE_NODE"
+
       - uses: "actions/checkout@v4"
 
       - name: "install nix"
