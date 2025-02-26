@@ -98,14 +98,14 @@ nix_multi_hash NIXPKGS_ARCHIVE "${nixpkgs_repo}/${NIXPKGS_COMMIT}.tar.gz" "${NIX
 pushd "${project_dir}"
 
 rustup update
-rustup toolchain install "stable"
+rustup toolchain install "beta"
 rustup update
 
-declare RUST_STABLE_PIN RUST_STABLE_PIN_LLVM
-RUST_STABLE_PIN="$(rustc "+stable" -vV | grep 'release:' | awk '{print $NF}')"
-RUST_STABLE_PIN_LLVM="$(rustc "+stable" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
-declare -rx RUST_STABLE_PIN
-declare -rx RUST_STABLE_PIN_LLVM
+declare RUST_BETA_PIN RUST_BETA_PIN_LLVM
+RUST_BETA_PIN="$(rustc "+beta" -vV | grep 'release:' | awk '{print $NF}')"
+RUST_BETA_PIN_LLVM="$(rustc "+beta" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
+declare -rx RUST_BETA_PIN
+declare -rx RUST_BETA_PIN_LLVM
 
 declare JUST_STABLE_PIN
 JUST_STABLE_PIN="$(just --version | grep '^just ' | awk '{print $NF}')"
