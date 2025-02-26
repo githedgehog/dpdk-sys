@@ -31,10 +31,10 @@
     };
   };
   rust = {
-    stable = {
-      channel = "stable";
-      version = "$RUST_STABLE_PIN";
-      llvm = "$RUST_STABLE_PIN_LLVM";
+    beta = {
+      channel = "beta";
+      version = "latest";
+      llvm = "$RUST_BETA_PIN_LLVM";
       profile = "default";
       targets = [
         "x86_64-unknown-linux-gnu"

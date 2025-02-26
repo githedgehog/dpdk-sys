@@ -4,23 +4,22 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    stable: &rust_stable "1.85.0"
+    beta: &rust_beta "1.86.0-beta.2"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
   nixpkgs:
-    unstable: &nixpkgs_unstable "dad564433178067be1fbdfcce23b546254b6d641"
+    unstable: &nixpkgs_unstable "3a05eebede89661660945da1f151959900903b6a"
   just:
     version: &just_version "1.39.0"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   toolchain:
-    - # pinned stable
-      &default
-      key: "stable"
+    - &default
+      key: "beta"
       llvm: *llvm_stable
       rust:
-        channel: "stable"
-        version: *rust_stable
+        channel: "beta"
+        version: *rust_beta
       sysroot:
         profile:
           - "release"
