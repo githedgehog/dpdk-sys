@@ -34,6 +34,8 @@ jobs:
       matrix: "${{ steps.matrix.outputs.matrix }}"
     steps:
       - uses: "actions/checkout@v4"
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
       - name: "install whyq"
@@ -76,6 +78,8 @@ jobs:
           echo "$KUBE_NODE"
 
       - uses: "actions/checkout@v4"
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: "install nix"
         uses: "cachix/install-nix-action@v30"
