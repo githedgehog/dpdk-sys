@@ -40,7 +40,7 @@ jobs:
       - run: |
           cargo binstall --no-confirm just
       - name: "install nix"
-        uses: "cachix/install-nix-action@v30"
+        uses: "cachix/install-nix-action@v31"
       - name: "bump"
         run: |
           just bump "${{ env.dpdk_sys_branch }}"
