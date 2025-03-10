@@ -118,7 +118,7 @@ rec {
       systemdMinimal = null;
       tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
-      rdma-core = (fatLto (optimizedBuild super.rdma-core)).overrideAttrs (orig: {
+      rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
         version = "56.0";
         src = self.fetchFromGitHub {
           owner = "linux-rdma";
@@ -146,6 +146,7 @@ rec {
             url = "https://git.openembedded.org/meta-openembedded/plain/meta-networking/recipes-support/rdma-core/rdma-core/0001-librdmacm-Use-overloadable-function-attribute-with-c.patch?id=69769ff44ed0572a7b3c769ce3c36f28fff359d1";
             sha256 = "sha256-k+T8vSkvljksJabSJ/WRCXTYfbINcW1n0oDQrvFXXGM=";
           })
+          (./nix/rdma-core/patches/versioning.patch)
         ];
       });
       iptables = null;
