@@ -362,7 +362,6 @@ rec {
   compileEnvPackageList = with toolchainPkgs; [
     bash
     cacert
-    cargo-nextest
     coreutils
     glibc.dev
     glibc.out
