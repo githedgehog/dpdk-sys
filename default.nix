@@ -391,7 +391,6 @@ rec {
       graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
       jre # needed for mdbook-plantuml to work (runtime exe dep)
       mdbook
-      mdbook-katex
       mdbook-mermaid
       mdbook-plantuml
       openssl.out # needed for mdbook-plantuml to work (runtime exe dep)
