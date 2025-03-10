@@ -62,15 +62,17 @@ rec {
           CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
           LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
         }));
-      fancy.stdenvDynamic = (self.stdenvAdapters.useMoldLinker (self.llvmPackages.libcxxStdenv));
+      fancy.stdenvDynamic = self.llvmPackages.libcxxStdenv;
       fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild =
         pkg:
-        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs {
+        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
+          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ self.llvmPackages.bintools ];
+          LD="lld";
           withDoc = false;
           doCheck = false;
-        };
+        });
       fancy.libmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
         configureFlags = orig.configureFlags ++ [
           "--enable-static"
