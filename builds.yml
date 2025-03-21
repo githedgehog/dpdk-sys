@@ -4,7 +4,7 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    beta: &rust_beta "1.86.0-beta.5"
+    beta: &rust_beta "1.86.0-beta.6"
   llvm_for_rust_pins:
     stable: &llvm_stable "19"
   nixpkgs:
