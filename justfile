@@ -10,7 +10,7 @@ debug := "false"
 # These versions are pinned by the `./nix/versions.nix`
 # file (which is managed by `./scripts/bump.sh`)
 
-rust := "beta"
+rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 
 # This is the maximum number of builds nix will start at a time.

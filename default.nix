@@ -1,5 +1,5 @@
 {
-  rust-channel ? "beta",
+  rust-channel ? "stable",
   build-flags ? import ./nix/flags.nix,
   versions ? import ./nix/versions.nix,
   image-tag ? "latest",
