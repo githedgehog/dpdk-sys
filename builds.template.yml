@@ -4,9 +4,9 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    beta: &rust_beta "${RUST_BETA_PIN}"
+    stable: &rust_stable "${RUST_STABLE_PIN}"
   llvm_for_rust_pins:
-    stable: &llvm_stable "${RUST_BETA_PIN_LLVM}"
+    stable: &llvm_stable "${RUST_STABLE_PIN_LLVM}"
   nixpkgs:
     unstable: &nixpkgs_unstable "${NIXPKGS_COMMIT}"
   just:
@@ -14,12 +14,13 @@ env:
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   toolchain:
-    - &default
-      key: "beta"
+    - # pinned stable
+      &default
+      key: "stable"
       llvm: *llvm_stable
       rust:
-        channel: "beta"
-        version: *rust_beta
+        channel: "stable"
+        version: *rust_stable
       sysroot:
         profile:
           - "release"
