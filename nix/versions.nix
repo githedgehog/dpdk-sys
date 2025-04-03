@@ -31,9 +31,9 @@
     };
   };
   rust = {
-    beta = {
-      channel = "beta";
-      version = "latest";
+    stable = {
+      channel = "stable";
+      version = "1.86.0";
       llvm = "19";
       profile = "default";
       targets = [
