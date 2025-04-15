@@ -119,12 +119,12 @@ rec {
       tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
-        version = "56.0";
+        version = "56.1";
         src = self.fetchFromGitHub {
-          owner = "linux-rdma";
+          owner = "githedgehog";
           repo = "rdma-core";
-          rev = "v56.0";
-          hash = "sha256-nzd7BDP72o0TsSTrCGT6HOF7td+3ex4/c68GdjIA6Bc=";
+          rev = "fix-lto-56.1";
+          hash = "sha256-nyvmDJBMPCnJP1AJw287bGFjJHiaN2kc8qvXCo/6WDg=";
         };
         outputs = [
           "out"
@@ -137,16 +137,6 @@ rec {
           "-DNO_MAN_PAGES=1"
           "-DIOCTL_MODE=write"
           "-DNO_COMPAT_SYMS=1"
-        ];
-        patches = (orig.patches or [ ]) ++ [
-          (super.fetchpatch {
-            # you need to patch rdma-core to build with clang + glibc 2.40.x since glibc 2.40 has improved fortifying
-            # this function with clang.
-            name = "fix-for-glibc-2.40.x";
-            url = "https://git.openembedded.org/meta-openembedded/plain/meta-networking/recipes-support/rdma-core/rdma-core/0001-librdmacm-Use-overloadable-function-attribute-with-c.patch?id=69769ff44ed0572a7b3c769ce3c36f28fff359d1";
-            sha256 = "sha256-k+T8vSkvljksJabSJ/WRCXTYfbINcW1n0oDQrvFXXGM=";
-          })
-          (./nix/rdma-core/patches/versioning.patch)
         ];
       });
       iptables = null;
