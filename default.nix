@@ -366,6 +366,7 @@ rec {
     glibc.dev
     glibc.out
     just
+    libcap
     libgcc.libgcc
     libgccjit
     libz
