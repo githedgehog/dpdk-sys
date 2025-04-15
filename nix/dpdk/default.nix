@@ -73,8 +73,6 @@ stdenv.mkDerivation rec {
     sed -i 's/#define RTE_ETHDEV_RXTX_CALLBACKS 1/#undef RTE_ETHDEV_RXTX_CALLBACKS/g' config/rte_config.h
   '';
 
-  LDFLAGS = ''-Wl,--push-state -Wl,--as-needed -l:libibverbs.a -l:libmlx5.a -l:libjansson.a -l:libnl-route-3.a -l:libnl-3.a -l:libbsd.a -l:libmd.a -Wl,--pop-state'';
-
   disabledLibs = [
     "acl"
     "argparse"
