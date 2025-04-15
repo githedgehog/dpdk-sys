@@ -548,5 +548,14 @@ rec {
         ];
       };
     };
+    libc-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/libc-env";
+      tag = "${image-tag}";
+      contents = [
+        pkgs.release.gnu64.glibc.out
+        pkgs.release.gnu64.libgcc.libgcc
+      ];
+      inherit maxLayers;
+    };
   };
 }
