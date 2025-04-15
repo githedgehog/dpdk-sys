@@ -26,11 +26,11 @@
 
 stdenv.mkDerivation rec {
   pname = "dpdk";
-  version = "24.11.1";
+  version = "25.03";
 
   src = fetchurl {
     url = "https://fast.dpdk.org/rel/dpdk-${version}.tar.xz";
-    sha256 = "sha256-vK59QsRJ/EVt+yef6ry+BZmim+uy/ikFdh4YcznZa44=";
+    sha256 = "sha256-akCnMTKChuvXloWxj/pZkua3cME4Q9Zf0NEVfPzP9j0=";
   };
 
   nativeBuildInputs = [
@@ -179,7 +179,6 @@ stdenv.mkDerivation rec {
     "net/dpaa_sec"
     "net/dpaax"
     "net/dsw"
-    "net/e1000"
     "net/ena"
     "net/enetc"
     "net/enic"
@@ -190,11 +189,12 @@ stdenv.mkDerivation rec {
     "net/fslmc"
     "net/hinic"
     "net/hns3"
-    "net/i40e"
     "net/iavf"
     "net/ifc"
     "net/ifpga"
     "net/igc"
+    "net/intel/e1000"
+    "net/intel/i40e"
     "net/ioat"
     "net/ionic"
     "net/ipn3ke"
