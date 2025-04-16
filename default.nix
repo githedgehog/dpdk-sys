@@ -363,7 +363,9 @@ rec {
     llvmPackages.clang
     llvmPackages.libclang.lib
     llvmPackages.lld
+    pam
     rust-toolchain
+    sudo
     tmpdir
   ];
 
