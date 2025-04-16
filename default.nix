@@ -353,8 +353,11 @@ rec {
     bash
     cacert
     coreutils
+    docker-client
+    getent
     glibc.dev
     glibc.out
+    gnugrep
     just
     libcap
     libgcc.libgcc
@@ -367,6 +370,7 @@ rec {
     rust-toolchain
     sudo
     tmpdir
+    which
   ];
 
   docEnvPackageList = (
