@@ -286,7 +286,7 @@ rec {
         ];
       });
       fancy.ncurses = optimizedBuild (super.ncurses.override { enableStatic = true; });
-      fancy.readline = optimizedBuild super.readline;
+      fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
       frr =
       (optimizedBuild (
