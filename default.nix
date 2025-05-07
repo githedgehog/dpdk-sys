@@ -261,6 +261,10 @@ rec {
       protobuf_25 = (optimizedBuild super.protobuf_25).overrideAttrs (orig: {
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
       });
+      fancy.zlib = (optimizedBuild super.zlib).override {
+        static = true;
+        shared = false;
+      };
       protobufc = (optimizedBuild super.protobufc).overrideAttrs (orig: {
         configureFlags = (orig.configureFlags or [ ]) ++ [
           "--enable-static"
