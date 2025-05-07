@@ -1,4 +1,3 @@
-# This is copied from nixpkgs and modified significantly
 {
   stdenv,
   lib,
@@ -311,11 +310,5 @@ stdenv.mkDerivation rec {
       bsd2
     ];
     platforms = platforms.linux;
-    maintainers = with maintainers; [
-      magenbluten
-      orivej
-      mic92
-      zhaofengli
-    ];
   };
 }
