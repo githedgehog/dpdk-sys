@@ -61,6 +61,9 @@ rec {
           CFLAGS = "${orig.CFLAGS or ""} ${flags.CFLAGS}";
           CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
           LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
+          env.NIX_CFLAGS_COMPILE = (orig.NIX_CFLAGS_COMPILE or "") + flags.CFLAGS;
+          env.NIX_CXXFLAGS_COMPILE = (orig.NIX_CXXFLAGS_COMPILE or "") + flags.CXXFLAGS;
+          env.NIX_CFLAGS_LINK = (orig.NIX_CFLAGS_LINK or "") + flags.LDFLAGS;
         }));
       fancy.stdenvDynamic = self.llvmPackages.libcxxStdenv;
       fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
