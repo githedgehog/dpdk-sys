@@ -316,6 +316,7 @@ rec {
             ];
           });
       dplane-rpc = optimizedBuild (self.callPackage ./nix/dplane-rpc { });
+      frr-config = (optimizedBuild (self.callPackage ./nix/frr-config { }));
     };
 
   pkgs.dev =
