@@ -317,6 +317,19 @@ rec {
           });
       dplane-rpc = optimizedBuild (self.callPackage ./nix/dplane-rpc { });
       frr-config = (optimizedBuild (self.callPackage ./nix/frr-config { }));
+      fancy.python3 = (super.python3.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
+        configureFlags = orig.configureFlags ++ [
+          "--disable-shared"
+          "--enable-static"
+        ];
+      });
+      fancy.python3Minimal = (super.python3Minimal.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
+        configureFlags = orig.configureFlags ++ [
+          "--disable-shared"
+          "--enable-static"
+        ];
+      });
+      fancy.nuitka = self.python3Packages.nuitka.override { python = fancy.python3; };
     };
 
   pkgs.dev =
