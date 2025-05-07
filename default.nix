@@ -289,32 +289,32 @@ rec {
       fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
       frr =
-      (optimizedBuild (
-        self.callPackage ./nix/frr {
-          stdenv = fancy.stdenv;
-          readline = fancy.readline;
-          json_c = fancy.json_c.dev;
-          libxcrypt = fancy.libxcrypt;
-        }
-      )).overrideAttrs
-        (orig: {
-          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [
-            fancy.libxcrypt
-            self.fancy.pcre2
-            self.protobufc
-          ];
-          LDFLAGS =
-            (orig.LDFLAGS or "")
-            + " -L${fancy.libxcrypt}/lib -lcrypt "
-            + " -L${self.protobufc}/lib -lprotobuf-c "
-            + " -L${self.fancy.pcre2}/lib -lpcre2-8 "
-            + " -L${self.libgccjit}/lib -latomic ";
-          configureFlags = orig.configureFlags ++ [
-            "--enable-shared"
-            "--enable-static"
-            "--enable-static-bin"
-          ];
-        });
+        (optimizedBuild (
+          self.callPackage ./nix/frr {
+            json_c = fancy.json_c.dev;
+            libxcrypt = fancy.libxcrypt;
+            libyang = self.libyang-static;
+            nuitka = self.python3Packages.nuitka;
+            pcre2 = self.fancy.pcre2;
+            protobufc = self.protobufc;
+            python3Minimal = fancy.python3Minimal;
+            readline = fancy.readline;
+            stdenv = fancy.stdenv;
+          }
+        )).overrideAttrs
+          (orig: {
+            LDFLAGS =
+              (orig.LDFLAGS or "")
+              + " -L${self.libyang-static}/lib "
+              + " -L${fancy.libxcrypt}/lib -lcrypt "
+              + " -L${self.protobufc}/lib -lprotobuf-c "
+              + " -L${self.fancy.pcre2}/lib -lpcre2-8 ";
+            configureFlags = orig.configureFlags ++ [
+              "--enable-shared"
+              "--enable-static"
+              "--enable-static-bin"
+            ];
+          });
     };
 
   pkgs.dev =
