@@ -204,18 +204,24 @@ rec {
           });
       libcap =
         ((optimizedBuild super.libcap).override {
+          stdenv = fancy.stdenv;
           usePam = false;
         }).overrideAttrs
           (orig: {
-            nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ self.llvmPackages.bintools ];
-            LD = "lld";
+            doCheck = false; # tests require privileges
+            makeFlags = [
+              "lib=lib"
+              "PAM_CAP=no"
+              "CC:=clang"
+              "SHARED=no"
+              "LIBCSTATIC=no"
+              "GOLANG=no"
+            ];
             configureFlags = (orig.configureFlags or [ ]) ++ [ "--enable-static" ];
-            makeFlags = orig.makeFlags ++ [ "GOLANG=no" ];
             postInstall =
               orig.postInstall
               + ''
                 # extant postInstall removes .a files for no reason
-                rm $lib/lib/*.so*;
                 cp ./libcap/*.a $lib/lib;
               '';
           });
