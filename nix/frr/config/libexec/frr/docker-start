@@ -1,0 +1,4 @@
+#!/bin/sh
+
+source /libexec/frr/frrcommon.sh
+/libexec/frr/watchfrr $(daemon_list) --timeout 400

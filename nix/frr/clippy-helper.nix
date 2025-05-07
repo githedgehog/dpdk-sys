@@ -11,7 +11,7 @@
   pkg-config,
   elfutils,
   perl,
-  python3,
+  python3Minimal,
 
 }:
 
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
 
   buildInputs =
     [
-      python3
+      python3Minimal
     ]
     ++ lib.optionals (lib.meta.availableOn stdenv.hostPlatform elfutils) [
       elfutils

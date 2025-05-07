@@ -2,76 +2,58 @@
   lib,
   stdenv,
   fetchFromGitHub,
-  fetchpatch,
 
   # build time
   autoreconfHook,
-  flex,
   bison,
+  buildPackages,
+  flex,
+  nuitka,
   perl,
   pkg-config,
-  texinfo,
-  buildPackages,
+  python3Minimal,
 
-  # runtime
-  #, libunwind
-  #, pam
-  #, zeromq
   c-ares,
   elfutils,
   json_c,
   libcap,
   libxcrypt,
   libyang,
-  net-snmp,
   pcre2,
   protobufc,
-  python3,
   readline,
   rtrlib,
 
+  # to get rid of build time dependencies
+  nukeReferences,
+
   # tests
-  nettools,
   nixosTests,
 
-  # FRR's configure.ac gets SNMP options by executing net-snmp-config on the build host
-  # This leads to compilation errors when cross compiling.
-  # E.g. net-snmp-config for x86_64 does not return the ARM64 paths.
-  #
-  #   SNMP_LIBS="`${NETSNMP_CONFIG} --agent-libs`"
-  #   SNMP_CFLAGS="`${NETSNMP_CONFIG} --base-cflags`"
-  snmpSupport ? false,
-
   # other general options besides snmp support
-  rpkiSupport ? false,
   numMultipath ? 8,
-  watchfrrSupport ? true,
-  cumulusSupport ? false,
-  rtadvSupport ? true,
-  irdpSupport ? false,
-  mgmtdSupport ? false,
 
   # routing daemon options
   bgpdSupport ? true,
   bfddSupport ? true,
   staticdSupport ? true,
-
-  ripdSupport ? false,
-  ripngdSupport ? false,
   ospfdSupport ? false,
-  ospf6dSupport ? false,
+  isisdSupport ? false,
+
+  babeldSupport ? false,
+  eigrpdSupport ? false,
+  fabricdSupport ? false,
   ldpdSupport ? false,
   nhrpdSupport ? false,
-  eigrpdSupport ? false,
-  babeldSupport ? false,
-  isisdSupport ? false,
-  pimdSupport ? false,
-  pim6dSupport ? false,
-  sharpdSupport ? false,
-  fabricdSupport ? false,
-  vrrpdSupport ? false,
+  ospf6dSupport ? false,
   pathdSupport ? false,
   pbrdSupport ? false,
+  pim6dSupport ? false,
+  pimdSupport ? false,
+  ripdSupport ? false,
+  ripngdSupport ? false,
+  sharpdSupport ? false,
+  vrrpdSupport ? false,
 
   # BGP options
   bgpAnnounce ? true,
@@ -82,202 +64,140 @@
   ospfApi ? false,
 }:
 
-lib.warnIf (!(stdenv.buildPlatform.canExecute stdenv.hostPlatform))
-  "cannot enable SNMP support due to cross-compilation issues with net-snmp-config"
+stdenv.mkDerivation
+(finalAttrs: {
+  pname = "frr";
+  version = "10.2.1";
+  dontPatchShebangs = true;
+  dontFixup = true;
+  dontPatchElf = true;
 
-  stdenv.mkDerivation
-  (finalAttrs: {
-    pname = "frr";
-    version = "10.2.1";
-    dontPatchShebangs = true;
-    dontFixup = true;
-    dontPatchElf = true;
+  outputs = ["out" "build"];
 
-    src = fetchFromGitHub {
-      owner = "FRRouting";
-      repo = finalAttrs.pname;
-      rev = "${finalAttrs.pname}-${finalAttrs.version}";
-      hash = "sha256-TWqW6kI5dDl6IW2Ql6eeySDSyxp0fPgcJOOX1JxjAxs";
-    };
+  src = fetchFromGitHub {
+    owner = "githedgehog";
+    repo = finalAttrs.pname;
+    rev = "hh-master";
+    hash = "sha256-G0Pzlie6wBkdj3Kkzio6XwPedBFQsc7vIZCqMm+cqQY=";
+  };
 
-    nativeBuildInputs = [
-      autoreconfHook
-      bison
-      flex
-      perl
-      pkg-config
-      protobufc
-      python3
-      texinfo
-    ];
+  nativeBuildInputs = [
+    autoreconfHook
+    bison
+    c-ares
+    elfutils
+    flex
+    json_c
+    libcap
+    libxcrypt
+    libyang
+    nuitka
+    pcre2
+    perl
+    pkg-config
+    protobufc
+    python3Minimal
+    readline
+    rtrlib
+    nukeReferences
+  ];
 
-    buildInputs =
-      [
-        # libunwind
-        # pam
-        # python3
-        # zeromq
-        c-ares
-        json_c
-        libxcrypt
-        libyang
-        pcre2
-        protobufc
-        readline
-        rtrlib
-      ]
-      ++ lib.optionals stdenv.hostPlatform.isLinux [
-        libcap
-      ]
-      ++ lib.optionals snmpSupport [
-        net-snmp
-      ]
-      ++ lib.optionals (lib.meta.availableOn stdenv.hostPlatform elfutils) [
-        elfutils
-      ];
+  # cross-compiling: clippy is compiled with the build host toolchain, split it out to ease
+  # navigation in dependency hell
+  clippy-helper = buildPackages.callPackage ./clippy-helper.nix {
+    frrVersion = finalAttrs.version;
+    frrSource = finalAttrs.src;
+  };
 
-    # otherwise in cross-compilation: "configure: error: no working python version found"
-    depsBuildBuild = [
-      # buildPackages.python3
-    ];
+  configureFlags = [
+    "--disable-python-runtime"
+    "--enable-fpm=netlink" # try to disable later
+    "--with-moduledir=/lib/frr/modules"
 
-    # cross-compiling: clippy is compiled with the build host toolchain, split it out to ease
-    # navigation in dependency hell
-    clippy-helper = buildPackages.callPackage ./clippy-helper.nix {
-      frrVersion = finalAttrs.version;
-      frrSource = finalAttrs.src;
-    };
+    "--enable-configfile-mask=0640"
+    "--enable-logfile-mask=0640"
+    "--enable-user=frr"
+    "--enable-group=frr"
+    "--enable-vty-group=frrvty"
 
-    configureFlags = [
-      "--disable-grpc"
-      "--disable-protobuf"
-      "--disable-python-runtime"
-      "--disable-scripting"
-      "--disable-sysrepo"
-      "--disable-zeromq"
-      "--with-libpam=no"
-      "--enable-shared"
-      "--enable-static"
-      "--enable-static-bin"
-      "--with-crypto=internal"
-      "--disable-doc"
+    "--enable-config-rollbacks=no"
+    "--disable-doc"
+    "--disable-doc-html"
+    "--enable-grpc=no"
+    "--enable-scripting=no"
+    "--enable-sysrepo=no"
+    "--enable-zeromq=no"
 
-      "--disable-silent-rules"
-      "--enable-configfile-mask=0640"
-      "--enable-group=frr"
-      "--enable-logfile-mask=0640"
-      "--enable-multipath=${toString numMultipath}"
-      "--localstatedir=/run/frr"
-      "--sbindir=${placeholder "out"}/libexec/frr"
-      "--sysconfdir=/etc/frr"
-      "--with-clippy=${finalAttrs.clippy-helper}/bin/clippy"
-      # general options
-      (lib.strings.enableFeature snmpSupport "snmp")
-      (lib.strings.enableFeature rpkiSupport "rpki")
-      (lib.strings.enableFeature watchfrrSupport "watchfrr")
-      (lib.strings.enableFeature rtadvSupport "rtadv")
-      (lib.strings.enableFeature irdpSupport "irdp")
-      (lib.strings.enableFeature mgmtdSupport "mgmtd")
+    "--with-libpam=no"
 
-      # routing protocols
-      (lib.strings.enableFeature bgpdSupport "bgpd")
-      (lib.strings.enableFeature ripdSupport "ripd")
-      (lib.strings.enableFeature ripngdSupport "ripngd")
-      (lib.strings.enableFeature ospfdSupport "ospfd")
-      (lib.strings.enableFeature ospf6dSupport "ospf6d")
-      (lib.strings.enableFeature ldpdSupport "ldpd")
-      (lib.strings.enableFeature nhrpdSupport "nhrpd")
-      (lib.strings.enableFeature eigrpdSupport "eigrpd")
-      (lib.strings.enableFeature babeldSupport "babeld")
-      (lib.strings.enableFeature isisdSupport "isisd")
-      (lib.strings.enableFeature pimdSupport "pimd")
-      (lib.strings.enableFeature pim6dSupport "pim6d")
-      (lib.strings.enableFeature sharpdSupport "sharpd")
-      (lib.strings.enableFeature fabricdSupport "fabricd")
-      (lib.strings.enableFeature vrrpdSupport "vrrpd")
-      (lib.strings.enableFeature pathdSupport "pathd")
-      (lib.strings.enableFeature bfddSupport "bfdd")
-      (lib.strings.enableFeature pbrdSupport "pbrd")
-      (lib.strings.enableFeature staticdSupport "staticd")
-      # BGP options
-      (lib.strings.enableFeature bgpAnnounce "bgp-announce")
-      (lib.strings.enableFeature bgpBmp "bgp-bmp")
-      (lib.strings.enableFeature bgpVnc "bgp-vnc")
-      # OSPF options
-      (lib.strings.enableFeature ospfApi "ospfapi")
-      # Cumulus options
-      (lib.strings.enableFeature cumulusSupport "cumulus")
-    ];
+    "--disable-silent-rules"
+    "--enable-configfile-mask=0640"
+    "--enable-logfile-mask=0640"
+    "--enable-multipath=${toString numMultipath}"
+    "--localstatedir=/run/frr"
+    "--sbindir=${placeholder "out"}/libexec/frr"
+    "--sysconfdir=/etc/frr"
+    "--with-clippy=${finalAttrs.clippy-helper}/bin/clippy"
+    # general options
+    "--enable-irdp=no"
+    "--enable-mgmtd=yes"
+    "--enable-rpki=no"
+    "--enable-rtadv=yes"
+    "--enable-watchfrr=yes"
 
-    postPatch = ''
-      substituteInPlace tools/frr-reload \
-        --replace-quiet /usr/lib/frr/ $out/libexec/frr/
-      sed -i '/^PATH=/ d' tools/frr.in tools/frrcommon.sh.in
-    '';
+    # routing protocols
+    (lib.strings.enableFeature babeldSupport "babeld")
+    (lib.strings.enableFeature bfddSupport "bfdd")
+    (lib.strings.enableFeature bgpdSupport "bgpd")
+    (lib.strings.enableFeature eigrpdSupport "eigrpd")
+    (lib.strings.enableFeature fabricdSupport "fabricd")
+    (lib.strings.enableFeature isisdSupport "isisd")
+    (lib.strings.enableFeature ldpdSupport "ldpd")
+    (lib.strings.enableFeature nhrpdSupport "nhrpd")
+    (lib.strings.enableFeature ospf6dSupport "ospf6d")
+    (lib.strings.enableFeature ospfdSupport "ospfd")
+    (lib.strings.enableFeature pathdSupport "pathd")
+    (lib.strings.enableFeature pbrdSupport "pbrd")
+    (lib.strings.enableFeature pim6dSupport "pim6d")
+    (lib.strings.enableFeature pimdSupport "pimd")
+    (lib.strings.enableFeature ripdSupport "ripd")
+    (lib.strings.enableFeature ripngdSupport "ripngd")
+    (lib.strings.enableFeature sharpdSupport "sharpd")
+    (lib.strings.enableFeature staticdSupport "staticd")
+    (lib.strings.enableFeature vrrpdSupport "vrrpd")
+    # BGP options
+    (lib.strings.enableFeature bgpAnnounce "bgp-announce")
+    (lib.strings.enableFeature bgpBmp "bgp-bmp")
+    (lib.strings.enableFeature bgpVnc "bgp-vnc")
+    # OSPF options
+    (lib.strings.enableFeature ospfApi "ospfapi")
+    # Cumulus options
+    "--enable-cumulus=no"
+    "--disable-cumulus"
+  ];
 
-    buildPhase = ''
-      ls -lah
-      make CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" -j32
-      cd zebra
-      ls -lah
-      $CC $CFLAGS $LDFLAGS \
-        -I /build/source \
-        -I /build/source/lib \
-        -I /build/source/lib/zebra \
-        -o sample_plugin.so \
-        -shared \
-        -fPIC \
-        sample_plugin.c
-      mkdir -p $out/lib/frr/modules
-      cp sample_plugin.so $out/lib/frr/modules
-      cd ..
-    '';
+  patches = [
+    ./patches/yang-hack.patch
+    ./patches/xrelifo.py.fix.patch
+    ./patches/vtysh-extensions.h.patch
+  ];
 
-    doCheck = false;
+  buildPhase = ''
+    make "-j$(nproc)";
+    python3 -m nuitka --static-libpython=yes --follow-imports $src/tools/frr-reload.py
+  '';
 
-    nativeCheckInputs = [
-      nettools
-      #python3.pkgs.pytest
-    ];
+  installPhase = ''
+    make install;
+    mkdir -p $build/src/
+    cp -r . $build/src/frr
+    mv frr-reload.bin $out/libexec/frr/frr-reload
+    find "$out" -exec nuke-refs -e "$out" -e "${stdenv.cc.libc}" '{}' +;
+  '';
 
-    enableParallelBuilding = true;
+  doCheck = false;
 
-    meta = with lib; {
-      homepage = "https://frrouting.org/";
-      description = "FRR BGP/OSPF/ISIS/RIP/RIPNG routing daemon suite";
-      longDescription = ''
-        FRRouting (FRR) is a free and open source Internet routing protocol suite
-        for Linux and Unix platforms. It implements BGP, OSPF, RIP, IS-IS, PIM,
-        LDP, BFD, Babel, PBR, OpenFabric and VRRP, with alpha support for EIGRP
-        and NHRP.
+  enableParallelBuilding = true;
 
-        FRR’s seamless integration with native Linux/Unix IP networking stacks
-        makes it a general purpose routing stack applicable to a wide variety of
-        use cases including connecting hosts/VMs/containers to the network,
-        advertising network services, LAN switching and routing, Internet access
-        routers, and Internet peering.
-
-        FRR has its roots in the Quagga project. In fact, it was started by many
-        long-time Quagga developers who combined their efforts to improve on
-        Quagga’s well-established foundation in order to create the best routing
-        protocol stack available. We invite you to participate in the FRRouting
-        community and help shape the future of networking.
-
-        Join the ranks of network architects using FRR for ISPs, SaaS
-        infrastructure, web 2.0 businesses, hyperscale services, and Fortune 500
-        private clouds.
-      '';
-      license = with licenses; [
-        gpl2Plus
-        lgpl21Plus
-      ];
-      maintainers = with maintainers; [
-        woffs
-        thillux
-      ];
-      # adapt to platforms stated in http://docs.frrouting.org/en/latest/overview.html#supported-platforms
-      platforms = (platforms.linux ++ platforms.freebsd ++ platforms.netbsd ++ platforms.openbsd);
-    };
-
-    passthru.tests = { inherit (nixosTests) frr; };
-  })
+  passthru.tests = { inherit (nixosTests) frr; };
+})
