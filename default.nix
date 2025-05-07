@@ -258,7 +258,7 @@ rec {
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
       });
       abseil-cpp = (optimizedBuild super.abseil-cpp);
-      protobuf_25 = (optimizedBuild super.protobuf_25).overrideAttrs (orig: {
+      protobuf = (optimizedBuild super.protobuf).overrideAttrs (orig: {
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
       });
       fancy.zlib = (optimizedBuild super.zlib).override {
