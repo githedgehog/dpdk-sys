@@ -197,14 +197,30 @@ rec {
           }
         )
       );
-      libyang =
+      libyang-dynamic =
         ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs
           (orig: {
             cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
-              "-DENABLE_STATIC=1"
               "-DBUILD_SHARED_LIBS=ON"
             ];
           });
+      libyang-static =
+        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs
+          (orig: {
+            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
+              "-DBUILD_SHARED_LIBS=OFF"
+            ];
+          });
+      libyang = self.fancy.stdenv.mkDerivation {
+        name = "libyang";
+        src = null;
+        dontUnpack = true;
+        installPhase = ''
+          mkdir -p $out/lib;
+          cp -r ${self.libyang-static}/lib/libyang.a $out/lib/
+          cp -r ${self.libyang-dynamic}/* $out
+        '';
+      };
       libcap =
         ((optimizedBuild super.libcap).override {
           stdenv = fancy.stdenv;
