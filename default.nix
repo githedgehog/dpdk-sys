@@ -226,7 +226,6 @@ rec {
               '';
           });
       fancy.json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
-        CFLAGS = (orig.CFLAGS or "") + " -ffat-lto-objects ";
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
         postInstall =
           (orig.postInstall or "")
