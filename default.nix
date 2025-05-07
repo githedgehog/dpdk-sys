@@ -265,12 +265,20 @@ rec {
         static = true;
         shared = false;
       };
-      protobufc = (optimizedBuild super.protobufc).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ]) ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-      });
+      protobufc =
+        (optimizedBuild (
+          self.callPackage ./nix/protobufc {
+            stdenv = self.fancy.stdenv;
+            protobuf = self.protobuf;
+            zlib = self.fancy.zlib;
+          }
+        )).overrideAttrs
+          (orig: {
+            configureFlags = (orig.configureFlags or [ ]) ++ [
+              "--enable-static"
+              "--disable-shared"
+            ];
+          });
       fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs (orig: {
         configureFlags = (orig.configureFlags or [ ]) ++ [
           "--enable-static"
