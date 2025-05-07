@@ -285,6 +285,7 @@ rec {
           "--disable-shared"
         ];
       });
+      fancy.ncurses = optimizedBuild (super.ncurses.override { enableStatic = true; });
       fancy.readline = optimizedBuild super.readline;
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
       frr =
