@@ -315,6 +315,7 @@ rec {
               "--enable-static-bin"
             ];
           });
+      dplane-rpc = optimizedBuild (self.callPackage ./nix/dplane-rpc { });
     };
 
   pkgs.dev =
