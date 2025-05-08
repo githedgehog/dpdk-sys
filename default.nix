@@ -72,7 +72,7 @@ rec {
         pkg:
         (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
           nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ self.llvmPackages.bintools ];
-          LD="lld";
+          LD = "lld";
           withDoc = false;
           doCheck = false;
         });
