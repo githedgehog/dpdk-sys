@@ -323,12 +323,14 @@ rec {
           "--enable-static"
         ];
       });
-      fancy.python3Minimal = (super.python3Minimal.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags ++ [
-          "--disable-shared"
-          "--enable-static"
-        ];
-      });
+      fancy.python3Minimal =
+        (super.python3Minimal.override { stdenv = fancy.stdenv; }).overrideAttrs
+          (orig: {
+            configureFlags = orig.configureFlags ++ [
+              "--disable-shared"
+              "--enable-static"
+            ];
+          });
       fancy.nuitka = self.python3Packages.nuitka.override { python = fancy.python3; };
 
       fancy.zstd = optimizedBuild super.zstd;
@@ -386,15 +388,17 @@ rec {
 
             nativeBuildInputs = orig.nativeBuildInputs ++ [ self.nukeReferences ];
 
-            buildInputs = [ self.python3Minimal ] ++ (with self.fancy; [
-               boost
-               curl
-               expat
-               libxml2
-               openssl.out
-               xz
-               zlib
-            ]);
+            buildInputs =
+              [ self.python3Minimal ]
+              ++ (with self.fancy; [
+                boost
+                curl
+                expat
+                libxml2
+                openssl.out
+                xz
+                zlib
+              ]);
 
             preFixup =
               (orig.postFixup or "")
@@ -414,7 +418,7 @@ rec {
           });
     };
 
-  pkgs.dev =
+  pkgs.debug =
     (import toolchainPkgs.path {
       overlays = [
         (self: prev: {
@@ -423,7 +427,7 @@ rec {
               llvm-overlay
               helpersOverlay
               (crossOverlay {
-                build-flags = build-flags.dev;
+                build-flags = build-flags.debug;
                 crossEnv = "gnu64";
               })
             ];
@@ -472,14 +476,14 @@ rec {
 
   sysrootPackageList = {
     gnu64 = {
-      dev = sysrootPackageListFn pkgs.dev.gnu64;
+      debug = sysrootPackageListFn pkgs.debug.gnu64;
       release = sysrootPackageListFn pkgs.release.gnu64;
     };
   };
 
   rust-toolchain =
     with rust-version;
-    (toolchainPkgs.rust-bin.${channel}.${version}.${profile}.override {
+    (toolchainPkgs.rust-bin.${channel}.${version}.${rust-version.profile}.override {
       inherit targets extensions;
     });
 
@@ -531,9 +535,9 @@ rec {
   );
 
   env = {
-    sysroot.gnu64.dev = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-env-dev-sysroot-gnu64";
-      paths = sysrootPackageListFn pkgs.dev.gnu64;
+    sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-debug-sysroot-gnu64";
+      paths = sysrootPackageListFn pkgs.debug.gnu64;
     };
     sysroot.gnu64.release = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-release-sysroot-gnu64";
@@ -565,42 +569,32 @@ rec {
           "${env.sysroot.gnu64.${profile}}/include/" \
           "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/include/"
       '';
-      # Rust can't decided if the profile is called dev or debug so we need a fixup
-      postFixup =
-        (
-          if profile == "dev" then
-            ''
-              ln -s dev $out/sysroot/x86_64-unknown-linux-gnu/debug
-            ''
-          else
-            ""
-        )
-        + (
-          # libm.a file contains a GROUP instruction which contains absolute paths to /nix
-          # and those paths are not preserved by the rsync commands.
-          ''
-            export lib="$out/sysroot/x86_64-unknown-linux-gnu/${profile}/lib"
-            cd $lib
-            cat > libm.a <<EOF
-            OUTPUT_FORMAT(elf64-x86-64)
-            GROUP ( libm-${pkgs.dev.gnu64.glibc.version}.a libmvec.a )
-            EOF
-            cat > libm.so <<EOF
-            OUTPUT_FORMAT(elf64-x86-64)
-            GROUP ( libm.so.6 AS_NEEDED ( libmvec.so.1 ) )
-            EOF
-            cat > libc.so <<EOF
-            OUTPUT_FORMAT(elf64-x86-64)
-            GROUP ( libc.so.6 libc_nonshared.a AS_NEEDED ( ld-linux-x86-64.so.2 ) )
-            EOF
-          '');
+      postFixup = (
+        # libm.a file contains a GROUP instruction which contains absolute paths to /nix
+        # and those paths are not preserved by the rsync commands.
+        ''
+          export lib="$out/sysroot/x86_64-unknown-linux-gnu/${profile}/lib"
+          cd $lib
+          cat > libm.a <<EOF
+          OUTPUT_FORMAT(elf64-x86-64)
+          GROUP ( libm-${pkgs.${profile}.gnu64.glibc.version}.a libmvec.a )
+          EOF
+          cat > libm.so <<EOF
+          OUTPUT_FORMAT(elf64-x86-64)
+          GROUP ( libm.so.6 AS_NEEDED ( libmvec.so.1 ) )
+          EOF
+          cat > libc.so <<EOF
+          OUTPUT_FORMAT(elf64-x86-64)
+          GROUP ( libc.so.6 libc_nonshared.a AS_NEEDED ( ld-linux-x86-64.so.2 ) )
+          EOF
+        '');
     };
 
-  sysroot.gnu64.dev = sysrootFn "dev";
+  sysroot.gnu64.debug = sysrootFn "debug";
   sysroot.gnu64.release = sysrootFn "release";
 
   sysroots = with sysroot; [
-    gnu64.dev
+    gnu64.debug
     gnu64.release
   ];
 

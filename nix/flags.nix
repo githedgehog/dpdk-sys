@@ -6,9 +6,10 @@ rec {
     LDFLAGS = "-fuse-ld=lld -Wl,-O3 -Wl,-z,relro,-z,now -Wl,--thinlto-jobs=1 -Wl,-plugin-opt,jobs=1 -Qunused-arguments";
   };
 
-  dev = rec {
+  debug = rec {
     CFLAGS = " ${machine} -Og -ggdb3 -fno-inline -Qunused-arguments";
     CXXFLAGS = CFLAGS;
     LDFLAGS = "-fuse-ld=lld";
   };
+
 }
