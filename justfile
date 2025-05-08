@@ -217,7 +217,7 @@ build-libc-container: (_build-container "libc-env-" + profile _libc_container_na
 build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container build-mstflint-container
+build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container
 
 # Push the compile-env and doc-env containers to the container registry
 [script]
@@ -231,8 +231,9 @@ push: build
     docker push "{{ _frr_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
     docker push "{{ _libc_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
     docker push "{{ _libc_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
-    docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
-    docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    # Temporary comment to reduce build times
+    # docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
+    # docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
