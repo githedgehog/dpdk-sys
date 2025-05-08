@@ -50,4 +50,22 @@
       ];
     };
   };
+  dplane-rpc = {
+    branch = "$DPLANE_RPC_BRANCH";
+    rev = "$DPLANE_RPC_REV";
+    hash = "$DPLANE_RPC_HASH";
+    commit_date = "$DPLANE_RPC_COMMIT_DATE";
+  };
+  dplane-plugin = {
+    branch = "$DPLANE_PLUGIN_BRANCH";
+    rev = "$DPLANE_PLUGIN_REV";
+    hash = "$DPLANE_PLUGIN_HASH";
+    commit_date = "$DPLANE_PLUGIN_COMMIT_DATE";
+  };
+  frr = {
+    branch = "$FRR_BRANCH";
+    rev = "$FRR_REV";
+    hash = "$FRR_HASH";
+    commit_date = "$FRR_COMMIT_DATE";
+  };
 }

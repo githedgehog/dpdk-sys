@@ -1,8 +1,22 @@
 ARG IMAGE=scratch
-FROM ${IMAGE} AS frr
+FROM ${IMAGE} AS frr-base
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+RUN find / -name '*.a' -exec rm -f {} \;
+RUN find / -name '*.la' -exec rm -f {} \;
+RUN find / -name '*.h' -exec rm -f {} \;
+#RUN ln -s / $(< /the-path-to-frr) && rm /the-path-to-frr
+FROM scratch AS frr-release
+COPY --from=frr-base / /
+FROM scratch AS frr-debug
+COPY --from=frr-base / /
+#RUN export TO=$(dirname $(readlink /lib/frr/modules/zebra_fpm.so)) \
+# && cp /lib/frr/modules/zebra_hh_dplane.so $TO
+CMD ["/libexec/frr/docker-start"]
 FROM ${IMAGE} AS doc-env
-FROM ${IMAGE} AS libc-env
-FROM ${IMAGE} AS mstflint
+FROM ${IMAGE} AS libc-env-release
+FROM ${IMAGE} AS libc-env-debug
+FROM ${IMAGE} AS mstflint-release
+FROM ${IMAGE} AS mstflint-debug
 FROM ${IMAGE} AS compile-env
 # This sets up sudo to work in the compile env container
 RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \

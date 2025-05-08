@@ -50,4 +50,22 @@
       ];
     };
   };
+  dplane-rpc = {
+    branch = "master";
+    rev = "019206ff443645684596fbef49470163f5ae58d6";
+    hash = "sha256-lbkDKEvOhrgP+AQO2ENjmpPUYoBcW8mlByHXOLbp518=";
+    commit_date = "2025-04-02T11:27:15+00:00";
+  };
+  dplane-plugin = {
+    branch = "pr/daniel-noland/cmake-fixups";
+    rev = "b020a78fe953ede0ba902abb355c823e975dc211";
+    hash = "sha256-KsP9BG7et4McTnmwCgmwEtOhTF99b37JeHSmOs+zoB0=";
+    commit_date = "2025-05-08T03:14:50+00:00";
+  };
+  frr = {
+    branch = "hh-master";
+    rev = "9edf5a564c45820289473ca088fb2386d57706ac";
+    hash = "sha256-G0Pzlie6wBkdj3Kkzio6XwPedBFQsc7vIZCqMm+cqQY=";
+    commit_date = "2025-02-05T17:10:13+00:00";
+  };
 }

@@ -291,6 +291,8 @@ rec {
       frr =
         (optimizedBuild (
           self.callPackage ./nix/frr {
+            rev = versions.frr.rev;
+            hash = versions.frr.hash;
             json_c = fancy.json_c.dev;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
@@ -315,8 +317,32 @@ rec {
               "--enable-static-bin"
             ];
           });
-      dplane-rpc = optimizedBuild (self.callPackage ./nix/dplane-rpc { });
+      dplane-rpc = optimizedBuild (
+        self.callPackage ./nix/dplane-rpc {
+          rev = versions.dplane-rpc.rev;
+          hash = versions.dplane-rpc.hash;
+        }
+      );
+      dplane-plugin = optimizedBuild (
+        self.callPackage ./nix/dplane-plugin {
+          rev = versions.dplane-plugin.rev;
+          hash = versions.dplane-plugin.hash;
+          commit_date = versions.dplane-plugin.commit_date;
+          stdenv = fancy.stdenv;
+          libyang = libyang-static;
+          pcre2 = fancy.pcre2;
+        }
+      );
       frr-config = (optimizedBuild (self.callPackage ./nix/frr-config { }));
+      frr-with-dplane-plugin = self.symlinkJoin {
+        name = "frr-with-dplane-plugin";
+        paths = [
+          frr
+          dplane-rpc
+          dplane-plugin
+          frr-config
+        ];
+      };
       fancy.python3 = (super.python3.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
         configureFlags = orig.configureFlags ++ [
           "--disable-shared"
@@ -344,7 +370,11 @@ rec {
         enableStatic = true;
       };
       fancy.expat = optimizedBuild super.expat;
-      fancy.openssl = (optimizedBuild super.openssl).override { static = true; };
+      # the optimized build for openssl takes ages to run.  We don't care about the performance of the crypto for
+      # mstflint so skip the optimization
+      fancy.openssl = (super.openssl.override { static = true; }).overrideAttrs (final: {
+        doCheck = false;
+      });
       fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
       hwdata = optimizedBuild super.hwdata;
       pciutils = (optimizedBuild super.pciutils).override {
@@ -600,75 +630,22 @@ rec {
 
   maxLayers = 120;
 
-  initfrr = toolchainPkgs.stdenv.mkDerivation {
-    name = "${project-name}-initfrr";
-    src = ./nix/frr/bin;
-    dontUnpack = true;
-    installPhase = ''
-      mkdir -p $out/bin
-      cp $src/init.sh $out/bin/init.sh
-      chmod +x $out/bin/init.sh
-    '';
-  };
-
-  frrContainerContents = (
-    with pkgs.release.gnu64;
-    [
-      bash
-      coreutils
-      frr
-      glibc.bin
-      glibc.out
-      gnugrep
-      gnused
-      initfrr
-      libxcrypt
-      ncurses
-      readline
-      tmpdir
-    ]
-  );
-
-  container = {
+  container-profile = profile: {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/frr";
       tag = "${image-tag}";
-      contents = frrContainerContents;
-      config = {
-        Env = [
-          "LD_LIBRARY_PATH=/lib"
-          "PATH=/bin:/libexec/frr"
-        ];
-        Entrypoint = [ "/bin/init.sh" ];
-      };
-      inherit maxLayers;
-    };
-    compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/compile-env";
-      tag = "${image-tag}";
-      contents = [
-        env.compile
-        pkgs.dev.gnu64.glibc.static
-        pkgs.release.gnu64.glibc.static
-        pkgs.dev.gnu64.glibc.dev
-        pkgs.release.gnu64.glibc.dev
-        pkgs.dev.gnu64.glibc.out
-        pkgs.release.gnu64.glibc.out
-      ] ++ sysroots;
-      inherit maxLayers;
-    };
-    doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/doc-env";
-      tag = "${image-tag}";
-      contents = docEnvPackageList;
-      inherit maxLayers;
-      config = {
-        Entrypoint = [
-          "/bin/mdbook"
-        ];
-        Env = [
-          "LD_LIBRARY_PATH=/lib"
-          "PATH=/bin"
+      contents = toolchainPkgs.buildEnv {
+        name = "frr-env-${profile}";
+        pathsToLink = [ "/" ];
+        paths = with pkgs.${profile}.gnu64; [
+          bash
+          fancy.busybox
+          dplane-plugin
+          dplane-rpc
+          findutils
+          frr-config
+          pkgs.${profile}.gnu64.frr
+          tmpdir
         ];
       };
     };
@@ -676,11 +653,12 @@ rec {
       name = "${contianer-repo}/libc-env";
       tag = "${image-tag}";
       contents = [
-        pkgs.release.gnu64.glibc.out
-        pkgs.release.gnu64.libgcc.libgcc
+        pkgs.${profile}.gnu64.glibc.out
+        pkgs.${profile}.gnu64.libgcc.libgcc
       ];
       inherit maxLayers;
     };
+
     mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/mstflint";
       tag = "${image-tag}";
@@ -693,5 +671,49 @@ rec {
       ];
       inherit maxLayers;
     };
+
   };
+
+  container =
+    let
+      release = container-profile "release";
+      debug = container-profile "debug";
+    in
+    {
+      frr-release = release.frr;
+      frr-debug = debug.frr;
+      mstflint-release = release.mstflint;
+      mstflint-debug = debug.mstflint;
+      libc-env-release = release.libc-env;
+      libc-env-debug = debug.libc-env;
+      compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
+        name = "${contianer-repo}/compile-env";
+        tag = "${image-tag}";
+        contents = [
+          env.compile
+          pkgs.debug.gnu64.glibc.static
+          pkgs.release.gnu64.glibc.static
+          pkgs.debug.gnu64.glibc.dev
+          pkgs.release.gnu64.glibc.dev
+          pkgs.debug.gnu64.glibc.out
+          pkgs.release.gnu64.glibc.out
+        ] ++ sysroots;
+        inherit maxLayers;
+      };
+      doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
+        name = "${contianer-repo}/doc-env";
+        tag = "${image-tag}";
+        contents = docEnvPackageList;
+        inherit maxLayers;
+        config = {
+          Entrypoint = [
+            "/bin/mdbook"
+          ];
+          Env = [
+            "LD_LIBRARY_PATH=/lib"
+            "PATH=/bin"
+          ];
+        };
+      };
+    };
 }

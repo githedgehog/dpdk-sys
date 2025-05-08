@@ -2,6 +2,8 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  rev,
+  hash,
 
   # build time
   autoreconfHook,
@@ -77,8 +79,7 @@ stdenv.mkDerivation
   src = fetchFromGitHub {
     owner = "githedgehog";
     repo = finalAttrs.pname;
-    rev = "hh-master";
-    hash = "sha256-G0Pzlie6wBkdj3Kkzio6XwPedBFQsc7vIZCqMm+cqQY=";
+    inherit rev hash;
   };
 
   nativeBuildInputs = [

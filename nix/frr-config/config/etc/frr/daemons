@@ -39,8 +39,7 @@ pathd=no
 # Check /etc/pam.d/frr if you intend to use "vtysh"!
 #
 vtysh_enable=yes
-#zebra_options=" -A 127.0.0.1 -s 90000000 --log-level debug --log stdout -M hh_dplane:'--local-dp-sock-path /var/run/frr/hh/plugin.sock --remote-dp-sock-path /var/run/frr/hh/dataplane.sock'"
-zebra_options=" -A 127.0.0.1 -s 90000000 --log-level debug --log stdout"
+zebra_options=" -A 127.0.0.1 -s 90000000 --log-level debug --log stdout -M hh_dplane:'--local-dp-sock-path /var/run/frr/hh/plugin.sock --remote-dp-sock-path /var/run/frr/hh/dataplane.sock'"
 mgmtd_options="  -A 127.0.0.1"
 bgpd_options="   -A 127.0.0.1"
 ospfd_options="  -A 127.0.0.1"
