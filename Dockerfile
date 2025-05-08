@@ -4,6 +4,9 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN find / -name '*.a' -exec rm -f {} \;
 RUN find / -name '*.la' -exec rm -f {} \;
 RUN find / -name '*.h' -exec rm -f {} \;
+RUN mkdir -p /run/frr/hh /var/run/frr/hh
+RUN chown -R frr:frr /run/frr
+RUN chown -R frr:frr /var/run/frr
 #RUN ln -s / $(< /the-path-to-frr) && rm /the-path-to-frr
 FROM scratch AS frr-release
 COPY --from=frr-base / /
