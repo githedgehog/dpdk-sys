@@ -73,6 +73,8 @@ _compile_env_container_name := container_repo + "/compile-env"
 _frr_container_name := container_repo + "/frr"
 
 _libc_container_name := container_repo + "/libc-env"
+[private]
+_mstflint_container_name := container_repo + "/mstflint"
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -199,6 +201,9 @@ build-frr-container: build-frr-contents (_build-container "frr" _frr_container_n
 # Build and tag the libc container
 build-libc-container: (_build-container "libc-env" _libc_container_name)
 
+# Build and tag the libc container
+build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
+
 # Build the sysroot, and compile-env containers
 build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container
 
@@ -214,6 +219,8 @@ push: build
     docker push "{{ _frr_container_name }}:{{ _commit }}.rust-{{ rust }}"
     docker push "{{ _libc_container_name }}:{{ _slug }}.rust-{{ rust }}"
     docker push "{{ _libc_container_name }}:{{ _commit }}.rust-{{ rust }}"
+    docker push "{{ _mstflint_container_name }}:{{ _slug }}.rust-{{ rust }}"
+    docker push "{{ _mstflint_container_name }}:{{ _commit }}.rust-{{ rust }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]

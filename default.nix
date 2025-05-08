@@ -330,6 +330,88 @@ rec {
         ];
       });
       fancy.nuitka = self.python3Packages.nuitka.override { python = fancy.python3; };
+
+      fancy.zstd = optimizedBuild super.zstd;
+      fancy.xz = optimizedBuild super.xz;
+      fancy.libxml2 = optimizedBuild super.libxml2;
+      fancy.busybox = super.busybox.override {
+        enableStatic = true;
+      };
+      fancy.boost = (optimizedBuild super.boost).override {
+        enableShared = false;
+        enableStatic = true;
+      };
+      fancy.expat = optimizedBuild super.expat;
+      fancy.openssl = (optimizedBuild super.openssl).override { static = true; };
+      fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
+      hwdata = optimizedBuild super.hwdata;
+      pciutils = (optimizedBuild super.pciutils).override {
+        zlib = fancy.zlib;
+        static = true;
+      };
+
+      mstflint =
+        (optimizedBuild (
+          super.mstflint.override {
+            openssl = self.fancy.openssl;
+            zlib = self.fancy.zlib;
+            xz = self.fancy.xz;
+            expat = self.fancy.expat;
+            boost = self.fancy.boost;
+            curl = self.fancy.curl;
+            libxml2 = self.fancy.libxml2;
+            busybox = self.fancy.busybox;
+            onlyFirmwareUpdater = false;
+            enableDPA = false;
+            python3 = self.python3Minimal;
+          }
+        )).overrideAttrs
+          (orig: {
+            configureFlags = [
+              "--datarootdir=${placeholder "out"}/share"
+              "--disable-cs"
+              "--disable-dc"
+              "--disable-inband"
+              "--disable-openssl"
+              "--disable-rdmem"
+              "--disable-shared"
+              "--disable-xml2"
+              "--enable-adb-generic-tools"
+              "--enable-all-static"
+              "--enable-static"
+              "--enable-static-libstdcpp"
+              # "--disable-dpa" # disabling this causes it to be enabled?
+              # "--disable-fw-mgr" # disabling this causes it to be enabled?
+            ];
+
+            nativeBuildInputs = orig.nativeBuildInputs ++ [ self.nukeReferences ];
+
+            buildInputs = [ self.python3Minimal ] ++ (with self.fancy; [
+               boost
+               curl
+               expat
+               libxml2
+               openssl.out
+               xz
+               zlib
+            ]);
+
+            preFixup =
+              (orig.postFixup or "")
+              + (with self.fancy; ''
+                rm -f "$out/bin/mstarchive"
+                rm -f "$out/bin/mstfwmanager"
+                find "$out" \
+                  -type f \
+                  -exec nuke-refs \
+                  -e "$out" \
+                  -e ${openssl.out} \
+                  -e ${self.python3Minimal} \
+                  -e ${busybox} \
+                  -e ${stdenv.cc.libc} \
+                  '{}' +;
+              '');
+          });
     };
 
   pkgs.dev =
@@ -602,6 +684,18 @@ rec {
       contents = [
         pkgs.release.gnu64.glibc.out
         pkgs.release.gnu64.libgcc.libgcc
+      ];
+      inherit maxLayers;
+    };
+    mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/mstflint";
+      tag = "${image-tag}";
+      contents = [
+        pkgs.${profile}.gnu64.mstflint
+        pkgs.${profile}.gnu64.coreutils
+        pkgs.${profile}.gnu64.gnugrep
+        pkgs.${profile}.gnu64.gnused
+        pkgs.${profile}.gnu64.python3Minimal
       ];
       inherit maxLayers;
     };

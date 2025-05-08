@@ -2,6 +2,7 @@ ARG IMAGE=scratch
 FROM ${IMAGE} AS frr
 FROM ${IMAGE} AS doc-env
 FROM ${IMAGE} AS libc-env
+FROM ${IMAGE} AS mstflint
 FROM ${IMAGE} AS compile-env
 # This sets up sudo to work in the compile env container
 RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
