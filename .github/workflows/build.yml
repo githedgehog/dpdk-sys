@@ -104,7 +104,8 @@ jobs:
 
       - name: "build + push"
         run: |
-          just --yes debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
+          just --yes profile=debug debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
+          just --yes profile=release debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
 
       - name: "Install SBOM generator dependencies"
         run: |

@@ -12,6 +12,7 @@ debug := "false"
 
 rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
+profile := "release"
 
 # This is the maximum number of builds nix will start at a time.
 # You can jump this up to 8 or 16 if you have a really powerful machine.
@@ -41,6 +42,7 @@ nix_substitute := "true"
 # private fields (do not override)
 # The git tree state (clean or dirty)
 
+[private]
 _clean := ```
   set -euo pipefail
   (
@@ -52,26 +54,31 @@ _clean := ```
 
 # The git commit hash of the last commit to HEAD
 
+[private]
 _commit := `git rev-parse HEAD`
 
 # The git branch we are currnetly on
 
+[private]
 _branch := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g'`
 
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 
+[private]
 _slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
 
 # The name of the doc-env container
 
+[private]
 _doc_env_container_name := container_repo + "/doc-env"
 
 # The name of the compile-env container
 
+[private]
 _compile_env_container_name := container_repo + "/compile-env"
-
+[private]
 _frr_container_name := container_repo + "/frr"
-
+[private]
 _libc_container_name := container_repo + "/libc-env"
 [private]
 _mstflint_container_name := container_repo + "/mstflint"
@@ -80,8 +87,11 @@ _mstflint_container_name := container_repo + "/mstflint"
 # We temporarily tag our containers with this id so that we can be certain that we are
 # not retagging or pushing some other container.
 
-_build-id := uuid()
+[private]
+_build-id := "1"
+[private]
 _just_debug_ := if debug == "true" { "set -x" } else { "" }
+[private]
 _build_time := datetime_utc("%+")
 
 # Compute the default number of jobs to use as a guess to try and keep the build within the memory limits
@@ -116,15 +126,12 @@ _nix_build attribute:
       --argstr container-repo "{{ container_repo }}" \
       --argstr image-tag "{{ _build-id }}" \
       --argstr rust-channel "{{ rust }}" \
+      --argstr profile "{{ profile }}" \
       "-j{{ max_nix_builds }}" \
       `if [ "{{ cores }}" != "all" ]; then echo --cores "{{ cores }}"; fi`
 
 # Build the sysroot
-build-sysroot: \
-  (_nix_build "sysroots") \
-  (_nix_build "env.sysroot.gnu64.dev") \
-  (_nix_build "env.sysroot.gnu64.release") \
-  (_nix_build "sysroot")
+build-sysroot: (_nix_build "sysroots") (_nix_build "env.sysroot.gnu64.debug") (_nix_build "env.sysroot.gnu64.release") (_nix_build "sysroot")
 
 # Build doc env packages
 build-docEnvPackageList: (_nix_build "docEnvPackageList")
@@ -180,12 +187,17 @@ _build-container target container-name: (_nix_build ("container." + target))
       --target {{ target }} \
       -f Dockerfile \
       .
+    if [ "{{ profile }}" = "release" ]; then
+      docker tag \
+        "{{ container-name }}:post-{{ _build-id }}" \
+        "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
+    fi
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
+      "{{ container-name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
+      "{{ container-name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
     docker rmi "{{ container-name }}:{{ _build-id }}"
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
 
@@ -196,16 +208,16 @@ build-doc-env-container: build-docEnvPackageList (_build-container "doc-env" _do
 build-compile-env-container: build-sysroot (_build-container "compile-env" _compile_env_container_name)
 
 # Build and tag the frr container
-build-frr-container: build-frr-contents (_build-container "frr" _frr_container_name)
+build-frr-container: (_build-container "frr-" + profile _frr_container_name)
 
 # Build and tag the libc container
-build-libc-container: (_build-container "libc-env" _libc_container_name)
+build-libc-container: (_build-container "libc-env-" + profile _libc_container_name)
 
 # Build and tag the libc container
-build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
+build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container
+build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container build-mstflint-container
 
 # Push the compile-env and doc-env containers to the container registry
 [script]
@@ -215,12 +227,12 @@ push: build
     docker push "{{ _compile_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
     docker push "{{ _doc_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
     docker push "{{ _doc_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
-    docker push "{{ _frr_container_name }}:{{ _slug }}.rust-{{ rust }}"
-    docker push "{{ _frr_container_name }}:{{ _commit }}.rust-{{ rust }}"
-    docker push "{{ _libc_container_name }}:{{ _slug }}.rust-{{ rust }}"
-    docker push "{{ _libc_container_name }}:{{ _commit }}.rust-{{ rust }}"
-    docker push "{{ _mstflint_container_name }}:{{ _slug }}.rust-{{ rust }}"
-    docker push "{{ _mstflint_container_name }}:{{ _commit }}.rust-{{ rust }}"
+    docker push "{{ _frr_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _frr_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _libc_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _libc_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]

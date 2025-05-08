@@ -4,6 +4,8 @@
 
   # build time
   cmake,
+  rev,
+  hash,
 
   # args
   cmakeBuildType ? "Release",
@@ -12,7 +14,7 @@
 stdenv.mkDerivation
 (finalAttrs: {
   pname = "dplane-rpc";
-  version = "0.0.1";
+  version = rev;
 
   doCheck = false;
   enableParallelBuilding = true;
@@ -20,8 +22,7 @@ stdenv.mkDerivation
   src = fetchFromGitHub {
     owner = "githedgehog";
     repo = finalAttrs.pname;
-    rev = "019206ff443645684596fbef49470163f5ae58d6";
-    hash = "sha256-lbkDKEvOhrgP+AQO2ENjmpPUYoBcW8mlByHXOLbp518=";
+    inherit rev hash;
   };
 
   outputs = ["out" "dev"];
@@ -37,8 +38,6 @@ stdenv.mkDerivation
   ];
 
   configurePhase = ''
-    export NIX_CFLAGS_COMPILE=" $CFLAGS $LDFLAGS -fvisibility=default ";
-    export NIX_CFLAGS_LINK=" $LDFLAGS ";
     cmake -DCMAKE_C_STANDARD=23 -S ./clib .
   '';
 
