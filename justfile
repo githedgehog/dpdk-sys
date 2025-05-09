@@ -148,12 +148,6 @@ _build-container target container-name: (_nix_build ("container." + target))
     build_date="$(date --utc --iso-8601=date --date="{{ _build_time }}")"
     declare -r build_date
     docker load --input /tmp/dpdk-sys/builds/container.{{ target }}
-    docker tag \
-      "{{ container-name }}:{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
-    docker tag \
-      "{{ container-name }}:{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
     docker build \
       --label "git.commit={{ _commit }}" \
       --label "git.branch={{ _branch }}" \
@@ -187,17 +181,20 @@ _build-container target container-name: (_nix_build ("container." + target))
       --target {{ target }} \
       -f Dockerfile \
       .
-    if [ "{{ profile }}" = "release" ]; then
-      docker tag \
-        "{{ container-name }}:post-{{ _build-id }}" \
-        "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
-    fi
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
       "{{ container-name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
       "{{ container-name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    if [ "{{ profile }}" = "release" ]; then
+      docker tag \
+        "{{ container-name }}:post-{{ _build-id }}" \
+        "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
+      docker tag \
+        "{{ container-name }}:post-{{ _build-id }}" \
+        "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
+    fi
     docker rmi "{{ container-name }}:{{ _build-id }}"
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
 
