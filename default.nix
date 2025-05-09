@@ -632,7 +632,7 @@ rec {
 
   container-profile = profile: {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/frr";
+      name = "${contianer-repo}/frr-${profile}";
       tag = "${image-tag}";
       contents = toolchainPkgs.buildEnv {
         name = "frr-env-${profile}";
@@ -660,7 +660,7 @@ rec {
     };
 
     mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/mstflint";
+      name = "${contianer-repo}/mstflint-${profile}";
       tag = "${image-tag}";
       contents = [
         pkgs.${profile}.gnu64.mstflint
@@ -682,10 +682,9 @@ rec {
     {
       frr-release = release.frr;
       frr-debug = debug.frr;
-      mstflint-release = release.mstflint;
-      mstflint-debug = debug.mstflint;
-      libc-env-release = release.libc-env;
-      libc-env-debug = debug.libc-env;
+      mstflint-debug = release.mstflint;
+      mstflint-release = debug.mstflint;
+      libc-env = release.libc-env;
       compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
         name = "${contianer-repo}/compile-env";
         tag = "${image-tag}";
