@@ -10,14 +10,12 @@ RUN chown -R frr:frr /var/run/frr
 #RUN ln -s / $(< /the-path-to-frr) && rm /the-path-to-frr
 FROM scratch AS frr-release
 COPY --from=frr-base / /
+CMD ["/libexec/frr/docker-start"]
 FROM scratch AS frr-debug
 COPY --from=frr-base / /
-#RUN export TO=$(dirname $(readlink /lib/frr/modules/zebra_fpm.so)) \
-# && cp /lib/frr/modules/zebra_hh_dplane.so $TO
 CMD ["/libexec/frr/docker-start"]
 FROM ${IMAGE} AS doc-env
-FROM ${IMAGE} AS libc-env-release
-FROM ${IMAGE} AS libc-env-debug
+FROM ${IMAGE} AS libc-env
 FROM ${IMAGE} AS mstflint-release
 FROM ${IMAGE} AS mstflint-debug
 FROM ${IMAGE} AS compile-env

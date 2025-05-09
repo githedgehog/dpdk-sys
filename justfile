@@ -59,13 +59,10 @@ _commit := `git rev-parse HEAD`
 
 # The git branch we are currnetly on
 
-[private]
-_branch := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g'`
-
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 
 [private]
-_slug := (if _clean == "clean" { "" } else { "dirty." }) + _branch
+_slug := (if _clean == "clean" { "" } else { "dirty." }) + _commit
 
 # The name of the doc-env container
 
@@ -77,11 +74,11 @@ _doc_env_container_name := container_repo + "/doc-env"
 [private]
 _compile_env_container_name := container_repo + "/compile-env"
 [private]
-_frr_container_name := container_repo + "/frr"
+_frr_container_name := container_repo + "/frr-" + profile
 [private]
 _libc_container_name := container_repo + "/libc-env"
 [private]
-_mstflint_container_name := container_repo + "/mstflint"
+_mstflint_container_name := container_repo + "/mstflint-" + profile
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -122,11 +119,9 @@ _nix_build attribute:
       -f default.nix \
       "{{ attribute }}" \
       --out-link "/tmp/dpdk-sys/builds/{{ attribute }}" \
-      --argstr onlyRunDeps false \
       --argstr container-repo "{{ container_repo }}" \
       --argstr image-tag "{{ _build-id }}" \
       --argstr rust-channel "{{ rust }}" \
-      --argstr profile "{{ profile }}" \
       "-j{{ max_nix_builds }}" \
       `if [ "{{ cores }}" != "all" ]; then echo --cores "{{ cores }}"; fi`
 
@@ -150,7 +145,6 @@ _build-container target container-name: (_nix_build ("container." + target))
     docker load --input /tmp/dpdk-sys/builds/container.{{ target }}
     docker build \
       --label "git.commit={{ _commit }}" \
-      --label "git.branch={{ _branch }}" \
       --label "git.tree-state={{ _clean }}" \
       --label "build.date=${build_date}" \
       --label "build.timestamp={{ _build_time }}" \
@@ -183,18 +177,7 @@ _build-container target container-name: (_nix_build ("container." + target))
       .
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}.{{ profile }}"
-    docker tag \
-      "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}.{{ profile }}"
-    if [ "{{ profile }}" = "release" ]; then
-      docker tag \
-        "{{ container-name }}:post-{{ _build-id }}" \
-        "{{ container-name }}:{{ _slug }}"
-      docker tag \
-        "{{ container-name }}:post-{{ _build-id }}" \
-        "{{ container-name }}:{{ _commit }}"
-    fi
+      "{{ container-name }}:{{ _slug }}"
     docker rmi "{{ container-name }}:{{ _build-id }}"
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
 
@@ -208,10 +191,10 @@ build-compile-env-container: build-sysroot (_build-container "compile-env" _comp
 build-frr-container: (_build-container "frr-" + profile _frr_container_name)
 
 # Build and tag the libc container
-build-libc-container: (_build-container "libc-env-" + profile _libc_container_name)
+build-libc-container: (_build-container "libc-env" _libc_container_name)
 
 # Build and tag the libc container
-build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
+build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
 
 # Build the sysroot, and compile-env containers
 build: build-sysroot build-libc-container build-frr-container build-compile-env-container build-doc-env-container
@@ -221,16 +204,11 @@ build: build-sysroot build-libc-container build-frr-container build-compile-env-
 push: build
     {{ _just_debug_ }}
     docker push "{{ _compile_env_container_name }}:{{ _slug }}"
-    docker push "{{ _compile_env_container_name }}:{{ _commit }}"
     docker push "{{ _doc_env_container_name }}:{{ _slug }}"
-    docker push "{{ _doc_env_container_name }}:{{ _commit }}"
-    docker push "{{ _frr_container_name }}:{{ _slug }}.{{ profile }}"
-    docker push "{{ _frr_container_name }}:{{ _commit }}.{{ profile }}"
-    docker push "{{ _libc_container_name }}:{{ _slug }}.{{ profile }}"
-    docker push "{{ _libc_container_name }}:{{ _commit }}.{{ profile }}"
+    docker push "{{ _frr_container_name }}:{{ _slug }}"
+    docker push "{{ _libc_container_name }}:{{ _slug }}"
     # Temporary comment to reduce build times
-    # docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}"
-    # docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}"
+    # docker push "{{ _mstflint_container_name }}:{{ _slug }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
