@@ -65,7 +65,7 @@ _branch := `git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g'`
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 
 [private]
-_slug := (if _clean == "clean" { "" } else { "dirty-_-" }) + _branch
+_slug := (if _clean == "clean" { "" } else { "dirty." }) + _branch
 
 # The name of the doc-env container
 
