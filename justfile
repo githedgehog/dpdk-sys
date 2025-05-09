@@ -183,17 +183,17 @@ _build-container target container-name: (_nix_build ("container." + target))
       .
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
+      "{{ container-name }}:{{ _slug }}.{{ profile }}"
     docker tag \
       "{{ container-name }}:post-{{ _build-id }}" \
-      "{{ container-name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+      "{{ container-name }}:{{ _commit }}.{{ profile }}"
     if [ "{{ profile }}" = "release" ]; then
       docker tag \
         "{{ container-name }}:post-{{ _build-id }}" \
-        "{{ container-name }}:{{ _slug }}.rust-{{ rust }}"
+        "{{ container-name }}:{{ _slug }}"
       docker tag \
         "{{ container-name }}:post-{{ _build-id }}" \
-        "{{ container-name }}:{{ _commit }}.rust-{{ rust }}"
+        "{{ container-name }}:{{ _commit }}"
     fi
     docker rmi "{{ container-name }}:{{ _build-id }}"
     docker rmi "{{ container-name }}:post-{{ _build-id }}"
@@ -220,17 +220,17 @@ build: build-sysroot build-libc-container build-frr-container build-compile-env-
 [script]
 push: build
     {{ _just_debug_ }}
-    docker push "{{ _compile_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
-    docker push "{{ _compile_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
-    docker push "{{ _doc_env_container_name }}:{{ _slug }}.rust-{{ rust }}"
-    docker push "{{ _doc_env_container_name }}:{{ _commit }}.rust-{{ rust }}"
-    docker push "{{ _frr_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
-    docker push "{{ _frr_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
-    docker push "{{ _libc_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
-    docker push "{{ _libc_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    docker push "{{ _compile_env_container_name }}:{{ _slug }}"
+    docker push "{{ _compile_env_container_name }}:{{ _commit }}"
+    docker push "{{ _doc_env_container_name }}:{{ _slug }}"
+    docker push "{{ _doc_env_container_name }}:{{ _commit }}"
+    docker push "{{ _frr_container_name }}:{{ _slug }}.{{ profile }}"
+    docker push "{{ _frr_container_name }}:{{ _commit }}.{{ profile }}"
+    docker push "{{ _libc_container_name }}:{{ _slug }}.{{ profile }}"
+    docker push "{{ _libc_container_name }}:{{ _commit }}.{{ profile }}"
     # Temporary comment to reduce build times
-    # docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}.rust-{{ rust }}"
-    # docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}.rust-{{ rust }}"
+    # docker push "{{ _mstflint_container_name }}:{{ _slug }}.{{ profile }}"
+    # docker push "{{ _mstflint_container_name }}:{{ _commit }}.{{ profile }}"
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
