@@ -9,8 +9,8 @@ rec {
   rust-version = versions.rust.${rust-channel};
   llvm-version = rust-version.llvm;
   llvm-overlay = self: super: rec {
-    llvmPackages = super.${llvmPackagesVersion};
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
+    fancy.llvmPackages = super.${llvmPackagesVersion};
   };
   rust-overlay = (
     import (builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz")
@@ -65,13 +65,14 @@ rec {
           env.NIX_CXXFLAGS_COMPILE = (orig.NIX_CXXFLAGS_COMPILE or "") + flags.CXXFLAGS;
           env.NIX_CFLAGS_LINK = (orig.NIX_CFLAGS_LINK or "") + flags.LDFLAGS;
         }));
-      fancy.stdenvDynamic = self.llvmPackages.libcxxStdenv;
+
+      fancy.stdenvDynamic = super.fancy.llvmPackages.libcxxStdenv;
       fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild =
         pkg:
         (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
-          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ self.llvmPackages.bintools ];
+          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ super.fancy.llvmPackages.bintools ];
           LD = "lld";
           withDoc = false;
           doCheck = false;
@@ -193,7 +194,7 @@ rec {
           self.callPackage ./nix/dpdk-wrapper {
             inherit dpdk;
             libbsd = fancy.libbsd;
-            bintools = self.llvmPackages.bintools;
+            bintools = super.fancy.llvmPackages.bintools;
           }
         )
       );
@@ -531,9 +532,9 @@ rec {
     libgcc.libgcc
     libgccjit
     libz
-    llvmPackages.clang
-    llvmPackages.libclang.lib
-    llvmPackages.lld
+    fancy.llvmPackages.clang
+    fancy.llvmPackages.libclang.lib
+    fancy.llvmPackages.lld
     pam
     rust-toolchain
     sudo

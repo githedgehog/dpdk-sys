@@ -4,11 +4,11 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    stable: &rust_stable "1.86.0"
+    stable: &rust_stable "1.87.0"
   llvm_for_rust_pins:
-    stable: &llvm_stable "19"
+    stable: &llvm_stable "20"
   nixpkgs:
-    unstable: &nixpkgs_unstable "b3582c75c7f21ce0b429898980eddbbf05c68e55"
+    unstable: &nixpkgs_unstable "e4b09e47ace7d87de083786b404bf232eb6c89d8"
   just:
     version: &just_version "1.40.0"
 # matrix describes the test structure which I expect to be relatively stable.
