@@ -38,16 +38,6 @@ rec {
         mkdir --parent "$out/tmp"
       '';
     };
-
-    graphviz-links = self.stdenv.mkDerivation {
-      name = "${project-name}-tmpdir";
-      src = null;
-      dontUnpack = true;
-      installPhase = ''
-        mkdir -p $out/opt/local/bin
-        ln -s "${self.graphviz}/bin/dot" "$out/opt/local/bin/dot"
-      '';
-    };
   };
 
   project-name = "dpdk-sys";
@@ -525,29 +515,6 @@ rec {
     which
   ];
 
-  docEnvPackageList = (
-    with toolchainPkgs;
-    [
-      (callPackage ./nix/mdbook-alerts { })
-      (callPackage ./nix/plantuml-wrapper { })
-      bash
-      coreutils
-      file # needed for mdbook-plantuml to work (runtime exe dep)
-      fontconfig.lib # needed for mdbook-plantuml to work (runtime exe dep)
-      fontconfig.out # needed for mdbook-plantuml to work (runtime exe dep)
-      glibc.out
-      graphviz # needed for mdbook-plantuml to work (runtime exe dep)
-      graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
-      jre # needed for mdbook-plantuml to work (runtime exe dep)
-      mdbook
-      mdbook-mermaid
-      mdbook-plantuml
-      openssl.out # needed for mdbook-plantuml to work (runtime exe dep)
-      plantuml # needed for mdbook-plantuml to work (runtime exe dep)
-      tmpdir
-    ]
-  );
-
   env = {
     sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-debug-sysroot-gnu64";
@@ -560,10 +527,6 @@ rec {
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
-    };
-    doc = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-doc";
-      paths = docEnvPackageList;
     };
   };
 
@@ -682,21 +645,6 @@ rec {
           pkgs.release.gnu64.glibc.out
         ] ++ sysroots;
         inherit maxLayers;
-      };
-      doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
-        name = "${contianer-repo}/doc-env";
-        tag = "${image-tag}";
-        contents = docEnvPackageList;
-        inherit maxLayers;
-        config = {
-          Entrypoint = [
-            "/bin/mdbook"
-          ];
-          Env = [
-            "LD_LIBRARY_PATH=/lib"
-            "PATH=/bin"
-          ];
-        };
       };
     };
 }
