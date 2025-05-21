@@ -29,7 +29,7 @@ rec {
         ];
       };
 
-  helpersOverlay = self: super: rec {
+  helpersOverlay = self: super: {
     tmpdir = self.stdenv.mkDerivation {
       name = "${project-name}-tmpdir";
       src = null;
@@ -296,10 +296,8 @@ rec {
             json_c = fancy.json_c.dev;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
-            nuitka = self.python3Packages.nuitka;
             pcre2 = self.fancy.pcre2;
             protobufc = self.protobufc;
-            python3Minimal = fancy.python3Minimal;
             readline = fancy.readline;
             stdenv = fancy.stdenv;
           }
@@ -343,21 +341,6 @@ rec {
           frr-config
         ];
       };
-      fancy.python3 = (super.python3.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags ++ [
-          "--disable-shared"
-          "--enable-static"
-        ];
-      });
-      fancy.python3Minimal =
-        (super.python3Minimal.override { stdenv = fancy.stdenv; }).overrideAttrs
-          (orig: {
-            configureFlags = orig.configureFlags ++ [
-              "--disable-shared"
-              "--enable-static"
-            ];
-          });
-      fancy.nuitka = self.python3Packages.nuitka.override { python = fancy.python3; };
 
       fancy.zstd = optimizedBuild super.zstd;
       fancy.xz = optimizedBuild super.xz;
@@ -500,7 +483,7 @@ rec {
       libnftnl
       libnl.out
       libpcap
-      numactl
+      numactl.dev
       rdma-core
     ];
 
@@ -541,29 +524,6 @@ rec {
     which
   ];
 
-  docEnvPackageList = (
-    with toolchainPkgs;
-    [
-      (callPackage ./nix/mdbook-alerts { })
-      (callPackage ./nix/plantuml-wrapper { })
-      bash
-      coreutils
-      file # needed for mdbook-plantuml to work (runtime exe dep)
-      fontconfig.lib # needed for mdbook-plantuml to work (runtime exe dep)
-      fontconfig.out # needed for mdbook-plantuml to work (runtime exe dep)
-      glibc.out
-      graphviz # needed for mdbook-plantuml to work (runtime exe dep)
-      graphviz-links # needed for mdbook-plantuml to work (runtime exe dep)
-      jre # needed for mdbook-plantuml to work (runtime exe dep)
-      mdbook
-      mdbook-mermaid
-      mdbook-plantuml
-      openssl.out # needed for mdbook-plantuml to work (runtime exe dep)
-      plantuml # needed for mdbook-plantuml to work (runtime exe dep)
-      tmpdir
-    ]
-  );
-
   env = {
     sysroot.gnu64.debug = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-debug-sysroot-gnu64";
@@ -576,10 +536,6 @@ rec {
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
-    };
-    doc = toolchainPkgs.symlinkJoin {
-      name = "${project-name}-doc";
-      paths = docEnvPackageList;
     };
   };
 
@@ -698,21 +654,6 @@ rec {
           pkgs.release.gnu64.glibc.out
         ] ++ sysroots;
         inherit maxLayers;
-      };
-      doc-env = toolchainPkgs.dockerTools.buildLayeredImage {
-        name = "${contianer-repo}/doc-env";
-        tag = "${image-tag}";
-        contents = docEnvPackageList;
-        inherit maxLayers;
-        config = {
-          Entrypoint = [
-            "/bin/mdbook"
-          ];
-          Env = [
-            "LD_LIBRARY_PATH=/lib"
-            "PATH=/bin"
-          ];
-        };
       };
     };
 }

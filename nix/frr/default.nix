@@ -10,7 +10,6 @@
   bison,
   buildPackages,
   flex,
-  nuitka,
   perl,
   pkg-config,
   python3Minimal,
@@ -70,9 +69,9 @@ stdenv.mkDerivation
 (finalAttrs: {
   pname = "frr";
   version = "10.2.1";
-  dontPatchShebangs = true;
-  dontFixup = true;
-  dontPatchElf = true;
+  dontPatchShebangs = false;
+  dontFixup = false;
+  dontPatchElf = false;
 
   outputs = ["out" "build"];
 
@@ -92,7 +91,6 @@ stdenv.mkDerivation
     libcap
     libxcrypt
     libyang
-    nuitka
     pcre2
     perl
     pkg-config
@@ -111,7 +109,7 @@ stdenv.mkDerivation
   };
 
   configureFlags = [
-    "--disable-python-runtime"
+    "--enable-python-runtime"
     "--enable-fpm=netlink" # try to disable later
     "--with-moduledir=/lib/frr/modules"
 
@@ -185,15 +183,13 @@ stdenv.mkDerivation
 
   buildPhase = ''
     make "-j$(nproc)";
-    python3 -m nuitka --static-libpython=yes --follow-imports $src/tools/frr-reload.py
   '';
 
   installPhase = ''
     make install;
     mkdir -p $build/src/
     cp -r . $build/src/frr
-    mv frr-reload.bin $out/libexec/frr/frr-reload
-    find "$out" -exec nuke-refs -e "$out" -e "${stdenv.cc.libc}" '{}' +;
+    find "$out" -exec nuke-refs -e "$out" -e "${python3Minimal}" -e "${stdenv.cc.libc}" '{}' +;
   '';
 
   doCheck = false;
