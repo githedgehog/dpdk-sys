@@ -297,7 +297,6 @@ rec {
             json_c = fancy.json_c.dev;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
-            nuitka = self.python3Packages.nuitka;
             pcre2 = self.fancy.pcre2;
             protobufc = self.protobufc;
             python3Minimal = fancy.python3Minimal;
