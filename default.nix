@@ -299,7 +299,6 @@ rec {
             libyang = self.libyang-static;
             pcre2 = self.fancy.pcre2;
             protobufc = self.protobufc;
-            python3Minimal = fancy.python3Minimal;
             readline = fancy.readline;
             stdenv = fancy.stdenv;
           }
@@ -343,21 +342,6 @@ rec {
           frr-config
         ];
       };
-      fancy.python3 = (super.python3.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags ++ [
-          "--disable-shared"
-          "--enable-static"
-        ];
-      });
-      fancy.python3Minimal =
-        (super.python3Minimal.override { stdenv = fancy.stdenv; }).overrideAttrs
-          (orig: {
-            configureFlags = orig.configureFlags ++ [
-              "--disable-shared"
-              "--enable-static"
-            ];
-          });
-      fancy.nuitka = self.python3Packages.nuitka.override { python = fancy.python3; };
 
       fancy.zstd = optimizedBuild super.zstd;
       fancy.xz = optimizedBuild super.xz;
