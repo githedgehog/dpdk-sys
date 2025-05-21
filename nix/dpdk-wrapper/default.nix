@@ -6,7 +6,7 @@
 }:
 stdenv.mkDerivation {
   pname = "dpdk-wrapper";
-  version = "24.11.1";
+  version = "25.03";
 
   src = ./src;
 
