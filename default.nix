@@ -29,7 +29,7 @@ rec {
         ];
       };
 
-  helpersOverlay = self: super: rec {
+  helpersOverlay = self: super: {
     tmpdir = self.stdenv.mkDerivation {
       name = "${project-name}-tmpdir";
       src = null;
