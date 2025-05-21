@@ -483,7 +483,7 @@ rec {
       libnftnl
       libnl.out
       libpcap
-      numactl
+      numactl.dev
       rdma-core
     ];
 
