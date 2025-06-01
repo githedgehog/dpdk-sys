@@ -33,8 +33,8 @@
   rust = {
     stable = {
       channel = "stable";
-      version = "1.86.0";
-      llvm = "19";
+      version = "1.87.0";
+      llvm = "20";
       profile = "default";
       targets = [
         "x86_64-unknown-linux-gnu"
