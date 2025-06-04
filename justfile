@@ -125,9 +125,6 @@ build-sysroot: (_nix_build "sysroots") (_nix_build "env.sysroot.gnu64.debug") (_
 # Build doc env packages
 build-docEnvPackageList: (_nix_build "docEnvPackageList")
 
-# Build FRR
-build-frr-contents: (_nix_build "frrContainerContents")
-
 # Builds and post processes a container from the nix build
 [private]
 [script]
