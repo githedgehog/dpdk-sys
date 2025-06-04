@@ -294,7 +294,7 @@ rec {
           (orig: {
             LDFLAGS =
               (orig.LDFLAGS or "")
-              + " -L${self.libyang-static}/lib "
+              + " -L${self.libyang-static}/lib -lyang "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
               + " -L${protobufc}/lib -lprotobuf-c "
               + " -L${fancy.pcre2}/lib -lpcre2-8 ";
