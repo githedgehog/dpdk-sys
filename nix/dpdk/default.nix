@@ -8,7 +8,6 @@
   makeWrapper,
   libbsd,
   numactl,
-  libbpf,
   zlib,
   elfutils,
   jansson,
@@ -47,7 +46,6 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     jansson
-    libbpf
     elfutils
     libpcap
     numactl
