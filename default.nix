@@ -188,15 +188,16 @@ rec {
           }
         )
       );
+      fancy.xxHash = optimizedBuild super.xxHash;
       libyang-dynamic =
-        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs
+        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; xxHash = self.fancy.xxHash; }).overrideAttrs
           (orig: {
             cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
               "-DBUILD_SHARED_LIBS=ON"
             ];
           });
       libyang-static =
-        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; }).overrideAttrs
+        ((optimizedBuild super.libyang).override { pcre2 = self.fancy.pcre2; xxHash = self.fancy.xxHash; }).overrideAttrs
           (orig: {
             cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
               "-DBUILD_SHARED_LIBS=OFF"
@@ -295,6 +296,7 @@ rec {
             LDFLAGS =
               (orig.LDFLAGS or "")
               + " -L${self.libyang-static}/lib -lyang "
+              + " -L${fancy.xxHash}/lib -lxxhash "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
               + " -L${protobufc}/lib -lprotobuf-c "
               + " -L${fancy.pcre2}/lib -lpcre2-8 ";

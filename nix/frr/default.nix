@@ -81,6 +81,10 @@ stdenv.mkDerivation
     inherit rev hash;
   };
 
+  # Without the std explicitly set, we may run into abseil-cpp
+  # compilation errors.
+  CXXFLAGS = "-std=gnu++23";
+
   nativeBuildInputs = [
     autoreconfHook
     bison
