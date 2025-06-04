@@ -259,9 +259,8 @@ rec {
       protobufc =
         (optimizedBuild (
           self.callPackage ./nix/protobufc {
-            stdenv = self.fancy.stdenv;
-            protobuf = self.protobuf;
-            zlib = self.fancy.zlib;
+            stdenv = fancy.stdenv;
+            zlib = fancy.zlib;
           }
         )).overrideAttrs
           (orig: {
@@ -287,8 +286,7 @@ rec {
             json_c = fancy.json_c.dev;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
-            pcre2 = self.fancy.pcre2;
-            protobufc = self.protobufc;
+            pcre2 = fancy.pcre2;
             readline = fancy.readline;
             stdenv = fancy.stdenv;
           }
@@ -298,8 +296,8 @@ rec {
               (orig.LDFLAGS or "")
               + " -L${self.libyang-static}/lib "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
-              + " -L${self.protobufc}/lib -lprotobuf-c "
-              + " -L${self.fancy.pcre2}/lib -lpcre2-8 ";
+              + " -L${protobufc}/lib -lprotobuf-c "
+              + " -L${fancy.pcre2}/lib -lpcre2-8 ";
             configureFlags = orig.configureFlags ++ [
               "--enable-shared"
               "--enable-static"
