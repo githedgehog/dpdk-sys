@@ -40,18 +40,17 @@ stdenv.mkDerivation rec {
     python3
     python3.pkgs.sphinx
     python3.pkgs.pyelftools
-    libnl
-    rdma-core
   ];
 
   buildInputs = [
-    jansson
     elfutils
+    jansson
+    libnl
     libpcap
     numactl
     openssl.dev
-    zlib
     python3
+    zlib
   ];
 
   propagatedBuildInputs = [
