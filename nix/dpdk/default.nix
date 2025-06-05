@@ -12,7 +12,6 @@
   elfutils,
   jansson,
   openssl,
-  libpcap,
   rdma-core,
   libnl,
   libmd,
@@ -46,7 +45,6 @@ stdenv.mkDerivation rec {
     elfutils
     jansson
     libnl
-    libpcap
     numactl
     openssl.dev
     python3
