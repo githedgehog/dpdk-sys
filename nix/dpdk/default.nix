@@ -9,7 +9,6 @@
   libbsd,
   numactl,
   elfutils,
-  jansson,
   rdma-core,
   libnl,
   libmd,
@@ -41,7 +40,6 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     elfutils
-    jansson
     libnl
     numactl
     python3
