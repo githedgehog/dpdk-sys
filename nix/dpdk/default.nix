@@ -11,7 +11,6 @@
   zlib,
   elfutils,
   jansson,
-  openssl,
   rdma-core,
   libnl,
   libmd,
@@ -46,7 +45,6 @@ stdenv.mkDerivation rec {
     jansson
     libnl
     numactl
-    openssl.dev
     python3
     zlib
   ];
