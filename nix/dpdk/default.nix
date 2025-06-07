@@ -8,10 +8,7 @@
   makeWrapper,
   libbsd,
   numactl,
-  zlib,
   elfutils,
-  jansson,
-  openssl,
   rdma-core,
   libnl,
   libmd,
@@ -43,12 +40,9 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     elfutils
-    jansson
     libnl
     numactl
-    openssl.dev
     python3
-    zlib
   ];
 
   propagatedBuildInputs = [
