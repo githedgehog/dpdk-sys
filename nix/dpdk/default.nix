@@ -8,7 +8,6 @@
   makeWrapper,
   libbsd,
   numactl,
-  zlib,
   elfutils,
   jansson,
   rdma-core,
@@ -46,7 +45,6 @@ stdenv.mkDerivation rec {
     libnl
     numactl
     python3
-    zlib
   ];
 
   propagatedBuildInputs = [
