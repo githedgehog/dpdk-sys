@@ -1,6 +1,0 @@
-#!/bin/bash
-
-export GRAPHVIZ_DOT=/bin/dot
-export FONTCONFIG_PATH=/etc/fonts
-export HOME=/tmp # needed for font cache
-exec /lib/openjdk/bin/java -jar /lib/plantuml.jar "$@"
