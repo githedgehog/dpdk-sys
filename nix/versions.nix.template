@@ -42,6 +42,7 @@
       extensions = [
         "cargo"
         "clippy"
+        "llvm-tools"
         "rust-analyzer"
         "rust-docs"
         "rust-src"
