@@ -106,6 +106,10 @@ rustup update
 
 declare RUST_STABLE_PIN RUST_STABLE_PIN_LLVM
 RUST_STABLE_PIN="$(rustc "+stable" -vV | grep 'release:' | awk '{print $NF}')"
+declare RUST_TOOLCHAIN_TOML_HASH
+RUST_TOOLCHAIN_TOML_HASH="$(nix-prefetch-url --type sha256 "https://static.rust-lang.org/dist/channel-rust-${RUST_STABLE_PIN}.toml")"
+RUST_TOOLCHAIN_TOML_HASH="sha256-$(nix hash convert --from base32 --to base64 --hash-algo sha256 "${RUST_TOOLCHAIN_TOML_HASH}")"
+declare -rx RUST_TOOLCHAIN_TOML_HASH
 RUST_STABLE_PIN_LLVM="$(rustc "+stable" -vV | grep 'LLVM version:' | awk '{print $NF}' | sed 's/\([0-9]\+\)\.[0-9]\+\.[0-9]\+/\1/')"
 declare -rx RUST_STABLE_PIN
 declare -rx RUST_STABLE_PIN_LLVM

@@ -12,9 +12,21 @@ rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     fancy.llvmPackages = super.${llvmPackagesVersion};
   };
-  rust-overlay = (
-    import (builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz")
+  fenix-overlay = (
+    import "${fetchTarball "https://github.com/nix-community/fenix/archive/main.tar.gz"}/overlay.nix"
   );
+  rust-overlay = self: super: rec {
+    rust-toolchain = with super.fenix; let toolchain = fromToolchainName {
+        name = versions.rust.stable.version;
+        sha256 = versions.rust.stable.toolchain_toml_hash;
+      }; in combine (
+      map (extension: toolchain.${extension}) versions.rust.stable.extensions
+    );
+    fancy = super.fancy // rec {
+      rustPlatform = super.makeRustPlatform { cargo = rust-toolchain; rustc = rust-toolchain; };
+      rustOverrides = pkg: (pkg.override { inherit rustPlatform; }).overrideAttrs { doCheck = false; };
+    };
+  };
   toolchainPkgs =
     import
       (builtins.fetchTarball {
@@ -24,6 +36,7 @@ rec {
       {
         overlays = [
           llvm-overlay
+          fenix-overlay
           rust-overlay
           helpersOverlay
         ];
@@ -431,6 +444,8 @@ rec {
             overlays = [
               llvm-overlay
               helpersOverlay
+              fenix-overlay
+              rust-overlay
               (crossOverlay {
                 build-flags = build-flags.debug;
                 crossEnv = "gnu64";
@@ -449,6 +464,8 @@ rec {
             overlays = [
               llvm-overlay
               helpersOverlay
+              fenix-overlay
+              rust-overlay
               (crossOverlay {
                 build-flags = build-flags.release;
                 crossEnv = "gnu64";
@@ -486,11 +503,6 @@ rec {
     };
   };
 
-  rust-toolchain =
-    with rust-version;
-    (toolchainPkgs.rust-bin.${channel}.${version}.${rust-version.profile}.override {
-      inherit targets extensions;
-    });
 
   compileEnvPackageList = with toolchainPkgs; [
     bash
