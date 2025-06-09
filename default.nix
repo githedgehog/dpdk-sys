@@ -511,6 +511,7 @@ rec {
     libgccjit
     libz
     pam
+    patchelf
     rust-toolchain
     stdenv.cc.cc.lib
     sudo
