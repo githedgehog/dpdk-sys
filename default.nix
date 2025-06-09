@@ -514,6 +514,7 @@ rec {
     patchelf
     rust-toolchain
     stdenv.cc.cc.lib
+    strace
     sudo
     tmpdir
     which
