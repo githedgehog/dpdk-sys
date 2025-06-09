@@ -26,6 +26,12 @@ rec {
       rustPlatform = super.makeRustPlatform { cargo = rust-toolchain; rustc = rust-toolchain; };
       rustOverrides = pkg: (pkg.override { inherit rustPlatform; }).overrideAttrs { doCheck = false; };
     };
+    cargo-bolero = fancy.rustOverrides super.cargo-bolero;
+    cargo-deny = fancy.rustOverrides super.cargo-deny;
+    cargo-llvm-cov = fancy.rustOverrides super.cargo-llvm-cov;
+    cargo-nextest = fancy.rustOverrides super.cargo-nextest;
+    csview = fancy.rustOverrides super.csview;
+    just = fancy.rustOverrides super.just;
   };
   toolchainPkgs =
     import
@@ -507,7 +513,12 @@ rec {
   compileEnvPackageList = with toolchainPkgs; [
     bash
     cacert
+    cargo-bolero
+    cargo-deny
+    cargo-llvm-cov
+    cargo-nextest
     coreutils
+    csview
     docker-client
     fancy.llvmPackages.clang
     fancy.llvmPackages.compiler-rt
@@ -517,6 +528,7 @@ rec {
     glibc.dev
     glibc.out
     gnugrep
+    just
     just
     libcap
     libgcc.libgcc
