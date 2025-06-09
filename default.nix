@@ -56,7 +56,8 @@ rec {
           env.NIX_CFLAGS_LINK = (orig.NIX_CFLAGS_LINK or "") + flags.LDFLAGS;
         }));
 
-      fancy.stdenvDynamic = super.fancy.llvmPackages.libcxxStdenv;
+      fancy.llvmPackages = super.fancy.llvmPackages;
+      fancy.stdenvDynamic = super.fancy.llvmPackages.stdenv;
       fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild =
@@ -496,6 +497,10 @@ rec {
     cacert
     coreutils
     docker-client
+    fancy.llvmPackages.clang
+    fancy.llvmPackages.compiler-rt
+    fancy.llvmPackages.libclang.lib
+    fancy.llvmPackages.lld
     getent
     glibc.dev
     glibc.out
@@ -505,11 +510,9 @@ rec {
     libgcc.libgcc
     libgccjit
     libz
-    fancy.llvmPackages.clang
-    fancy.llvmPackages.libclang.lib
-    fancy.llvmPackages.lld
     pam
     rust-toolchain
+    stdenv.cc.cc.lib
     sudo
     tmpdir
     which
