@@ -72,6 +72,8 @@ _frr_container_name := container_repo + "/frr-" + profile
 [private]
 _libc_container_name := container_repo + "/libc-env"
 [private]
+_debug_container_name := container_repo + "/debug-env"
+[private]
 _mstflint_container_name := container_repo + "/mstflint-" + profile
 
 # This is a unique identifier for the build.
@@ -182,10 +184,13 @@ build-frr-container: (_build-container "frr-" + profile _frr_container_name)
 build-libc-container: (_build-container "libc-env" _libc_container_name)
 
 # Build and tag the libc container
+build-debug-container: (_build-container "debug-env" _debug_container_name)
+
+# Build and tag the libc container
 build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-libc-container build-frr-container build-compile-env-container
+build: build-sysroot build-libc-container build-compile-env-container build-frr-container build-debug-container
 
 # Push the containers to the container registry
 [script]
@@ -194,6 +199,7 @@ push: build
     docker push "{{ _compile_env_container_name }}:{{ _slug }}"
     docker push "{{ _frr_container_name }}:{{ _slug }}"
     docker push "{{ _libc_container_name }}:{{ _slug }}"
+    docker push "{{ _debug_container_name }}:{{ _slug }}"
     # Temporary comment to reduce build times
     # docker push "{{ _mstflint_container_name }}:{{ _slug }}"
 

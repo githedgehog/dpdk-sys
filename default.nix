@@ -625,6 +625,35 @@ rec {
         ];
       };
     };
+    debug-env = toolchainPkgs.dockerTools.buildLayeredImage {
+      name = "${contianer-repo}/debug-env";
+      tag = "${image-tag}";
+      contents = (with toolchainPkgs; [
+        bash
+        coreutils
+        curl
+        ethtool
+        gawk
+        gdb
+        gnugrep
+        gnused
+        iproute2
+        jq
+        less
+        nano
+        rr
+        strace
+        tcpdump
+        tshark
+        valgrind
+        vim
+        zstd
+      ]) ++ (with pkgs.${profile}.gnu64; [
+        glibc.out
+        libgcc.libgcc
+      ]);
+      inherit maxLayers;
+    };
     libc-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/libc-env";
       tag = "${image-tag}";
@@ -660,6 +689,7 @@ rec {
       frr-debug = debug.frr;
       mstflint-debug = release.mstflint;
       mstflint-release = debug.mstflint;
+      debug-env = release.debug-env;
       libc-env = release.libc-env;
       compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
         name = "${contianer-repo}/compile-env";

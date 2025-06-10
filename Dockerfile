@@ -16,6 +16,7 @@ COPY --from=frr-base / /
 CMD ["/libexec/frr/docker-start"]
 FROM ${IMAGE} AS doc-env
 FROM ${IMAGE} AS libc-env
+FROM ${IMAGE} AS debug-env
 FROM ${IMAGE} AS mstflint-release
 FROM ${IMAGE} AS mstflint-debug
 FROM ${IMAGE} AS compile-env
