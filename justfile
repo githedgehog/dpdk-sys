@@ -196,8 +196,8 @@ build: build-sysroot build-libc-container build-compile-env-container build-frr-
 [script]
 push: build
     {{ _just_debug_ }}
-    docker push "{{ _compile_env_container_name }}:{{ _slug }}"
     docker push "{{ _frr_container_name }}:{{ _slug }}"
+    docker push "{{ _compile_env_container_name }}:{{ _slug }}"
     docker push "{{ _libc_container_name }}:{{ _slug }}"
     docker push "{{ _debug_container_name }}:{{ _slug }}"
     # Temporary comment to reduce build times
