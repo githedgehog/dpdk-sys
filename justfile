@@ -190,7 +190,7 @@ build-debug-container: (_build-container "debug-env" _debug_container_name)
 build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-libc-container build-compile-env-container build-frr-container build-debug-container
+build: build-frr-container build-sysroot build-libc-container build-compile-env-container build-debug-container
 
 # Push the containers to the container registry
 [script]
