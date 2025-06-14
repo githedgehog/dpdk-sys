@@ -640,15 +640,18 @@ rec {
         bashInteractive
         coreutils
         curl
+        debianutils
         ethtool
         gawk
         gdb
         gnugrep
         gnused
         iproute2
+        iptables
         jq
         less
         nano
+        procps
         rr
         strace
         tcpdump
