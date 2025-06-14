@@ -104,11 +104,11 @@ jobs:
 
       - name: "build + push (debug)"
         run: |
-          just --yes profile=debug debug=true max_nix_builds=1 cores=$(nproc) rust="${{ matrix.toolchain.key }}" push
+          sudo --preserve-env just --yes profile=debug debug=true max_nix_builds=1 cores=$(nproc) rust="${{ matrix.toolchain.key }}" push
 
       - name: "build + push (release)"
         run: |
-          just --yes profile=release debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
+          sudo --preserve-env just --yes profile=release debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
 
       - name: "Install SBOM generator dependencies"
         run: |
