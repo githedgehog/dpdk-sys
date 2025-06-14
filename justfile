@@ -177,31 +177,60 @@ _build-container target container-name: (_nix_build ("container." + target))
 # Build and tag the compile-env container
 build-compile-env-container: build-sysroot (_build-container "compile-env" _compile_env_container_name)
 
+# build and push the compile-env container
+[script]
+push-compile-env-container: build-compile-env-container
+    {{ _just_debug_ }}
+    docker push "{{ _compile_env_container_name }}:{{ _slug }}"
+
 # Build and tag the frr container
 build-frr-container: (_build-container "frr-" + profile _frr_container_name)
+
+# build and push the frr container
+[script]
+push-frr-container: build-frr-container
+    {{ _just_debug_ }}
+    docker push "{{ _frr_container_name }}:{{ _slug }}"
 
 # Build and tag the libc container
 build-libc-container: (_build-container "libc-env" _libc_container_name)
 
+# build and push the libc container
+push-libc-container: build-libc-container
+    {{ _just_debug_ }}
+
 # Build and tag the libc container
 build-debug-container: (_build-container "debug-env" _debug_container_name)
 
+# build and push the libc container
+[script]
+push-debug-container: build-debug-container
+    {{ _just_debug_ }}
+    docker push "{{ _libc_container_name }}:{{ _slug }}"
+
 # Build and tag the libc container
-build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
+build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
+
+# build and push the libc container
+[script]
+push-mstflint-container: build-mstflint-container
+    {{ _just_debug_ }}
+    docker push "{{ _mstflint_container_name }}:{{ _slug }}"
 
 # Build the sysroot, and compile-env containers
-build: build-sysroot build-libc-container build-compile-env-container build-frr-container build-debug-container
+build: \
+  build-libc-container \
+  build-debug-container \
+  build-compile-env-container \
+  build-frr-container
 
 # Push the containers to the container registry
 [script]
-push: build
-    {{ _just_debug_ }}
-    docker push "{{ _compile_env_container_name }}:{{ _slug }}"
-    docker push "{{ _frr_container_name }}:{{ _slug }}"
-    docker push "{{ _libc_container_name }}:{{ _slug }}"
-    docker push "{{ _debug_container_name }}:{{ _slug }}"
-    # Temporary comment to reduce build times
-    # docker push "{{ _mstflint_container_name }}:{{ _slug }}"
+push: \
+  push-libc-container \
+  push-debug-container \
+  push-compile-env-container \
+  push-frr-container
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
