@@ -569,6 +569,14 @@ rec {
       installPhase = ''
         mkdir --parent "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/"{lib,include}
         rsync -rLhP \
+          --exclude '- *.so' \
+          --exclude '- *.so.*' \
+          --exclude '- *.la' \
+          --exclude '- *.pc' \
+          --exclude '- *.la' \
+          --include 'libc.so*' \
+          --include 'libm.so*' \
+          --include 'libgcc_s.so*' \
           "${env.sysroot.gnu64.${profile}}/lib/" \
           "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/lib/"
         rsync -rLhP \
