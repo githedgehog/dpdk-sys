@@ -637,7 +637,7 @@ rec {
       name = "${contianer-repo}/debug-env";
       tag = "${image-tag}";
       contents = (with toolchainPkgs; [
-        bash
+        bashInteractive
         coreutils
         curl
         ethtool
