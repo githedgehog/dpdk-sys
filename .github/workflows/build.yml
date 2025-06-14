@@ -104,13 +104,13 @@ jobs:
 
       - name: "build + push"
         run: |
-          just --yes profile=debug debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
-          just --yes profile=release debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
+          sudo --preserve-env just --yes profile=debug debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
+          sudo --preserve-env just --yes profile=release debug=true max_nix_builds=1 rust="${{ matrix.toolchain.key }}" push
 
       - name: "Install SBOM generator dependencies"
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
-            [ -h "$f" ] && rm "$f"
+            [ -h "$f" ] && sudo --preserve-env rm "$f"
           done
           cargo binstall --no-confirm csview
           sudo apt-get update
@@ -118,7 +118,7 @@ jobs:
 
       - name: "generate SBOM"
         run: |
-          ./scripts/sbom.sh
+          sudo --preserve-env ./scripts/sbom.sh
 
       - name: "step summary"
         continue-on-error: true # might fail due to $GITHUB_STEP_SUMMARY size limit of 1MB
@@ -128,7 +128,7 @@ jobs:
       - name: "remove links from /tmp/dpdk-sys/builds"
         run: |
           for f in /tmp/dpdk-sys/builds/*; do
-              [ -h "$f" ] && rm "$f"
+              [ -h "$f" ] && sudo rm "$f"
           done
 
       - uses: "actions/upload-artifact@v4"
