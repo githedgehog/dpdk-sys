@@ -209,7 +209,7 @@ push-debug-container: build-debug-container
     docker push "{{ _libc_container_name }}:{{ _slug }}"
 
 # Build and tag the libc container
-build-mstflint-container: (_build-container "mstflint" _mstflint_container_name)
+build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
 
 # build and push the libc container
 [script]
@@ -222,8 +222,7 @@ build: \
   build-libc-container \
   build-debug-container \
   build-compile-env-container \
-  build-frr-container \
-  build-mstflint-container
+  build-frr-container
 
 # Push the containers to the container registry
 [script]
@@ -231,8 +230,7 @@ push: \
   push-libc-container \
   push-debug-container \
   push-compile-env-container \
-  push-frr-container \
-  push-mstflint-container
+  push-frr-container
 
 # Delete all the old generations of the nix store and run the garbage collector
 [script]
