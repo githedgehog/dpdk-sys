@@ -133,12 +133,12 @@ rec {
       tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
-        version = "57.0";
+        version = "58.0";
         src = self.fetchFromGitHub {
           owner = "githedgehog";
           repo = "rdma-core";
-          rev = "fix-lto-57.0";
-          hash = "sha256-huwo0j/V2a1KNwEuL8EfVyk+bSVNRkm+zm8vGhvUr3s=";
+          rev = "fix-lto-58.0";
+          hash = "sha256-2FpPBrbHvJlFfmQlLBbl9aK5BIOXfOJxr6AIPsrLrPY=";
         };
         outputs = [
           "out"
