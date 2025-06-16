@@ -4,7 +4,7 @@ set -euxo pipefail
 
 declare -rx NIXPKGS_BRANCH="nixpkgs-unstable"
 declare -rx DPLANE_RPC_BRANCH="master"
-declare -rx DPLANE_PLUGIN_BRANCH="pr/daniel-noland/cmake-fixups"
+declare -rx DPLANE_PLUGIN_BRANCH="master"
 declare -rx FRR_BRANCH="hh-master"
 
 declare project_dir

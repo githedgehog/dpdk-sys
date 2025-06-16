@@ -61,10 +61,10 @@
     commit_date = "2025-04-02T11:27:15+00:00";
   };
   dplane-plugin = {
-    branch = "pr/daniel-noland/cmake-fixups";
-    rev = "ef66a53eca877a02d54f04dfcb1dc9756b480b5f";
+    branch = "master";
+    rev = "2e191ded95d0b612c70acc1a16b03670067f264a";
     hash = "sha256-HNqoQa2gB7wSjZGjsM/0lvn0V+nInfCbpM2EZ+E2GCQ=";
-    commit_date = "2025-06-13T17:45:02+00:00";
+    commit_date = "2025-06-16T19:31:56+00:00";
   };
   frr = {
     branch = "hh-master";
