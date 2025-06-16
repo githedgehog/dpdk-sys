@@ -623,11 +623,12 @@ rec {
         pathsToLink = [ "/" ];
         paths = with pkgs.${profile}.gnu64; [
           bash
-          fancy.busybox
           dplane-plugin
           dplane-rpc
+          fancy.busybox
           findutils
           frr-config
+          libgccjit
           pkgs.${profile}.gnu64.frr
           tmpdir
         ];
