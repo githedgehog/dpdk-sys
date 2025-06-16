@@ -12,7 +12,7 @@ debug := "false"
 
 rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
-profile := "release"
+profile := "debug"
 
 # This is the maximum number of builds nix will start at a time.
 # You can jump this up to 8 or 16 if you have a really powerful machine.
