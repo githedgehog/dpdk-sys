@@ -631,6 +631,7 @@ rec {
           frr-config
           libgccjit
           pkgs.${profile}.gnu64.frr
+          python3Minimal
           tmpdir
         ];
       };
