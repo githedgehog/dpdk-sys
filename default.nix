@@ -32,6 +32,10 @@ rec {
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
     just = fancy.rustOverrides super.just;
+    frr-agent = fancy.rustOverrides (self.callPackage ./nix/frr-agent {
+      rev = versions.frr-agent.rev;
+      hash = versions.frr-agent.hash;
+    });
   };
   toolchainPkgs =
     import
@@ -628,6 +632,7 @@ rec {
           dplane-rpc
           fancy.busybox
           findutils
+          frr-agent
           frr-config
           libgccjit
           pkgs.${profile}.gnu64.frr

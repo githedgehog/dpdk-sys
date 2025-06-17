@@ -72,4 +72,10 @@
     hash = "$FRR_HASH";
     commit_date = "$FRR_COMMIT_DATE";
   };
+  frr-agent = {
+    branch = "$FRR_AGENT_BRANCH";
+    rev = "$FRR_AGENT_REV";
+    hash = "$FRR_AGENT_HASH";
+    commit_date = "$FRR_AGENT_COMMIT_DATE";
+  };
 }
