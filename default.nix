@@ -319,7 +319,8 @@ rec {
               + " -L${fancy.xxHash}/lib -lxxhash "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
               + " -L${protobufc}/lib -lprotobuf-c "
-              + " -L${fancy.pcre2}/lib -lpcre2-8 ";
+              + " -L${fancy.pcre2}/lib -lpcre2-8 "
+              + " -L${self.libgccjit}/lib -latomic ";
             configureFlags = orig.configureFlags ++ [
               "--enable-shared"
               "--enable-static"

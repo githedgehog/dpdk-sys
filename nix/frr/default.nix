@@ -24,6 +24,7 @@
   protobufc,
   readline,
   rtrlib,
+  libgccjit,
 
   # to get rid of build time dependencies
   nukeReferences,
@@ -93,8 +94,10 @@ stdenv.mkDerivation
     flex
     json_c
     libcap
+    libgccjit
     libxcrypt
     libyang
+    nukeReferences
     pcre2
     perl
     pkg-config
@@ -102,7 +105,6 @@ stdenv.mkDerivation
     python3Minimal
     readline
     rtrlib
-    nukeReferences
   ];
 
   # cross-compiling: clippy is compiled with the build host toolchain, split it out to ease
@@ -193,7 +195,7 @@ stdenv.mkDerivation
     make install;
     mkdir -p $build/src/
     cp -r . $build/src/frr
-    find "$out" -exec nuke-refs -e "$out" -e "${python3Minimal}" -e "${stdenv.cc.libc}" '{}' +;
+    find "$out" -exec nuke-refs -e "$out" -e "${libgccjit}" -e "${python3Minimal}" -e "${stdenv.cc.libc}" '{}' +;
   '';
 
   doCheck = false;
