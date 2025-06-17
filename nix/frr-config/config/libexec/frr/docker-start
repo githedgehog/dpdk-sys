@@ -6,4 +6,6 @@ source /libexec/frr/frrcommon.sh
 
 /bin/frr-agent "${@}" &
 
-wait
+wait -n
+
+exit $?
