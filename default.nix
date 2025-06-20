@@ -709,8 +709,8 @@ rec {
     {
       frr-release = release.frr;
       frr-debug = debug.frr;
-      mstflint-debug = release.mstflint;
-      mstflint-release = debug.mstflint;
+      mstflint-debug = debug.mstflint;
+      mstflint-release = release.mstflint;
       debug-env = release.debug-env;
       libc-env = release.libc-env;
       compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
