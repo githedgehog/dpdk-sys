@@ -61,20 +61,20 @@ _commit := `git rev-parse HEAD`
 # The slug is the branch name (sanitized) with a marker if the tree is dirty
 
 [private]
-_slug := (if _clean == "clean" { "" } else { "dirty." }) + _commit
+_slug := (if _clean == "clean" { "" } else { "dirty." }) + _commit + "." + profile
 
 # The name of the compile-env container
 
 [private]
 _compile_env_container_name := container_repo + "/compile-env"
 [private]
-_frr_container_name := container_repo + "/frr-" + profile
+_frr_container_name := container_repo + "/frr"
 [private]
 _libc_container_name := container_repo + "/libc-env"
 [private]
 _debug_container_name := container_repo + "/debug-env"
 [private]
-_mstflint_container_name := container_repo + "/mstflint-" + profile
+_mstflint_container_name := container_repo + "/mstflint"
 
 # This is a unique identifier for the build.
 # We temporarily tag our containers with this id so that we can be certain that we are
@@ -142,6 +142,7 @@ _build-container target container-name: (_nix_build ("container." + target))
       --label "build.date=${build_date}" \
       --label "build.timestamp={{ _build_time }}" \
       --label "rust={{ rust }}" \
+      --label "profile={{ profile }}" \
       --label "rust.version=$(nix eval --raw -f '{{ versions }}' 'rust.{{ rust }}.version')" \
       --label "rust.channel=$(nix eval --raw -f '{{ versions }}' 'rust.{{ rust }}.channel')" \
       --label "rust.profile=$(nix eval --raw -f '{{ versions }}' 'rust.{{ rust }}.profile')" \
