@@ -369,11 +369,9 @@ rec {
         enableStatic = true;
       };
       fancy.expat = optimizedBuild super.expat;
-      # the optimized build for openssl takes ages to run.  We don't care about the performance of the crypto for
-      # mstflint so skip the optimization
-      fancy.openssl = (super.openssl.override { static = true; }).overrideAttrs (final: {
+      fancy.openssl = optimizedBuild ((super.openssl.override { static = true; }).overrideAttrs (final: {
         doCheck = false;
-      });
+      }));
       fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
       hwdata = optimizedBuild super.hwdata;
       pciutils = (optimizedBuild super.pciutils).override {
@@ -687,10 +685,15 @@ rec {
       name = "${contianer-repo}/mstflint";
       tag = "${image-tag}";
       contents = [
-        pkgs.${profile}.gnu64.mstflint
+        pkgs.${profile}.gnu64.pciutils
+        pkgs.${profile}.gnu64.bashInteractive
         pkgs.${profile}.gnu64.coreutils
         pkgs.${profile}.gnu64.gnugrep
         pkgs.${profile}.gnu64.gnused
+        pkgs.${profile}.gnu64.inotify-info
+        pkgs.${profile}.gnu64.iproute2
+        pkgs.${profile}.gnu64.jq
+        pkgs.${profile}.gnu64.mstflint
         pkgs.${profile}.gnu64.python3Minimal
       ];
       inherit maxLayers;
