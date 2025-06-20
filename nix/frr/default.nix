@@ -26,9 +26,6 @@
   rtrlib,
   libgccjit,
 
-  # to get rid of build time dependencies
-  nukeReferences,
-
   # tests
   nixosTests,
 
@@ -97,7 +94,6 @@ stdenv.mkDerivation
     libgccjit
     libxcrypt
     libyang
-    nukeReferences
     pcre2
     perl
     pkg-config
@@ -195,7 +191,6 @@ stdenv.mkDerivation
     make install;
     mkdir -p $build/src/
     cp -r . $build/src/frr
-    find "$out" -exec nuke-refs -e "$out" -e "${libgccjit}" -e "${python3Minimal}" -e "${stdenv.cc.libc}" '{}' +;
   '';
 
   doCheck = false;
