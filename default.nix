@@ -621,7 +621,7 @@ rec {
 
   container-profile = profile: {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/frr-${profile}";
+      name = "${contianer-repo}/frr";
       tag = "${image-tag}";
       contents = toolchainPkgs.buildEnv {
         name = "frr-env-${profile}";
@@ -684,7 +684,7 @@ rec {
     };
 
     mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/mstflint-${profile}";
+      name = "${contianer-repo}/mstflint";
       tag = "${image-tag}";
       contents = [
         pkgs.${profile}.gnu64.mstflint
