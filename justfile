@@ -200,14 +200,14 @@ build-libc-container: (_build-container "libc-env" _libc_container_name)
 push-libc-container: build-libc-container
     {{ _just_debug_ }}
 
-# Build and tag the libc container
+# Build and tag the debug container
 build-debug-container: (_build-container "debug-env" _debug_container_name)
 
 # build and push the libc container
 [script]
 push-debug-container: build-debug-container
     {{ _just_debug_ }}
-    docker push "{{ _libc_container_name }}:{{ _slug }}"
+    docker push "{{ _debug_container_name }}:{{ _slug }}"
 
 # Build and tag the libc container
 build-mstflint-container: (_build-container "mstflint-" + profile _mstflint_container_name)
