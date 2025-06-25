@@ -197,8 +197,10 @@ push-frr-container: build-frr-container
 build-libc-container: (_build-container "libc-env" _libc_container_name)
 
 # build and push the libc container
+[script]
 push-libc-container: build-libc-container
     {{ _just_debug_ }}
+    docker push "{{ _libc_container_name }}:{{ _slug }}"
 
 # Build and tag the debug container
 build-debug-container: (_build-container "debug-env" _debug_container_name)
