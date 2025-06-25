@@ -43,6 +43,7 @@ jobs:
         uses: "cachix/install-nix-action@v31"
       - name: "install nix-prefetch-git"
         run: |
+          nix-channel --update
           nix-env -i nix-prefetch-git -f '<nixpkgs>'
       - name: "bump"
         run: |
