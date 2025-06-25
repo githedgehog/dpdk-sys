@@ -41,6 +41,9 @@ jobs:
           cargo binstall --no-confirm just
       - name: "install nix"
         uses: "cachix/install-nix-action@v31"
+      - name: "install nix-prefetch-git"
+        run: |
+          nix-env -i nix-prefetch-git -f '<nixpkgs>'
       - name: "bump"
         run: |
           just bump "${{ env.dpdk_sys_branch }}"
