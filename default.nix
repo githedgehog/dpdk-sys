@@ -443,8 +443,7 @@ rec {
 
       perftest = (
         optimizedBuild (
-          self.callPackage ./nix/perftest {
-}
+          self.callPackage ./nix/perftest {}
         )
       );
     };
