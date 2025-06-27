@@ -43,6 +43,7 @@ jobs:
         uses: "cachix/install-nix-action@v31"
       - name: "install nix-prefetch-git"
         run: |
+          sudo chown -R $(id -u):$(id -g) /nix
           nix-channel --add https://nixos.org/channels/nixos-unstable nixpkgs
           nix-channel --update
           nix-env -i nix-prefetch-git -f '<nixpkgs>'
