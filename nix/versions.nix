@@ -68,9 +68,9 @@
   };
   frr = {
     branch = "hh-master-10.3";
-    rev = "0abeeb773b72b675149837082ca2e2e6c108226c";
-    hash = "sha256-MuOE34wUvYuto8ZkbKu/EpPHVLM4uMVXL9aFKzz3RXE=";
-    commit_date = "2025-06-19T14:15:21+00:00";
+    rev = "7f43a0d792aa178f1416f9d41d5096725ffdfccc";
+    hash = "sha256-1nWAGo95DJdRhC29DuZDA1p2pREOZTit2i67WLF7QiY=";
+    commit_date = "2025-06-25T21:48:53+00:00";
   };
   frr-agent = {
     branch = "master";
