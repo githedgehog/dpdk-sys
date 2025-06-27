@@ -672,6 +672,7 @@ rec {
         zstd
       ]) ++ (with pkgs.${profile}.gnu64; [
         glibc.out
+        glibc.bin
         libgcc.libgcc
         perftest
       ]);
