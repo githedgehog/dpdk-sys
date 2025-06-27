@@ -78,4 +78,10 @@
     hash = "sha256-+cjHioZ+5ABpB6dHpqkhEw8RkKehkR2S9TrvnkoBpWA=";
     commit_date = "2025-05-15T16:26:01+00:00";
   };
+  perftest = {
+    branch = "master";
+    rev = "920087f1651191062e00f6841bc9805be9bb8662";
+    hash = "sha256-WF3+rs1b+NI1ekIhndrhpxUkJ3zUbqt8602iNCHH3rg=";
+    commit_date = "2025-06-19T12:02:31+00:00";
+  };
 }

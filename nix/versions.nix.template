@@ -78,4 +78,10 @@
     hash = "$FRR_AGENT_HASH";
     commit_date = "$FRR_AGENT_COMMIT_DATE";
   };
+  perftest = {
+    branch = "$PERFTEST_BRANCH";
+    rev = "$PERFTEST_REV";
+    hash = "$PERFTEST_HASH";
+    commit_date = "$PERFTEST_COMMIT_DATE";
+  };
 }
