@@ -443,8 +443,10 @@ rec {
 
       perftest = (
         optimizedBuild (
-          self.callPackage ./nix/perftest {}
-        )
+          self.callPackage ./nix/perftest (with versions.perftest; {
+            inherit rev hash;
+          }
+        ))
       );
     };
 
@@ -671,6 +673,7 @@ rec {
       ]) ++ (with pkgs.${profile}.gnu64; [
         glibc.out
         libgcc.libgcc
+        perftest
       ]);
       inherit maxLayers;
     };
