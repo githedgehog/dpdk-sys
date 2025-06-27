@@ -234,7 +234,7 @@ rec {
           cp -r ${self.libyang-dynamic}/* $out
         '';
       };
-      libcap =
+      fancy.libcap =
         ((optimizedBuild super.libcap).override {
           stdenv = fancy.stdenv;
           usePam = false;
