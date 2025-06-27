@@ -131,9 +131,6 @@ rec {
       gtk3 = null;
       libusb = null;
       libusb1 = null;
-      systemd = null;
-      systemdLibs = null;
-      systemdMinimal = null;
       tinysparql = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
