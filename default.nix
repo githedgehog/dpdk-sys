@@ -557,6 +557,7 @@
           frr-config
           libgccjit
           pkgs.${profile}.gnu64.frr
+          prometheus-frr-exporter
           python3Minimal
           tmpdir
         ];
