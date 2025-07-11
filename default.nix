@@ -555,6 +555,8 @@
           findutils
           frr-agent
           frr-config
+          iproute2
+          jq
           libgccjit
           pkgs.${profile}.gnu64.frr
           prometheus-frr-exporter
