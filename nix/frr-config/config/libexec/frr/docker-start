@@ -2,6 +2,10 @@
 
 source /libexec/frr/frrcommon.sh
 
+ip -j -d nexthop show | \
+  jq --raw-output '.[] | select(.protocol="zebra").id' | \
+  while read -r id; do ip nexthop del id "${id}"; done
+
 /libexec/frr/watchfrr $(daemon_list) &
 
 /bin/frr-agent "${@}" &
