@@ -373,6 +373,8 @@
 
       perftest = (optimizedBuild (self.callPackage ./nix/perftest
         (with versions.perftest; { inherit rev hash; })));
+
+      hwloc = optimizedBuild (super.hwloc.override { expat = null; ncurses = null; });
     };
 
   pkgs.debug = (import toolchainPkgs.path {
@@ -424,12 +426,15 @@
       glibc.dev
       glibc.out
       glibc.static
+      hwloc.dev
+      hwloc.lib
       libgcc.libgcc
       libmnl
       libnftnl
       libnl.out
       libpcap
       numactl
+      pciutils
       rdma-core
     ];
 
@@ -466,6 +471,7 @@
     libz
     pam
     patchelf
+    pkg-config
     rust-toolchain
     stdenv.cc.cc.lib
     strace
@@ -501,7 +507,6 @@
           --exclude '- *.so' \
           --exclude '- *.so.*' \
           --exclude '- *.la' \
-          --exclude '- *.pc' \
           --exclude '- *.la' \
           --include 'libc.so*' \
           --include 'libm.so*' \
