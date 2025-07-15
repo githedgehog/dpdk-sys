@@ -374,7 +374,10 @@
       perftest = (optimizedBuild (self.callPackage ./nix/perftest
         (with versions.perftest; { inherit rev hash; })));
 
-      hwloc = optimizedBuild (super.hwloc.override { expat = null; ncurses = null; });
+      hwloc = optimizedBuild (super.hwloc.override {
+        expat = null;
+        ncurses = null;
+      });
     };
 
   pkgs.debug = (import toolchainPkgs.path {
