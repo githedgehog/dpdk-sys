@@ -549,9 +549,9 @@
         pathsToLink = [ "/" ];
         paths = with pkgs.${profile}.gnu64; [
           bash
+          coreutils
           dplane-plugin
           dplane-rpc
-          fancy.busybox
           findutils
           frr-agent
           frr-config
