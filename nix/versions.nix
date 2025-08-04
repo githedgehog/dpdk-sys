@@ -2,31 +2,31 @@
 {
   nixpkgs = {
     branch = "nixpkgs-unstable";
-    commit = "6027c30c8e9810896b92429f0092f624f7b1aace";
-    commit_date = "2025-07-25T08:26:56+00:00";
-    source_url = "https://github.com/NixOS/nixpkgs/archive/6027c30c8e9810896b92429f0092f624f7b1aace.tar.gz";
+    commit = "6a489c9482ca676ce23c0bcd7f2e1795383325fa";
+    commit_date = "2025-08-04T03:33:26+00:00";
+    source_url = "https://github.com/NixOS/nixpkgs/archive/6a489c9482ca676ce23c0bcd7f2e1795383325fa.tar.gz";
     hash = {
       nix32 = {
         packed = {
           comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (packed)";
-          sha256 = "1ag99694cb1s1ijjd4pl2ykiy0nxkzypvzm0nf526l85r081zzc6";
-          sha512 = "3s4c6wkjzkbyh98jhn6j6cmdyhfbfpbbs318f58gl4f13ngy3jwaimy9ax9hn5jzk31n9l7xwnsrdx2sr8pd4bsq4zxnxxqmxfli85d";
+          sha256 = "1p5wd31xab4qwklgvqkj5am70m307x5h6dxm8z15k5ql6zwc7n6m";
+          sha512 = "30zmga2gyhw0pxyj6xzqggd8akpp36g0lbzqzddq13sh4npb0rsvb7w7na2hzzg0lmlsqa7ambicwr8yadraak0fmwkrbs1hb8kw2f5";
         };
         unpacked = {
           comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (unpacked)";
-          sha256 = "1y0acnmg4f48xxi3vv68kddj1d2bak9xrx3zr1l4dipzd5czjwkj";
+          sha256 = "0vsvkhy3gb8yzq62vazhmpqixssmd4xinnll7w73l4vrqd611wlf";
         };
       };
       tar = {
         comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";
-        sha256 = "86fd1f10c80551238ab3a0fe7dfd9fdd021fa717f49226650c3a2c469249e9a9";
-        sha384 = "0ecbbb57821a324122ea4b5bfb61ad1c1ac7fc55fa3bee61ef04facdb195dfcd1b7af965f2c2f9b16178d7c7f7bd2f9c";
-        sha512 = "ada0485dafb877db3fc17a917651d6a2b7ac2def87261bc6fcb25898ba4abe46c5e5f0cf8ee0087da83814865eebbae5a06f9519692c942841bfe697931b46f4";
-        sha3_256 = "e43a6db75cc17431bda7def1cd70d3ca7f8d902549eed20811a598ac09f974ed";
-        sha3_384 = "7d0e9f3cc01543f015bce181b6dd87deafeeeadf6ebb9fb22b7545dd8e441410bb400c2c8e36a3a6af450d18aafbaf00";
-        sha3_512 = "f7c1ffa9bcdd203765400d209b8a1d53fb4044ccef9f275fba93d1842ecf846530ddc17d75e0b6369efe7f5d1a77f9034bf5001e82a6e2bd573f342d9ee29f18";
-        blake2b512 = "001f7137116945ca48e23318b53a3c1b8ff8eb2e976063f50797fb3c17af9a09b34edad343dba750941fc3339d45b0c38f7785ace6555629d2f244f81f7887c7";
-        blake2s256 = "6bb5bbb3bd54c0e8097b4e31d8dfc281a02845640f4b3025a8fe35f7a41b95cd";
+        sha256 = "d5d8c3f837149759c247b537034b3f605470aa2a72e2fde8e4982cd5c368bcdc";
+        sha384 = "6783f84a9d46b9d73d9624e48d5c10131ea1e436d30ad828dbf8986190e3655feb2c4f7f5948504f7dc41eb6965e0643";
+        sha512 = "c5093ed18241af3c7975602a959bf2287316575547614d2b05ef7f28943dfcacad3358d712a847c0ad7dfc1705cf8c7ba742ed3dfcbb91be5fc0a17f42bdfac1";
+        sha3_256 = "b787b1caf713fe75483479361ef43c68a44d4c9158a9a845e613c1819c4ada98";
+        sha3_384 = "f928895d11d689a2fc30602ffb9b3c08b4dcb660765993754bfff5e642d5b5f109e4b244e040c27601239aec5a1b25c7";
+        sha3_512 = "8618ad00d66a07bab831d4b9d45ec0473a9fc8db800e7812f18ef80e5dc31ce97de569d38213d7f5b1802b6b122dfb6a3c56432378d6b8ef8dbea243b8a7f12b";
+        blake2b512 = "3f0b82f626ff9dca9f378f0f50b05702aaa4289bcf8872b1e52d4d3e0f10c22288345f891d948d169a245a0f368960f2fa618d0034d435b304d22356eb05e757";
+        blake2s256 = "2b1166b17e28c9733df14b8a01df7a3386f2c74ecda6ab4dcacc49ce1b0fa914";
       };
     };
   };
@@ -61,16 +61,16 @@
     commit_date = "2025-07-22T12:35:11+00:00";
   };
   dplane-plugin = {
-    branch = "master";
-    rev = "b0d2ada4d5948519104dab7e668a201c3c340b2b";
-    hash = "sha256-llZAyc9HGum4Le9pOt8QSILlVg5AO1TtKgQsTZnu/og=";
-    commit_date = "2025-07-22T12:48:20+00:00";
+    branch = "pr/fredi/reconcile";
+    rev = "35b9f32dd02245838f0b5a4f8ab4743c9860df0a";
+    hash = "sha256-DbSSTjuK8I8bcc5z3FZ9jA6GG9ya5B/ahCx6ZZjVrkk=";
+    commit_date = "2025-08-04T08:48:31+00:00";
   };
   frr = {
-    branch = "hh-master-10.3";
-    rev = "7f43a0d792aa178f1416f9d41d5096725ffdfccc";
-    hash = "sha256-1nWAGo95DJdRhC29DuZDA1p2pREOZTit2i67WLF7QiY=";
-    commit_date = "2025-06-25T21:48:53+00:00";
+    branch = "pr/fredi/reconcile";
+    rev = "10f5827574e164b48e61211641efd0c946fba1f9";
+    hash = "sha256-BDzX29TbaEF7OHoLMCimcYJ1qdagyErvUcc/e5TGEEo=";
+    commit_date = "2025-07-21T09:07:13+00:00";
   };
   frr-agent = {
     branch = "master";
