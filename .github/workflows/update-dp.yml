@@ -45,6 +45,10 @@ jobs:
         run: |
           ./scripts/bump.sh
 
+      - name: "Give time for new packages to be published"
+        run: |
+          sleep 45
+
       - name: "Generate GitHub App token for the dataplane repository"
         id: "app-token"
         uses: "actions/create-github-app-token@v1"
@@ -63,13 +67,17 @@ jobs:
             automated
             dependencies
           signoff: "true"
-          commit-message: "bump(dpdk-sys): automated bump of dpdk-sys"
-          sign-commits: "true"
-          body: |
+          commit-message: |
+            bump(dpdk-sys): automated bump of dpdk-sys
+
             Automated bump from dpdk-sys,
             triggered by push to 'main' in source repository.
 
-            Commit: ${{ github.sha }}
+            Commit: githedgehog/dpdk-sys@${{ github.sha }}
+          sign-commits: "true"
+          body: |
+            Automated bump from dpdk-sys
+            Commit: githedgehog/dpdk-sys@${{ github.sha }}
 
       - name: "Setup tmate session for debug"
         if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
