@@ -47,7 +47,7 @@ jobs:
 
       - name: "Give time for new packages to be published"
         run: |
-          sleep 45
+          sleep 45m
 
       - name: "Generate GitHub App token for the dataplane repository"
         id: "app-token"
