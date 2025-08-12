@@ -33,7 +33,7 @@ jobs:
     outputs:
       matrix: "${{ steps.matrix.outputs.matrix }}"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: "dtolnay/rust-toolchain@stable"
@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "$KUBE_NODE"
 
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           # make sure to update the vlab prebuild script if changing it
           ref: ${{ github.event.pull_request.head.sha }}
