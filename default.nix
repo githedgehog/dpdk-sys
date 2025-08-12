@@ -138,6 +138,7 @@
       iptables = null;
       ethtool = null;
       iproute2 = null;
+      fancy.iproute2 = optimizedBuild super.iproute2;
       libnl = (optimizedBuild super.libnl).overrideAttrs (orig: {
         configureFlags = orig.configureFlags
           ++ [ "--enable-static" "--disable-shared" ];
@@ -549,13 +550,14 @@
         pathsToLink = [ "/" ];
         paths = with pkgs.${profile}.gnu64; [
           bash
+          coreutils
           dplane-plugin
           dplane-rpc
-          fancy.busybox
+          fancy.iproute2
           findutils
           frr-agent
           frr-config
-          iproute2
+          gnugrep
           jq
           libgccjit
           pkgs.${profile}.gnu64.frr
