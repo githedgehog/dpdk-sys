@@ -671,7 +671,6 @@ rec {
           less
           nano
           procps
-          rr
           strace
           tcpdump
           vim
