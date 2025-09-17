@@ -78,7 +78,7 @@ rec {
 
   project-name = "dpdk-sys";
   crossOverlay =
-    { build-flags, crossEnv }:
+    { build-flags }:
     self: super: rec {
       inherit build-flags;
       buildWithFlags =
@@ -471,7 +471,6 @@ rec {
               rust-overlay
               (crossOverlay {
                 build-flags = build-flags.debug;
-                crossEnv = "gnu64";
               })
             ];
           };
@@ -491,7 +490,6 @@ rec {
               rust-overlay
               (crossOverlay {
                 build-flags = build-flags.release;
-                crossEnv = "gnu64";
               })
             ];
           };
