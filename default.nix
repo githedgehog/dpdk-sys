@@ -510,6 +510,8 @@ rec {
       glibc.dev
       glibc.out
       glibc.static
+      hwloc.dev
+      hwloc.lib
       libgcc.libgcc
       libmnl
       libnftnl
@@ -551,6 +553,7 @@ rec {
     libz
     pam
     patchelf
+    pkg-config # for hwloc build in dataplane
     rust-toolchain
     stdenv.cc.cc.lib
     strace
@@ -587,7 +590,6 @@ rec {
           --exclude '- *.so' \
           --exclude '- *.so.*' \
           --exclude '- *.la' \
-          --exclude '- *.pc' \
           --exclude '- *.la' \
           --include 'libc.so*' \
           --include 'libm.so*' \
