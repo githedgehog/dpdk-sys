@@ -20,11 +20,11 @@
 
 stdenv.mkDerivation rec {
   pname = "dpdk";
-  version = "25.03";
+  version = "25.07";
 
   src = fetchurl {
     url = "https://fast.dpdk.org/rel/dpdk-${version}.tar.xz";
-    sha256 = "sha256-akCnMTKChuvXloWxj/pZkua3cME4Q9Zf0NEVfPzP9j0=";
+    sha256 = "sha256-aIbL7cNQu4y+80fRA2fWJZ42Q1Yn+7J9V4rb3A07QQ0=";
   };
 
   nativeBuildInputs = [
@@ -69,10 +69,8 @@ stdenv.mkDerivation rec {
     "bpf"
     "cfgfile"
     "compressdev"
-    "cryptodev"
     "dispatcher"
     "distributor"
-    "dmadev"
     "efd"
     "eventdev"
     "fib"
@@ -104,7 +102,12 @@ stdenv.mkDerivation rec {
     "security"
     "table"
     "timer"
-    "vhost"
+  ];
+
+  enabledLibs = [
+    "cryptodev" # required for vhost
+    "dmadev" # required by vhost
+    "vhost" # enabled to facilitate testing with vm runner
   ];
 
   disabledDrivers = [
@@ -143,6 +146,7 @@ stdenv.mkDerivation rec {
     "event/skeleton"
     "event/sw"
     "net/acc100"
+    "net/af_packet"
     "net/af_xdp"
     "net/ark"
     "net/atlantic"
@@ -189,6 +193,7 @@ stdenv.mkDerivation rec {
     "net/kasumi"
     "net/kni"
     "net/liquidio"
+    "net/memif"
     "net/mlx4"
     "net/netvsc"
     "net/nfp"
@@ -216,7 +221,6 @@ stdenv.mkDerivation rec {
     "net/txgbe"
     "net/vdev"
     "net/vdev_netvsc"
-    "net/vhost"
     "net/vmbus"
     "net/vmxnet3"
     "net/zuc"
@@ -238,12 +242,11 @@ stdenv.mkDerivation rec {
     "mempool/bucket"
     "mempool/ring"
     "mempool/stack"
-    "net/af_packet"
     "net/auxiliary"
     "net/intel/e1000"
-    "net/memif"
     "net/mlx5"
     "net/ring"
+    "net/vhost"
     "net/virtio"
   ];
 
@@ -271,6 +274,7 @@ stdenv.mkDerivation rec {
     "-Ddebug=true"
     ''-Ddisable_drivers=${lib.concatStringsSep "," disabledDrivers}''
     ''-Denable_drivers=${lib.concatStringsSep "," enabledDrivers}''
+    ''-Denable_libs=${lib.concatStringsSep "," enabledLibs}''
     ''-Ddisable_libs=${lib.concatStringsSep "," disabledLibs}''
   ];
 

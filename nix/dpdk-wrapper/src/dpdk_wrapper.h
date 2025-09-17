@@ -123,6 +123,7 @@
 #include <rte_vect.h>
 #include <rte_version.h>
 #include <rte_vfio.h>
+#include <rte_vhost.h>
 #include <rte_vxlan.h>
 
 // Things which are either duplicated, totally inapplicable or not needed
