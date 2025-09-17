@@ -266,7 +266,7 @@ stdenv.mkDerivation rec {
     "-Dmax_numa_nodes=4"
     "-Dstrip=false" # We should strip binaries in a separate step to preserve detached debug info
     "-Dtests=false" # Running DPDK tests in CI is usually silly
-    "-Duse_hpet=false" # TODO: compile kernel with CONFIG_HPET_MMAP=Y
+    "-Duse_hpet=false"
     "-Db_lto_mode=thin"
     "-Ddebug=true"
     ''-Ddisable_drivers=${lib.concatStringsSep "," disabledDrivers}''
