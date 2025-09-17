@@ -115,7 +115,7 @@ stdenv.mkDerivation (finalAttrs: {
   configureFlags = [
     "--enable-python-runtime"
     "--enable-fpm=netlink" # try to disable later
-    "--with-moduledir=/lib/frr/modules"
+    "--with-moduledir=${placeholder "out"}/lib/frr/modules"
 
     "--enable-configfile-mask=0640"
     "--enable-logfile-mask=0640"
