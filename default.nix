@@ -674,7 +674,6 @@ rec {
           strace
           tcpdump
           tshark
-          valgrind
           vim
           zstd
         ])
