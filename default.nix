@@ -20,11 +20,11 @@ rec {
       with super.fenix;
       let
         toolchain = fromToolchainName {
-          name = versions.rust.stable.version;
-          sha256 = versions.rust.stable.toolchain_toml_hash;
+          name = versions.rust."${rust-channel}".version;
+          sha256 = versions.rust."${rust-channel}".toolchain_toml_hash;
         };
       in
-      combine (map (extension: toolchain.${extension}) versions.rust.stable.extensions);
+      combine (map (extension: toolchain.${extension}) versions.rust."${rust-channel}".extensions);
     fancy = super.fancy // rec {
       rustPlatform = super.makeRustPlatform {
         cargo = rust-toolchain;
