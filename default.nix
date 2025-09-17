@@ -600,7 +600,7 @@ rec {
           "${env.sysroot.gnu64.${profile}}/include/" \
           "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/include/"
       '';
-      postFixup = (
+      postFixup =
         # libm.a file contains a GROUP instruction which contains absolute paths to /nix
         # and those paths are not preserved by the rsync commands.
         ''
@@ -618,7 +618,7 @@ rec {
           OUTPUT_FORMAT(elf64-x86-64)
           GROUP ( libc.so.6 libc_nonshared.a AS_NEEDED ( ld-linux-x86-64.so.2 ) )
           EOF
-        '');
+        '';
     };
 
   sysroot.gnu64.debug = sysrootFn "debug";
