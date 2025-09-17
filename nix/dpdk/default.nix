@@ -274,19 +274,18 @@ stdenv.mkDerivation rec {
     ''-Ddisable_libs=${lib.concatStringsSep "," disabledLibs}''
   ];
 
-  postInstall =
-    ''
-      # Remove Sphinx cache files. Not only are they not useful, but they also
-      # contain store paths causing spurious dependencies.
-      rm -rf $out/share/doc/dpdk/html/.doctrees
+  postInstall = ''
+    # Remove Sphinx cache files. Not only are they not useful, but they also
+    # contain store paths causing spurious dependencies.
+    rm -rf $out/share/doc/dpdk/html/.doctrees
 
-      wrapProgram $out/bin/dpdk-devbind.py \
-        --prefix PATH : "${lib.makeBinPath [ pciutils ]}"
-    ''
-    + lib.optionalString (withExamples != [ ]) ''
-      mkdir -p $examples/bin
-      find examples -type f -executable -exec install {} $examples/bin \;
-    '';
+    wrapProgram $out/bin/dpdk-devbind.py \
+      --prefix PATH : "${lib.makeBinPath [ pciutils ]}"
+  ''
+  + lib.optionalString (withExamples != [ ]) ''
+    mkdir -p $examples/bin
+    find examples -type f -executable -exec install {} $examples/bin \;
+  '';
 
   outputs = [ "out" ] ++ lib.optional (withExamples != [ ]) "examples";
 
