@@ -178,7 +178,15 @@ rec {
       libmnl = optimizedBuild super.libmnl;
       libnetfilter_conntrack = optimizedBuild super.libnetfilter_conntrack;
       libnftnl = optimizedBuild super.libnftnl;
-      libpcap = optimizedBuild super.libpcap;
+      libpcap = optimizedBuild (
+        (super.libpcap.override {
+          bash = null;
+          bashNonInteractive = null;
+        }).overrideAttrs
+          (orig: {
+            outputChecks.lib.disallowedRequisites = [ ];
+          })
+      );
       numactl = (optimizedBuild super.numactl).overrideAttrs (orig: {
         outputs = super.lib.lists.remove "man" orig.outputs;
         configurePhase = ''
