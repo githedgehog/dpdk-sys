@@ -23,15 +23,15 @@ FROM ${IMAGE} AS mstflint-debug
 FROM ${IMAGE} AS compile-env
 # This sets up sudo to work in the compile env container
 RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
- && chmod 0444 /etc/sudoers.d/dangerous \
- && chmod 4755 /sbin/sudo \
- && mkdir -p /etc/pam.d \
- && chmod 555 /etc/pam.d \
- && echo auth requisite pam_permit.so > /etc/pam.d/sudo \
- && echo account requisite pam_permit.so >> /etc/pam.d/sudo \
- && echo session requisite pam_permit.so >> /etc/pam.d/sudo \
- && chmod 444 /etc/pam.d/*
+    && chmod 0444 /etc/sudoers.d/dangerous \
+    && chmod 4755 /sbin/sudo \
+    && mkdir -p /etc/pam.d \
+    && chmod 555 /etc/pam.d \
+    && echo auth requisite pam_permit.so > /etc/pam.d/sudo \
+    && echo account requisite pam_permit.so >> /etc/pam.d/sudo \
+    && echo session requisite pam_permit.so >> /etc/pam.d/sudo \
+    && chmod 444 /etc/pam.d/*
 
 # Link the fuzz sysroot (same as the release sysroot)
 RUN cd /sysroot/x86_64-unknown-linux-gnu \
- && ln -s ./release fuzz
+    && ln -s ./release fuzz
