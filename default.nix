@@ -674,7 +674,6 @@ rec {
           rr
           strace
           tcpdump
-          tshark
           vim
           zstd
         ])
