@@ -536,7 +536,6 @@ rec {
     glibc.out
     gnugrep
     just
-    just
     libcap
     libgcc.libgcc
     libgccjit
