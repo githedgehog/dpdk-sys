@@ -1,4 +1,12 @@
-{ stdenv, rdma-core, autoreconfHook, fetchFromGitHub, pciutils, rev, hash }:
+{
+  stdenv,
+  rdma-core,
+  autoreconfHook,
+  fetchFromGitHub,
+  pciutils,
+  rev,
+  hash,
+}:
 stdenv.mkDerivation (final: {
   pname = "perftest";
   version = rev;
@@ -7,5 +15,9 @@ stdenv.mkDerivation (final: {
     repo = final.pname;
     inherit rev hash;
   };
-  nativeBuildInputs = [ autoreconfHook rdma-core pciutils ];
+  nativeBuildInputs = [
+    autoreconfHook
+    rdma-core
+    pciutils
+  ];
 })
