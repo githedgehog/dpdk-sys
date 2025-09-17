@@ -10,13 +10,15 @@
 rustPlatform.buildRustPackage (final: {
   pname = "frr-agent";
   version = rev;
-  nativeBuildInputs = [nukeReferences];
+  nativeBuildInputs = [ nukeReferences ];
   src = fetchFromGitHub {
     repo = final.pname;
     owner = "githedgehog";
     inherit rev hash;
   };
-  cargoLock = { lockFile = final.src + "/Cargo.lock"; };
+  cargoLock = {
+    lockFile = final.src + "/Cargo.lock";
+  };
   fixupPhase = ''
     find "$out" -exec nuke-refs -e "$out" -e "${stdenv.cc.libc}" -e "${libgcc.lib}" '{}' +;
   '';
