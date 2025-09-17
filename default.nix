@@ -139,12 +139,12 @@ rec {
       pandoc = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
-        version = "58.0";
+        version = "59.0";
         src = self.fetchFromGitHub {
           owner = "githedgehog";
           repo = "rdma-core";
-          rev = "fix-lto-58.0";
-          hash = "sha256-2FpPBrbHvJlFfmQlLBbl9aK5BIOXfOJxr6AIPsrLrPY=";
+          rev = "fix-lto-59.0";
+          hash = "sha256-0bIDGBwqvT7R6p0RIeUfLXlCoO6R45HKKyAMGqv2Aoc=";
         };
         outputs = [
           "out"
