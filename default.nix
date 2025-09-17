@@ -113,9 +113,6 @@ rec {
           rm $out/lib/*.la
         '';
       });
-      fatLto = pkg:
-        pkg.overrideAttrs
-        (orig: { CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects"; });
 
       fancy.libbsd =
         ((optimizedBuild super.libbsd).override {
