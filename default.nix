@@ -136,6 +136,7 @@ rec {
       libusb = null;
       libusb1 = null;
       tinysparql = null;
+      pandoc = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
       rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
         version = "58.0";
