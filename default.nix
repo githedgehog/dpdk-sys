@@ -629,6 +629,19 @@ rec {
     gnu64.release
   ];
 
+  compile-env = toolchainPkgs.symlinkJoin {
+    name = "compile-env";
+    paths = [
+      env.compile
+      pkgs.debug.gnu64.glibc.static
+      pkgs.release.gnu64.glibc.static
+      pkgs.debug.gnu64.glibc.dev
+      pkgs.release.gnu64.glibc.dev
+      pkgs.debug.gnu64.glibc.out
+      pkgs.release.gnu64.glibc.out
+    ]
+    ++ sysroots;
+  };
   maxLayers = 120;
 
   container-profile = profile: {
