@@ -63,15 +63,17 @@
   ospfApi ? false,
 }:
 
-stdenv.mkDerivation
-(finalAttrs: {
+stdenv.mkDerivation (finalAttrs: {
   pname = "frr";
   version = "10.3.1";
   dontPatchShebangs = false;
   dontFixup = false;
   dontPatchElf = false;
 
-  outputs = ["out" "build"];
+  outputs = [
+    "out"
+    "build"
+  ];
 
   src = fetchFromGitHub {
     owner = "githedgehog";
