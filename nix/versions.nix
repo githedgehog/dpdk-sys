@@ -33,8 +33,8 @@
   rust = {
     stable = {
       channel = "stable";
-      toolchain_toml_hash = "sha256-+9FmLhAOezBZCOziO0Qct1NOrfpjNsXxc/8I0c7BdKE=";
-      version = "1.89.0";
+      toolchain_toml_hash = "sha256-SJwZ8g0zF2WrKDVmHrVG3pD2RGoQeo24MEXnNx5FyuI=";
+      version = "1.90.0";
       llvm = "20";
       profile = "default";
       targets = [
@@ -80,8 +80,8 @@
   };
   perftest = {
     branch = "master";
-    rev = "42f5ec5c0acdd8efb44cc6be48e1da73e58244f0";
-    hash = "sha256-W8nbuYzKYEIvDkSvCO2cbL6RYW+WF86Z9uk/X9pfg5A=";
-    commit_date = "2025-09-17T13:34:12+00:00";
+    rev = "4bee61f80d9e268fc97eaf40be00409e91d3a19e";
+    hash = "sha256-6krKYrk7r2yE85kPVu0kdpf8XDRFpqd2lf2wMQu1naw=";
+    commit_date = "2025-09-18T12:16:15+00:00";
   };
 }
