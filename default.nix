@@ -659,6 +659,7 @@ rec {
           coreutils
           curl
           debianutils
+          dmidecode
           ethtool
           gawk
           gdb
