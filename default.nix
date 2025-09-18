@@ -23,8 +23,8 @@ rec {
           name = versions.rust.stable.version;
           sha256 = versions.rust.stable.toolchain_toml_hash;
         };
-      in combine
-      (map (extension: toolchain.${extension}) versions.rust.stable.extensions);
+      in
+      combine (map (extension: toolchain.${extension}) versions.rust.stable.extensions);
     fancy = super.fancy // rec {
       rustPlatform = super.makeRustPlatform {
         cargo = rust-toolchain;
@@ -739,7 +739,8 @@ rec {
           pkgs.release.gnu64.glibc.dev
           pkgs.debug.gnu64.glibc.out
           pkgs.release.gnu64.glibc.out
-        ] ++ sysroots;
+        ]
+        ++ sysroots;
         inherit maxLayers;
       };
     };
