@@ -4,7 +4,7 @@
 # (to the point of needing automation to keep up to date).
 env:
   rust_pins:
-    stable: &rust_stable "1.89.0"
+    stable: &rust_stable "1.90.0"
   llvm_for_rust_pins:
     stable: &llvm_stable "20"
   nixpkgs:
