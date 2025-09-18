@@ -1,7 +1,6 @@
 #include <rte_config.h>
 
 #include <rte_alarm.h>
-#include <rte_arp.h>
 #include <rte_atomic.h>
 #include <rte_bitmap.h>
 #include <rte_bitops.h>
@@ -20,43 +19,32 @@
 #include <rte_dev.h>
 #include <rte_dev_info.h>
 #include <rte_devargs.h>
-#include <rte_dtls.h>
 #include <rte_eal.h>
 #include <rte_eal_memconfig.h>
-#include <rte_ecpri.h>
 #include <rte_epoll.h>
 #include <rte_errno.h>
-#include <rte_esp.h>
 #include <rte_eth_ctrl.h>
 #include <rte_eth_ring.h>
+#include <rte_eth_vhost.h>
 #include <rte_ethdev.h>
 #include <rte_ethdev_core.h>
-#include <rte_ether.h>
 #include <rte_fbarray.h>
 #include <rte_fbk_hash.h>
 #include <rte_flow.h>
-#include <rte_geneve.h>
-#include <rte_gre.h>
-#include <rte_gtp.h>
 #include <rte_hash.h>
 #include <rte_hash_crc.h>
 #include <rte_hexdump.h>
-#include <rte_higig.h>
 #include <rte_hypervisor.h>
-#include <rte_ib.h>
 #include <rte_icmp.h>
 #include <rte_interrupts.h>
 #include <rte_io.h>
-#include <rte_ip.h>
 #include <rte_jhash.h>
 #include <rte_keepalive.h>
 #include <rte_kvargs.h>
-#include <rte_l2tpv2.h>
 #include <rte_launch.h>
 #include <rte_lcore.h>
+#include <rte_lcore_var.h>
 #include <rte_lock_annotations.h>
-#include <rte_log.h>
-#include <rte_macsec.h>
 #include <rte_malloc.h>
 #include <rte_mbuf.h>
 #include <rte_mbuf_core.h>
@@ -69,21 +57,17 @@
 #include <rte_mempool.h>
 #include <rte_memzone.h>
 #include <rte_meter.h>
-#include <rte_mpls.h>
 #include <rte_mtr.h>
-#include <rte_net.h>
 #include <rte_net_crc.h>
 #include <rte_os.h>
 #include <rte_pause.h>
 #include <rte_pci.h>
 #include <rte_pci_dev_feature_defs.h>
 #include <rte_pci_dev_features.h>
-#include <rte_pdcp_hdr.h>
 #include <rte_per_lcore.h>
 #include <rte_pflock.h>
 #include <rte_pmd_mlx5.h>
 #include <rte_power_intrinsics.h>
-#include <rte_ppp.h>
 #include <rte_prefetch.h>
 #include <rte_random.h>
 #include <rte_rcu_qsbr.h>
@@ -98,7 +82,6 @@
 #include <rte_ring_rts.h>
 #include <rte_rtm.h>
 #include <rte_rwlock.h>
-#include <rte_sctp.h>
 #include <rte_seqcount.h>
 #include <rte_seqlock.h>
 #include <rte_service.h>
@@ -108,23 +91,18 @@
 #include <rte_stdatomic.h>
 #include <rte_string_fns.h>
 #include <rte_tailq.h>
-#include <rte_tcp.h>
-#include <rte_telemetry.h>
 #include <rte_thash.h>
 #include <rte_thash_gfni.h>
 #include <rte_thash_x86_gfni.h>
 #include <rte_thread.h>
 #include <rte_ticketlock.h>
 #include <rte_time.h>
-#include <rte_tls.h>
 #include <rte_tm.h>
-#include <rte_udp.h>
-#include <rte_uuid.h>
 #include <rte_vect.h>
 #include <rte_version.h>
 #include <rte_vfio.h>
 #include <rte_vhost.h>
-#include <rte_vxlan.h>
+#include <rte_vhost_async.h>
 
 // Things which are either duplicated, totally inapplicable or not needed
 // #include <cmdline.h>
@@ -150,6 +128,7 @@
 // #include <generic/rte_rwlock.h>
 // #include <generic/rte_spinlock.h>
 // #include <generic/rte_vect.h>
+// #include <rte_arp.h>
 // #include <rte_atomic_32.h>
 // #include <rte_atomic_64.h>
 // #include <rte_byteorder_32.h>
@@ -158,19 +137,43 @@
 // #include <rte_crc_generic.h>
 // #include <rte_crc_sw.h>
 // #include <rte_crc_x86.h>
+// #include <rte_dtls.h>
+// #include <rte_ecpri.h>
+// #include <rte_esp.h>
+// #include <rte_ether.h>
 // #include <rte_flow_driver.h> // this is an internal header
+// #include <rte_geneve.h>
+// #include <rte_gre.h>
+// #include <rte_gtp.h>
+// #include <rte_higig.h>
+// #include <rte_ib.h>
+// #include <rte_ip.h>
+// #include <rte_l2tpv2.h>
+// #include <rte_log.h>
+// #include <rte_macsec.h>
+// #include <rte_mpls.h>
 // #include <rte_mtr_driver.h>
+// #include <rte_net.h>
+// #include <rte_pdcp_hdr.h>
+// #include <rte_ppp.h>
 // #include <rte_ring_c11_pvt.h>
 // #include <rte_ring_generic_pvt.h>
 // #include <rte_ring_hts_elem_pvt.h>
 // #include <rte_ring_peek_elem_pvt.h>
 // #include <rte_ring_rts_elem_pvt.h>
+// #include <rte_sctp.h>
 // #include <rte_stack_lf.h>
 // #include <rte_stack_lf_c11.h>
 // #include <rte_stack_lf_generic.h>
 // #include <rte_stack_lf_stubs.h>
 // #include <rte_stack_std.h>
+// #include <rte_tcp.h>
+// #include <rte_telemetry.h>
+// #include <rte_tls.h>
 // #include <rte_tm_driver.h>
+// #include <rte_udp.h>
+// #include <rte_uuid.h>
+// #include <rte_vxlan.h>
 
 // #include <rte_mempool_trace_fp.h>
 // #include <rte_eal_trace.h>
@@ -1654,12 +1657,6 @@ int rte_mcslock_trylock_w(rte_mcslock_t **msl, rte_mcslock_t *me) {
 }
 int rte_mcslock_is_locked_w(rte_mcslock_t *msl) {
   return rte_mcslock_is_locked(msl);
-}
-int rte_net_intel_cksum_flags_prepare_w(struct rte_mbuf *m, uint64_t ol_flags) {
-  return rte_net_intel_cksum_flags_prepare(m, ol_flags);
-}
-int rte_net_intel_cksum_prepare_w(struct rte_mbuf *m) {
-  return rte_net_intel_cksum_prepare(m);
 }
 void rte_pflock_init_w(struct rte_pflock *pf) { rte_pflock_init(pf); }
 void rte_pflock_read_lock_w(rte_pflock_t *pf) { rte_pflock_read_lock(pf); }
