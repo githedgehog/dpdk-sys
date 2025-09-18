@@ -1,17 +1,23 @@
-{ rust-channel ? "stable", build-flags ? import ./nix/flags.nix
-, versions ? import ./nix/versions.nix, image-tag ? "latest"
-, contianer-repo ? "ghcr.io/githedgehog/dpdk-sys", }: rec {
+{
+  rust-channel ? "stable",
+  build-flags ? import ./nix/flags.nix,
+  versions ? import ./nix/versions.nix,
+  image-tag ? "latest",
+  contianer-repo ? "ghcr.io/githedgehog/dpdk-sys",
+}:
+rec {
   rust-version = versions.rust.${rust-channel};
   llvm-version = rust-version.llvm;
   llvm-overlay = self: super: rec {
     llvmPackagesVersion = "llvmPackages_${llvm-version}";
     fancy.llvmPackages = super.${llvmPackagesVersion};
   };
-  fenix-overlay = (import "${
-      fetchTarball "https://github.com/nix-community/fenix/archive/main.tar.gz"
-    }/overlay.nix");
+  fenix-overlay = (
+    import "${fetchTarball "https://github.com/nix-community/fenix/archive/main.tar.gz"}/overlay.nix"
+  );
   rust-overlay = self: super: rec {
-    rust-toolchain = with super.fenix;
+    rust-toolchain =
+      with super.fenix;
       let
         toolchain = fromToolchainName {
           name = versions.rust.stable.version;
@@ -24,7 +30,8 @@
         cargo = rust-toolchain;
         rustc = rust-toolchain;
       };
-      rustOverrides = pkg:
+      rustOverrides =
+        pkg:
         (pkg.override { inherit rustPlatform; }).overrideAttrs {
           doCheck = false;
         };
@@ -35,16 +42,28 @@
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
     just = fancy.rustOverrides super.just;
-    frr-agent = fancy.rustOverrides (self.callPackage ./nix/frr-agent {
-      rev = versions.frr-agent.rev;
-      hash = versions.frr-agent.hash;
-    });
+    frr-agent = fancy.rustOverrides (
+      self.callPackage ./nix/frr-agent {
+        rev = versions.frr-agent.rev;
+        hash = versions.frr-agent.hash;
+      }
+    );
+
   };
-  toolchainPkgs = import (builtins.fetchTarball {
-    url =
-      "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
-    sha256 = versions.nixpkgs.hash.nix32.unpacked.sha256;
-  }) { overlays = [ llvm-overlay fenix-overlay rust-overlay helpersOverlay ]; };
+  toolchainPkgs =
+    import
+      (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/${versions.nixpkgs.commit}.tar.gz";
+        sha256 = versions.nixpkgs.hash.nix32.unpacked.sha256;
+      })
+      {
+        overlays = [
+          llvm-overlay
+          fenix-overlay
+          rust-overlay
+          helpersOverlay
+        ];
+      };
 
   helpersOverlay = self: super: {
     tmpdir = self.stdenv.mkDerivation {
@@ -58,48 +77,38 @@
   };
 
   project-name = "dpdk-sys";
-  crossOverlay = { build-flags, crossEnv }:
+  crossOverlay =
+    { build-flags, crossEnv }:
     self: super: rec {
       inherit build-flags;
-      buildWithFlags = flags: pkg:
+      buildWithFlags =
+        flags: pkg:
         (pkg.overrideAttrs (orig: {
           CFLAGS = "${orig.CFLAGS or ""} ${flags.CFLAGS}";
           CXXFLAGS = "${orig.CXXFLAGS or ""} ${flags.CXXFLAGS}";
           LDFLAGS = "${orig.LDFLAGS or ""} ${flags.LDFLAGS}";
-          env.NIX_CFLAGS_COMPILE = (orig.NIX_CFLAGS_COMPILE or "")
-            + flags.CFLAGS;
-          env.NIX_CXXFLAGS_COMPILE = (orig.NIX_CXXFLAGS_COMPILE or "")
-            + flags.CXXFLAGS;
+          env.NIX_CFLAGS_COMPILE = (orig.NIX_CFLAGS_COMPILE or "") + flags.CFLAGS;
+          env.NIX_CXXFLAGS_COMPILE = (orig.NIX_CXXFLAGS_COMPILE or "") + flags.CXXFLAGS;
           env.NIX_CFLAGS_LINK = (orig.NIX_CFLAGS_LINK or "") + flags.LDFLAGS;
         }));
 
       fancy.llvmPackages = super.fancy.llvmPackages;
       fancy.stdenvDynamic = super.fancy.llvmPackages.stdenv;
-      fancy.stdenv =
-        self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
+      fancy.stdenv = self.stdenvAdapters.makeStaticLibraries fancy.stdenvDynamic;
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
-      optimizedBuild = pkg:
-        (buildWithMyFlags
-          (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
-            nativeBuildInputs = (orig.nativeBuildInputs or [ ])
-              ++ [ super.fancy.llvmPackages.bintools ];
-            LD = "lld";
-            withDoc = false;
-            doCheck = false;
-          });
+      optimizedBuild =
+        pkg:
+        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
+          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ super.fancy.llvmPackages.bintools ];
+          LD = "lld";
+          withDoc = false;
+          doCheck = false;
+        });
       fancy.libmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags
-          ++ [ "--enable-static" "--disable-shared" ];
-        postFixup = (orig.postFixup or "") + ''
-          rm $out/lib/*.la
-        '';
-      });
-      fancy.libbsd = ((optimizedBuild super.libbsd).override {
-        libmd = fancy.libmd;
-      }).overrideAttrs (orig: {
-        doCheck = false;
-        configureFlags = orig.configureFlags
-          ++ [ "--enable-static" "--enable-shared" ];
+        configureFlags = orig.configureFlags ++ [
+          "--enable-static"
+          "--disable-shared"
+        ];
         postFixup = (orig.postFixup or "") + ''
           rm $out/lib/*.la
         '';
@@ -108,6 +117,20 @@
         pkg.overrideAttrs
         (orig: { CFLAGS = "${orig.CFLAGS or ""} -ffat-lto-objects"; });
 
+      fancy.libbsd =
+        ((optimizedBuild super.libbsd).override {
+          libmd = fancy.libmd;
+        }).overrideAttrs
+          (orig: {
+            doCheck = false;
+            configureFlags = orig.configureFlags ++ [
+              "--enable-static"
+              "--enable-shared"
+            ];
+            postFixup = (orig.postFixup or "") + ''
+              rm $out/lib/*.la
+            '';
+          });
       at-spi2-atk = null; # no users in container
       at-spi2-core = null; # no users in container
       bluez = null;
@@ -125,7 +148,10 @@
           rev = "fix-lto-58.0";
           hash = "sha256-2FpPBrbHvJlFfmQlLBbl9aK5BIOXfOJxr6AIPsrLrPY=";
         };
-        outputs = [ "out" "dev" ];
+        outputs = [
+          "out"
+          "dev"
+        ];
         perl = null;
         cmakeFlags = orig.cmakeFlags ++ [
           "-DENABLE_STATIC=1"
@@ -140,14 +166,17 @@
       iproute2 = null;
       fancy.iproute2 = optimizedBuild super.iproute2;
       libnl = (optimizedBuild super.libnl).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags
-          ++ [ "--enable-static" "--disable-shared" ];
+        configureFlags = orig.configureFlags ++ [
+          "--enable-static"
+          "--disable-shared"
+        ];
         postFixup = (orig.postFixup or "") + ''
           rm $out/lib/*.la
         '';
       });
-      jansson = (optimizedBuild super.jansson).overrideAttrs
-        (orig: { cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ]; });
+      jansson = (optimizedBuild super.jansson).overrideAttrs (orig: {
+        cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ];
+      });
       libmnl = optimizedBuild super.libmnl;
       libnetfilter_conntrack = optimizedBuild super.libnetfilter_conntrack;
       libnftnl = optimizedBuild super.libnftnl;
@@ -169,28 +198,40 @@
           rm ./.libs/*.la;
         '';
       });
-      dpdk = (optimizedBuild (self.callPackage ./nix/dpdk {
-        libbsd = fancy.libbsd;
-        libmd = fancy.libmd;
-      }));
-      dpdk-wrapper = (optimizedBuild (self.callPackage ./nix/dpdk-wrapper {
-        inherit dpdk;
-        libbsd = fancy.libbsd;
-        bintools = super.fancy.llvmPackages.bintools;
-      }));
+      dpdk = (
+        optimizedBuild (
+          self.callPackage ./nix/dpdk {
+            libbsd = fancy.libbsd;
+            libmd = fancy.libmd;
+          }
+        )
+      );
+      dpdk-wrapper = (
+        optimizedBuild (
+          self.callPackage ./nix/dpdk-wrapper {
+            inherit dpdk;
+            libbsd = fancy.libbsd;
+            bintools = super.fancy.llvmPackages.bintools;
+          }
+        )
+      );
       fancy.xxHash = optimizedBuild super.xxHash;
-      libyang-dynamic = ((optimizedBuild super.libyang).override {
-        pcre2 = self.fancy.pcre2;
-        xxHash = self.fancy.xxHash;
-      }).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=ON" ];
-      });
-      libyang-static = ((optimizedBuild super.libyang).override {
-        pcre2 = self.fancy.pcre2;
-        xxHash = self.fancy.xxHash;
-      }).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=OFF" ];
-      });
+      libyang-dynamic =
+        ((optimizedBuild super.libyang).override {
+          pcre2 = self.fancy.pcre2;
+          xxHash = self.fancy.xxHash;
+        }).overrideAttrs
+          (orig: {
+            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=ON" ];
+          });
+      libyang-static =
+        ((optimizedBuild super.libyang).override {
+          pcre2 = self.fancy.pcre2;
+          xxHash = self.fancy.xxHash;
+        }).overrideAttrs
+          (orig: {
+            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=OFF" ];
+          });
       libyang = self.fancy.stdenv.mkDerivation {
         name = "libyang";
         src = null;
@@ -201,25 +242,27 @@
           cp -r ${self.libyang-dynamic}/* $out
         '';
       };
-      fancy.libcap = ((optimizedBuild super.libcap).override {
-        stdenv = fancy.stdenv;
-        usePam = false;
-      }).overrideAttrs (orig: {
-        doCheck = false; # tests require privileges
-        makeFlags = [
-          "lib=lib"
-          "PAM_CAP=no"
-          "CC:=clang"
-          "SHARED=no"
-          "LIBCSTATIC=no"
-          "GOLANG=no"
-        ];
-        configureFlags = (orig.configureFlags or [ ]) ++ [ "--enable-static" ];
-        postInstall = orig.postInstall + ''
-          # extant postInstall removes .a files for no reason
-          cp ./libcap/*.a $lib/lib;
-        '';
-      });
+      fancy.libcap =
+        ((optimizedBuild super.libcap).override {
+          stdenv = fancy.stdenv;
+          usePam = false;
+        }).overrideAttrs
+          (orig: {
+            doCheck = false; # tests require privileges
+            makeFlags = [
+              "lib=lib"
+              "PAM_CAP=no"
+              "CC:=clang"
+              "SHARED=no"
+              "LIBCSTATIC=no"
+              "GOLANG=no"
+            ];
+            configureFlags = (orig.configureFlags or [ ]) ++ [ "--enable-static" ];
+            postInstall = orig.postInstall + ''
+              # extant postInstall removes .a files for no reason
+              cp ./libcap/*.a $lib/lib;
+            '';
+          });
       fancy.json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
         postInstall = (orig.postInstall or "") + ''
@@ -232,67 +275,90 @@
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
       });
       abseil-cpp = (optimizedBuild super.abseil-cpp);
-      protobuf = (optimizedBuild
-        (super.protobuf.override { enableShared = false; })).overrideAttrs
-        (orig: {
-          cmakeFlags = (orig.cmakeFlags or [ ])
-            ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
-        });
+      protobuf =
+        (optimizedBuild (super.protobuf.override { enableShared = false; })).overrideAttrs
+          (orig: {
+            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
+          });
       fancy.zlib = (optimizedBuild super.zlib).override {
         static = true;
         shared = false;
       };
-      protobufc = (optimizedBuild (self.callPackage ./nix/protobufc {
-        stdenv = fancy.stdenv;
-        zlib = fancy.zlib;
-      })).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ])
-          ++ [ "--enable-static" "--disable-shared" ];
-      });
+      protobufc =
+        (optimizedBuild (
+          self.callPackage ./nix/protobufc {
+            stdenv = fancy.stdenv;
+            zlib = fancy.zlib;
+          }
+        )).overrideAttrs
+          (orig: {
+            configureFlags = (orig.configureFlags or [ ]) ++ [
+              "--enable-static"
+              "--disable-shared"
+            ];
+          });
       fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ])
-          ++ [ "--enable-static" "--disable-shared" ];
+        configureFlags = (orig.configureFlags or [ ]) ++ [
+          "--enable-static"
+          "--disable-shared"
+        ];
       });
-      fancy.ncurses =
-        optimizedBuild (super.ncurses.override { enableStatic = true; });
-      fancy.readline =
-        optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
+      fancy.ncurses = optimizedBuild (super.ncurses.override { enableStatic = true; });
+      fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
-      frr = (optimizedBuild (self.callPackage ./nix/frr {
-        rev = versions.frr.rev;
-        hash = versions.frr.hash;
-        json_c = fancy.json_c.dev;
-        libxcrypt = fancy.libxcrypt;
-        libyang = self.libyang-static;
-        pcre2 = fancy.pcre2;
-        readline = fancy.readline;
-        stdenv = fancy.stdenv;
-      })).overrideAttrs (orig: {
-        LDFLAGS = (orig.LDFLAGS or "") + " -L${self.libyang-static}/lib -lyang "
-          + " -L${fancy.xxHash}/lib -lxxhash "
-          + " -L${fancy.libxcrypt}/lib -lcrypt "
-          + " -L${protobufc}/lib -lprotobuf-c "
-          + " -L${fancy.pcre2}/lib -lpcre2-8 "
-          + " -L${self.libgccjit}/lib -latomic ";
-        configureFlags = orig.configureFlags
-          ++ [ "--enable-shared" "--enable-static" "--enable-static-bin" ];
-      });
-      dplane-rpc = optimizedBuild (self.callPackage ./nix/dplane-rpc {
-        rev = versions.dplane-rpc.rev;
-        hash = versions.dplane-rpc.hash;
-      });
-      dplane-plugin = optimizedBuild (self.callPackage ./nix/dplane-plugin {
-        rev = versions.dplane-plugin.rev;
-        hash = versions.dplane-plugin.hash;
-        commit_date = versions.dplane-plugin.commit_date;
-        stdenv = fancy.stdenv;
-        libyang = libyang-static;
-        pcre2 = fancy.pcre2;
-      });
+      frr =
+        (optimizedBuild (
+          self.callPackage ./nix/frr {
+            rev = versions.frr.rev;
+            hash = versions.frr.hash;
+            json_c = fancy.json_c.dev;
+            libxcrypt = fancy.libxcrypt;
+            libyang = self.libyang-static;
+            pcre2 = fancy.pcre2;
+            readline = fancy.readline;
+            stdenv = fancy.stdenv;
+          }
+        )).overrideAttrs
+          (orig: {
+            LDFLAGS =
+              (orig.LDFLAGS or "")
+              + " -L${self.libyang-static}/lib -lyang "
+              + " -L${fancy.xxHash}/lib -lxxhash "
+              + " -L${fancy.libxcrypt}/lib -lcrypt "
+              + " -L${protobufc}/lib -lprotobuf-c "
+              + " -L${fancy.pcre2}/lib -lpcre2-8 "
+              + " -L${self.libgccjit}/lib -latomic ";
+            configureFlags = orig.configureFlags ++ [
+              "--enable-shared"
+              "--enable-static"
+              "--enable-static-bin"
+            ];
+          });
+      dplane-rpc = optimizedBuild (
+        self.callPackage ./nix/dplane-rpc {
+          rev = versions.dplane-rpc.rev;
+          hash = versions.dplane-rpc.hash;
+        }
+      );
+      dplane-plugin = optimizedBuild (
+        self.callPackage ./nix/dplane-plugin {
+          rev = versions.dplane-plugin.rev;
+          hash = versions.dplane-plugin.hash;
+          commit_date = versions.dplane-plugin.commit_date;
+          stdenv = fancy.stdenv;
+          libyang = libyang-static;
+          pcre2 = fancy.pcre2;
+        }
+      );
       frr-config = (optimizedBuild (self.callPackage ./nix/frr-config { }));
       frr-with-dplane-plugin = self.symlinkJoin {
         name = "frr-with-dplane-plugin";
-        paths = [ frr dplane-rpc dplane-plugin frr-config ];
+        paths = [
+          frr
+          dplane-rpc
+          dplane-plugin
+          frr-config
+        ];
       };
 
       fancy.zstd = optimizedBuild super.zstd;
@@ -304,118 +370,131 @@
         enableStatic = true;
       };
       fancy.expat = optimizedBuild super.expat;
-      fancy.openssl = optimizedBuild
-        ((super.openssl.override { static = true; }).overrideAttrs
-          (final: { doCheck = false; }));
-      fancy.curl =
-        (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
+      fancy.openssl = optimizedBuild (
+        (super.openssl.override { static = true; }).overrideAttrs (final: {
+          doCheck = false;
+        })
+      );
+      fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
       hwdata = optimizedBuild super.hwdata;
       pciutils = (optimizedBuild super.pciutils).override {
         zlib = fancy.zlib;
         static = true;
       };
 
-      mstflint = (optimizedBuild (super.mstflint.override {
-        openssl = self.fancy.openssl;
-        zlib = self.fancy.zlib;
-        xz = self.fancy.xz;
-        expat = self.fancy.expat;
-        boost = self.fancy.boost;
-        curl = self.fancy.curl;
-        libxml2 = self.fancy.libxml2;
-        busybox = self.fancy.busybox;
-        onlyFirmwareUpdater = false;
-        enableDPA = false;
-        python3 = self.python3Minimal;
-      })).overrideAttrs (orig: {
-        configureFlags = [
-          "--datarootdir=${placeholder "out"}/share"
-          "--disable-cs"
-          "--disable-dc"
-          "--disable-inband"
-          "--disable-openssl"
-          "--disable-rdmem"
-          "--disable-shared"
-          "--disable-xml2"
-          "--enable-adb-generic-tools"
-          "--enable-all-static"
-          "--enable-static"
-          "--enable-static-libstdcpp"
-          # "--disable-dpa" # disabling this causes it to be enabled?
-          # "--disable-fw-mgr" # disabling this causes it to be enabled?
-        ];
+      mstflint =
+        (optimizedBuild (
+          super.mstflint.override {
+            openssl = self.fancy.openssl;
+            zlib = self.fancy.zlib;
+            xz = self.fancy.xz;
+            expat = self.fancy.expat;
+            boost = self.fancy.boost;
+            curl = self.fancy.curl;
+            libxml2 = self.fancy.libxml2;
+            busybox = self.fancy.busybox;
+            onlyFirmwareUpdater = false;
+            enableDPA = false;
+            python3 = self.python3Minimal;
+          }
+        )).overrideAttrs
+          (orig: {
+            configureFlags = [
+              "--datarootdir=${placeholder "out"}/share"
+              "--disable-cs"
+              "--disable-dc"
+              "--disable-inband"
+              "--disable-openssl"
+              "--disable-rdmem"
+              "--disable-shared"
+              "--disable-xml2"
+              "--enable-adb-generic-tools"
+              "--enable-all-static"
+              "--enable-static"
+              "--enable-static-libstdcpp"
+              # "--disable-dpa" # disabling this causes it to be enabled?
+              # "--disable-fw-mgr" # disabling this causes it to be enabled?
+            ];
 
-        nativeBuildInputs = orig.nativeBuildInputs ++ [ self.nukeReferences ];
+            nativeBuildInputs = orig.nativeBuildInputs ++ [ self.nukeReferences ];
 
-        buildInputs = [ self.python3Minimal ] ++ (with self.fancy; [
-          boost
-          curl
-          expat
-          libxml2
-          openssl.out
-          xz
-          zlib
-        ]);
+            buildInputs = [
+              self.python3Minimal
+            ]
+            ++ (with self.fancy; [
+              boost
+              curl
+              expat
+              libxml2
+              openssl.out
+              xz
+              zlib
+            ]);
 
-        preFixup = (orig.postFixup or "") + (with self.fancy; ''
-          rm -f "$out/bin/mstarchive"
-          rm -f "$out/bin/mstfwmanager"
-          find "$out" \
-            -type f \
-            -exec nuke-refs \
-            -e "$out" \
-            -e ${openssl.out} \
-            -e ${self.python3Minimal} \
-            -e ${busybox} \
-            -e ${stdenv.cc.libc} \
-            '{}' +;
-        '');
-      });
+            preFixup =
+              (orig.postFixup or "")
+              + (with self.fancy; ''
+                rm -f "$out/bin/mstarchive"
+                rm -f "$out/bin/mstfwmanager"
+                find "$out" \
+                  -type f \
+                  -exec nuke-refs \
+                  -e "$out" \
+                  -e ${openssl.out} \
+                  -e ${self.python3Minimal} \
+                  -e ${busybox} \
+                  -e ${stdenv.cc.libc} \
+                  '{}' +;
+              '');
+          });
 
-      perftest = (optimizedBuild (self.callPackage ./nix/perftest
-        (with versions.perftest; { inherit rev hash; })));
+      perftest = (
+        optimizedBuild (self.callPackage ./nix/perftest { inherit (versions.perftest) rev hash; })
+      );
     };
 
-  pkgs.debug = (import toolchainPkgs.path {
-    overlays = [
-      (self: prev: {
-        pkgsCross.gnu64 = import prev.path {
-          overlays = [
-            llvm-overlay
-            helpersOverlay
-            fenix-overlay
-            rust-overlay
-            (crossOverlay {
-              build-flags = build-flags.debug;
-              crossEnv = "gnu64";
-            })
-          ];
-        };
-      })
-    ];
-  }).pkgsCross;
+  pkgs.debug =
+    (import toolchainPkgs.path {
+      overlays = [
+        (self: prev: {
+          pkgsCross.gnu64 = import prev.path {
+            overlays = [
+              llvm-overlay
+              helpersOverlay
+              fenix-overlay
+              rust-overlay
+              (crossOverlay {
+                build-flags = build-flags.debug;
+                crossEnv = "gnu64";
+              })
+            ];
+          };
+        })
+      ];
+    }).pkgsCross;
 
-  pkgs.release = (import toolchainPkgs.path {
-    overlays = [
-      (self: prev: {
-        pkgsCross.gnu64 = import prev.path {
-          overlays = [
-            llvm-overlay
-            helpersOverlay
-            fenix-overlay
-            rust-overlay
-            (crossOverlay {
-              build-flags = build-flags.release;
-              crossEnv = "gnu64";
-            })
-          ];
-        };
-      })
-    ];
-  }).pkgsCross;
+  pkgs.release =
+    (import toolchainPkgs.path {
+      overlays = [
+        (self: prev: {
+          pkgsCross.gnu64 = import prev.path {
+            overlays = [
+              llvm-overlay
+              helpersOverlay
+              fenix-overlay
+              rust-overlay
+              (crossOverlay {
+                build-flags = build-flags.release;
+                crossEnv = "gnu64";
+              })
+            ];
+          };
+        })
+      ];
+    }).pkgsCross;
 
-  sysrootPackageListFn = pkgs:
-    with pkgs; [
+  sysrootPackageListFn =
+    pkgs: with pkgs; [
       dpdk
       dpdk-wrapper
       fancy.libbsd
@@ -490,7 +569,8 @@
     };
   };
 
-  sysrootFn = profile:
+  sysrootFn =
+    profile:
     toolchainPkgs.stdenv.mkDerivation {
       name = "${project-name}-sysroot.gnu64.${profile}";
       nativeBuildInputs = [ toolchainPkgs.rsync ];
@@ -537,7 +617,10 @@
   sysroot.gnu64.debug = sysrootFn "debug";
   sysroot.gnu64.release = sysrootFn "release";
 
-  sysroots = with sysroot; [ gnu64.debug gnu64.release ];
+  sysroots = with sysroot; [
+    gnu64.debug
+    gnu64.release
+  ];
 
   maxLayers = 120;
 
@@ -570,42 +653,46 @@
     debug-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/debug-env";
       tag = "${image-tag}";
-      contents = (with toolchainPkgs; [
-        bashInteractive
-        coreutils
-        curl
-        debianutils
-        ethtool
-        gawk
-        gdb
-        gnugrep
-        gnused
-        iproute2
-        iptables
-        jq
-        less
-        nano
-        procps
-        rr
-        strace
-        tcpdump
-        tshark
-        valgrind
-        vim
-        zstd
-      ]) ++ (with pkgs.${profile}.gnu64; [
-        glibc.out
-        glibc.bin
-        libgcc.libgcc
-        perftest
-      ]);
+      contents =
+        (with toolchainPkgs; [
+          bashInteractive
+          coreutils
+          curl
+          debianutils
+          ethtool
+          gawk
+          gdb
+          gnugrep
+          gnused
+          iproute2
+          iptables
+          jq
+          less
+          nano
+          procps
+          rr
+          strace
+          tcpdump
+          tshark
+          valgrind
+          vim
+          zstd
+        ])
+        ++ (with pkgs.${profile}.gnu64; [
+          glibc.out
+          glibc.bin
+          libgcc.libgcc
+          perftest
+        ]);
       inherit maxLayers;
     };
     libc-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/libc-env";
       tag = "${image-tag}";
-      contents =
-        [ pkgs.${profile}.gnu64.glibc.out pkgs.${profile}.gnu64.libgcc.libgcc ];
+      contents = [
+        pkgs.${profile}.gnu64.glibc.out
+        pkgs.${profile}.gnu64.libgcc.libgcc
+      ];
       inherit maxLayers;
     };
 
@@ -629,29 +716,31 @@
 
   };
 
-  container = let
-    release = container-profile "release";
-    debug = container-profile "debug";
-  in {
-    frr-release = release.frr;
-    frr-debug = debug.frr;
-    mstflint-debug = debug.mstflint;
-    mstflint-release = release.mstflint;
-    debug-env = release.debug-env;
-    libc-env = release.libc-env;
-    compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/compile-env";
-      tag = "${image-tag}";
-      contents = [
-        env.compile
-        pkgs.debug.gnu64.glibc.static
-        pkgs.release.gnu64.glibc.static
-        pkgs.debug.gnu64.glibc.dev
-        pkgs.release.gnu64.glibc.dev
-        pkgs.debug.gnu64.glibc.out
-        pkgs.release.gnu64.glibc.out
-      ] ++ sysroots;
-      inherit maxLayers;
+  container =
+    let
+      release = container-profile "release";
+      debug = container-profile "debug";
+    in
+    {
+      frr-release = release.frr;
+      frr-debug = debug.frr;
+      mstflint-debug = debug.mstflint;
+      mstflint-release = release.mstflint;
+      debug-env = release.debug-env;
+      libc-env = release.libc-env;
+      compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
+        name = "${contianer-repo}/compile-env";
+        tag = "${image-tag}";
+        contents = [
+          env.compile
+          pkgs.debug.gnu64.glibc.static
+          pkgs.release.gnu64.glibc.static
+          pkgs.debug.gnu64.glibc.dev
+          pkgs.release.gnu64.glibc.dev
+          pkgs.debug.gnu64.glibc.out
+          pkgs.release.gnu64.glibc.out
+        ] ++ sysroots;
+        inherit maxLayers;
+      };
     };
-  };
 }
