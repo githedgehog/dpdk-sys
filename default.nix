@@ -317,12 +317,14 @@ rec {
       fancy.ncurses = optimizedBuild (super.ncurses.override { enableStatic = true; });
       fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
+      fancy.libgccjit = optimizedBuild super.libgccjit;
       frr =
         (optimizedBuild (
           self.callPackage ./nix/frr {
             rev = versions.frr.rev;
             hash = versions.frr.hash;
             json_c = fancy.json_c.dev;
+            libgccjit = fancy.libgccjit;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
             pcre2 = fancy.pcre2;
@@ -338,7 +340,7 @@ rec {
               + " -L${fancy.libxcrypt}/lib -lcrypt "
               + " -L${protobufc}/lib -lprotobuf-c "
               + " -L${fancy.pcre2}/lib -lpcre2-8 "
-              + " -L${self.libgccjit}/lib -latomic ";
+              + " -L${fancy.libgccjit}/lib -latomic ";
             configureFlags = orig.configureFlags ++ [
               "--enable-shared"
               "--enable-static"
@@ -664,7 +666,6 @@ rec {
           frr-config
           gnugrep
           jq
-          libgccjit
           pkgs.${profile}.gnu64.frr
           prometheus-frr-exporter
           python3Minimal
