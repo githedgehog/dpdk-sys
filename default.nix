@@ -324,6 +324,7 @@ rec {
             rev = versions.frr.rev;
             hash = versions.frr.hash;
             json_c = fancy.json_c.dev;
+            libcap = fancy.libcap;
             libgccjit = fancy.libgccjit;
             libxcrypt = fancy.libxcrypt;
             libyang = self.libyang-static;
