@@ -559,7 +559,6 @@ rec {
     pkg-config # for hwloc build in dataplane
     rust-toolchain
     stdenv.cc.cc.lib
-    strace
     sudo
     tmpdir
     which
