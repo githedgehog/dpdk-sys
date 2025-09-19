@@ -5,7 +5,7 @@ set -euxo pipefail
 declare -rx NIXPKGS_BRANCH="nixpkgs-unstable"
 declare -rx DPLANE_RPC_BRANCH="master"
 declare -rx DPLANE_PLUGIN_BRANCH="master"
-declare -rx FRR_BRANCH="hh-master-10.3"
+declare -rx FRR_BRANCH="hh-master-10.4"
 declare -rx FRR_AGENT_BRANCH="master"
 declare -rx PERFTEST_BRANCH="master"
 
