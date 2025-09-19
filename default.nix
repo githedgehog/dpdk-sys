@@ -558,6 +558,7 @@ rec {
     sudo
     tmpdir
     which
+    zstd.out
   ];
 
   env = {
