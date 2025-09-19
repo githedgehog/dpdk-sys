@@ -26,6 +26,7 @@ rec {
       in
       combine (map (extension: toolchain.${extension}) versions.rust."${rust-channel}".extensions);
     fancy = super.fancy // rec {
+      zstd = super.zstd.override { static = true; };
       rustPlatform = super.makeRustPlatform {
         cargo = rust-toolchain;
         rustc = rust-toolchain;
@@ -37,7 +38,11 @@ rec {
         };
     };
     cargo-bolero = fancy.rustOverrides super.cargo-bolero;
-    cargo-deny = fancy.rustOverrides super.cargo-deny;
+    cargo-deny = fancy.rustOverrides (
+      super.cargo-deny.override {
+        zstd = self.fancy.zstd;
+      }
+    );
     cargo-llvm-cov = fancy.rustOverrides super.cargo-llvm-cov;
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
