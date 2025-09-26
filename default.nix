@@ -710,9 +710,9 @@ rec {
     libc-env = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/libc-env";
       tag = "${image-tag}";
-      contents = [
-        pkgs.${profile}.gnu64.glibc.out
-        pkgs.${profile}.gnu64.libgcc.libgcc
+      contents = with pkgs.${profile}.gnu64; [
+        glibc.out
+        libgcc.libgcc
       ];
       inherit maxLayers;
     };
@@ -720,17 +720,17 @@ rec {
     mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
       name = "${contianer-repo}/mstflint";
       tag = "${image-tag}";
-      contents = [
-        pkgs.${profile}.gnu64.pciutils
-        pkgs.${profile}.gnu64.bashInteractive
-        pkgs.${profile}.gnu64.coreutils
-        pkgs.${profile}.gnu64.gnugrep
-        pkgs.${profile}.gnu64.gnused
-        pkgs.${profile}.gnu64.inotify-info
-        pkgs.${profile}.gnu64.iproute2
-        pkgs.${profile}.gnu64.jq
-        pkgs.${profile}.gnu64.mstflint
-        pkgs.${profile}.gnu64.python3Minimal
+      contents = with pkgs.${profile}.gnu64; [
+        pciutils
+        bashInteractive
+        coreutils
+        gnugrep
+        gnused
+        inotify-info
+        iproute2
+        jq
+        mstflint
+        python3Minimal
       ];
       inherit maxLayers;
     };
