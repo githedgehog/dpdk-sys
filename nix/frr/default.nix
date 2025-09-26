@@ -115,7 +115,7 @@ stdenv.mkDerivation (finalAttrs: {
   configureFlags = [
     "--enable-python-runtime"
     "--enable-fpm=netlink" # try to disable later
-    "--with-moduledir=${placeholder "out"}/lib/frr/modules"
+    "--with-moduledir=/lib/frr/modules"
 
     "--enable-configfile-mask=0640"
     "--enable-logfile-mask=0640"
@@ -138,7 +138,11 @@ stdenv.mkDerivation (finalAttrs: {
     "--enable-logfile-mask=0640"
     "--enable-multipath=${toString numMultipath}"
     "--localstatedir=/run/frr"
-    "--sbindir=${placeholder "out"}/libexec/frr"
+    "--includedir=/include"
+    "--sbindir=/libexec/frr"
+    "--bindir=/bin"
+    "--libdir=/lib"
+    "--prefix=/frr"
     "--sysconfdir=/etc/frr"
     "--with-clippy=${finalAttrs.clippy-helper}/bin/clippy"
     # general options
@@ -190,7 +194,7 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   installPhase = ''
-    make install;
+    make DESTDIR=$out install;
     mkdir -p $build/src/
     cp -r . $build/src/frr
   '';
