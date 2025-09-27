@@ -755,16 +755,7 @@ rec {
       compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
         name = "${contianer-repo}/compile-env";
         tag = "${image-tag}";
-        contents = [
-          env.compile
-          pkgs.debug.gnu64.glibc.static
-          pkgs.release.gnu64.glibc.static
-          pkgs.debug.gnu64.glibc.dev
-          pkgs.release.gnu64.glibc.dev
-          pkgs.debug.gnu64.glibc.out
-          pkgs.release.gnu64.glibc.out
-        ]
-        ++ sysroots;
+        contents = compile-env;
         inherit maxLayers;
       };
     };
