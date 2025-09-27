@@ -604,6 +604,9 @@ rec {
         rsync -rLhP \
           "${env.sysroot.gnu64.${profile}}/include/" \
           "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/include/"
+        if [ ${profile} = "release" ]; then
+          ln -rs $out/sysroot/x86_64-unknown-linux-gnu/release $out/sysroot/x86_64-unknown-linux-gnu/fuzz
+        fi
       '';
       postFixup =
         # libm.a file contains a GROUP instruction which contains absolute paths to /nix

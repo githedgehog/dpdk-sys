@@ -31,7 +31,3 @@ RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \
     && echo account requisite pam_permit.so >> /etc/pam.d/sudo \
     && echo session requisite pam_permit.so >> /etc/pam.d/sudo \
     && chmod 444 /etc/pam.d/*
-
-# Link the fuzz sysroot (same as the release sysroot)
-RUN cd /sysroot/x86_64-unknown-linux-gnu \
-    && ln -s ./release fuzz
