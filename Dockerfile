@@ -4,11 +4,12 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN find / -name '*.a' -exec rm -f {} \;
 RUN find / -name '*.la' -exec rm -f {} \;
 RUN find / -name '*.h' -exec rm -f {} \;
-RUN mkdir -p /run/frr/hh /var/run/frr/hh
+RUN mkdir -p /run/frr/hh
 RUN chown -R frr:frr /run/frr
-RUN chown -R frr:frr /var/run/frr
-# hack to deal with /usr/bin/python3 path in frr
+RUN mkdir -p /var
+RUN ln -s /run /var/run
 RUN ln -s / /usr
+RUN chown -R frr:frr /var/run/frr
 FROM scratch AS frr-release
 COPY --from=frr-base / /
 CMD ["/libexec/frr/docker-start"]
