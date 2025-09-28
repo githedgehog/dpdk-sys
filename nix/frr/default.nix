@@ -65,7 +65,7 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "frr";
-  version = "10.4.1";
+  version = "10.3.1";
   dontPatchShebangs = false;
   dontFixup = false;
   dontPatchElf = false;

@@ -67,10 +67,10 @@
     commit_date = "2025-08-07T18:58:02+00:00";
   };
   frr = {
-    branch = "hh-master-10.4";
-    rev = "489487319b350f9c5f8b8528cf01c336aaa47ad5";
-    hash = "sha256-81A98AgfgT5WVa8Imo5wf4/GLO5vGuFSf3+3f93f/fk=";
-    commit_date = "2025-09-19T02:29:56+00:00";
+    branch = "hh-master-10.3";
+    rev = "a9bfcc161380328ce3b9cae1827c1b259048f5fc";
+    hash = "sha256-luvDeyWcnXKs6xJvqdRPxjbgV+go0cuwORChwrDo+h8=";
+    commit_date = "2025-08-08T13:08:01+00:00";
   };
   frr-agent = {
     branch = "master";
