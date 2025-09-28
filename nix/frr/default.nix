@@ -142,8 +142,8 @@ stdenv.mkDerivation (finalAttrs: {
     "--sbindir=/libexec/frr"
     "--bindir=/bin"
     "--libdir=/lib"
-    "--prefix=/usr"
-    "--sysconfdir=/etc"
+    "--prefix=/frr"
+    "--sysconfdir=/etc/frr"
     "--with-clippy=${finalAttrs.clippy-helper}/bin/clippy"
     # general options
     "--enable-irdp=no"
