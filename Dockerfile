@@ -7,6 +7,8 @@ RUN find / -name '*.h' -exec rm -f {} \;
 RUN mkdir -p /run/frr/hh /var/run/frr/hh
 RUN chown -R frr:frr /run/frr
 RUN chown -R frr:frr /var/run/frr
+# hack to deal with /usr/bin/python3 path in frr
+RUN ln -s / /usr
 FROM scratch AS frr-release
 COPY --from=frr-base / /
 CMD ["/libexec/frr/docker-start"]
