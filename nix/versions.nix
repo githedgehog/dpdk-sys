@@ -2,31 +2,31 @@
 {
   nixpkgs = {
     branch = "nixpkgs-unstable";
-    commit = "e9f00bd893984bc8ce46c895c3bf7cac95331127";
-    commit_date = "2025-09-28T05:12:35+00:00";
-    source_url = "https://github.com/NixOS/nixpkgs/archive/e9f00bd893984bc8ce46c895c3bf7cac95331127.tar.gz";
+    commit = "647e5c14cbd5067f44ac86b74f014962df460840";
+    commit_date = "2025-09-28T14:42:27+00:00";
+    source_url = "https://github.com/NixOS/nixpkgs/archive/647e5c14cbd5067f44ac86b74f014962df460840.tar.gz";
     hash = {
       nix32 = {
         packed = {
           comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (packed)";
-          sha256 = "0j4j359xaw4lq7b2z9wc8m9jghpcv37svaijkz9waijwm0yl2s1y";
-          sha512 = "047gbx5hs7k84z0c9nr8s9ixi8hy13bzim9pxh4q5vzl0mp4z8f8d2ic37h5d0ps7b8sh4sb15wxwjk843zy06k1cwn8sw3z5x8w3pg";
+          sha256 = "08yi7bfjrmgjbfijkjg3prjmzvwp2g1x0b6i6clipah3gqwqba6i";
+          sha512 = "0k2mgfinsc05qvw12bjmv4ygc6cjb6jd0q5rh3vgkpcvwranq9xwi5pc3ym6ikdbsxjk273q0cap07jp6wa40365sh535ilqc1gc86r";
         };
         unpacked = {
           comment = "nix-prefetch-url generated hash of the nix archive file obtained from github archive (unpacked)";
-          sha256 = "0s2mhbrgzxlgkg2yxb0q0hpk8lby1a7w67dxvfmaz4gsmc0bnvfj";
+          sha256 = "0m30xfi18dgxi5lx9zgqpq1kxwdwrdg9wdbzzgs8cicmsvq6ami5";
         };
       };
       tar = {
         comment = "openssl generated hashes of the actual tar.gz file obtained from github archive";
-        sha256 = "3e68413da85c46c5d39f32aaadcfd8ecc22753458ca72fd6c19470d553199248";
-        sha384 = "eef4a14a978253bc0f013b201fc560b7f311e852d9ad95455eff033806a0a3ccb29e9ce17057379e67aaa978c0ed275c";
-        sha512 = "ef0e8e7af9836b64390bd300ff074153f2ce4b589a408dd6d117b402cf605134e4d027b702fa77c104f69b6afc6b040f51ec3169946d62e013348f86a5af7708";
-        sha3_256 = "91900b4c18f4d3119a6d6a73035842723e0af87a3a599c528a31ee976ea4dc68";
-        sha3_384 = "d5152676d74c99a3f8491bc43ce515691c930c58d68258ddb43756912b9c292e3da83318ca5224d24f9301e28ee9c3c1";
-        sha3_512 = "74d017244c678c1922c922967e2afb3daeb42454aef9b6041d9064bd561c09ec751790f6f64eee9c35e8d2554844c580d2fc10895eddcf43449a0a7f396a7058";
-        blake2b512 = "bd5cbb11b5bda9acb8a47ef75e8db56df3b151f0513a2f934bd40d4a5c564a193a81206b467b37c93c99f2dfbcdafc601f63d1d081ee1e335aefbd11402d1b31";
-        blake2s256 = "846546e7ba86d77e389f18cb51720ddbe1db298a5acc414bac8e1be7fdaa191d";
+        sha256 = "d1a885397e03aa1b2933d12cd0c31397ef5f65bee3c929a35bf2d52cdd3ad123";
+        sha384 = "798dd19f22d6b2734484e7fc6502cbfa2525cad09af03039c61d2a3df3b3dc38d13ca2778a2e9764dde609e482b51a2d";
+        sha512 = "d920f602c3349651a02e6600a2b8b9f280ab18c0e38829bb5e6d4653fd60b744de13b62af3cdee7c7bc05c3068d22cc90c7b9eec2a97087ce30298b6d1bd2a26";
+        sha3_256 = "fc334452e1aacd7c91224dd424fc7e31168be90b2479d5af7bc30c65b246a6e2";
+        sha3_384 = "eedbbb26d9ea666d7f26ca2043cb26f894f044a2ce1f0ed3862750fd409180414af1e128b8b59f6a1437536e00500e14";
+        sha3_512 = "46cbd099f970e5ca433d4309e83dbd0b441a8e0314d40b4ed3d603af8d818f7d8651f9307f9f65ea62156dadc8898c3823d310f9c917051cf00c1e9470ece07c";
+        blake2b512 = "c90f77f196d5d0746cb8a94cbdd850ebac3d384a5cd5429982ef5404b05a6ea89c42227b77780e52d2dfba4700cd713de31f689b6067af52668ec99726085815";
+        blake2s256 = "36f7f3134a2c356bbdf5618a59c4f01ef3f85721ba2e9f38d28ea37e5a168cb3";
       };
     };
   };
