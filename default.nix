@@ -3,7 +3,7 @@
   build-flags ? import ./nix/flags.nix,
   versions ? import ./nix/versions.nix,
   image-tag ? "latest",
-  contianer-repo ? "ghcr.io/githedgehog/dpdk-sys",
+  container-repo ? "ghcr.io/githedgehog/dpdk-sys",
 }:
 rec {
   rust-version = versions.rust.${rust-channel};
@@ -658,7 +658,7 @@ rec {
 
   container-profile = profile: {
     frr = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/frr";
+      name = "${container-repo}/frr";
       tag = "${image-tag}";
       contents = toolchainPkgs.buildEnv {
         name = "frr-env-${profile}";
@@ -682,7 +682,7 @@ rec {
       };
     };
     debug-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/debug-env";
+      name = "${container-repo}/debug-env";
       tag = "${image-tag}";
       contents =
         (with toolchainPkgs; [
@@ -715,7 +715,7 @@ rec {
       inherit maxLayers;
     };
     libc-env = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/libc-env";
+      name = "${container-repo}/libc-env";
       tag = "${image-tag}";
       contents = with pkgs.${profile}.gnu64; [
         glibc.out
@@ -725,7 +725,7 @@ rec {
     };
 
     mstflint = toolchainPkgs.dockerTools.buildLayeredImage {
-      name = "${contianer-repo}/mstflint";
+      name = "${container-repo}/mstflint";
       tag = "${image-tag}";
       contents = with pkgs.${profile}.gnu64; [
         pciutils
@@ -757,7 +757,7 @@ rec {
       debug-env = release.debug-env;
       libc-env = release.libc-env;
       compile-env = toolchainPkgs.dockerTools.buildLayeredImage {
-        name = "${contianer-repo}/compile-env";
+        name = "${container-repo}/compile-env";
         tag = "${image-tag}";
         contents = compile-env;
         inherit maxLayers;
