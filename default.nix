@@ -392,6 +392,7 @@ rec {
       );
       fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
       hwdata = optimizedBuild super.hwdata;
+      hwloc = optimizedBuild super.hwloc;
       pciutils = (optimizedBuild super.pciutils).override {
         zlib = fancy.zlib;
         static = true;
