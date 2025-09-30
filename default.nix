@@ -43,6 +43,7 @@ rec {
         zstd = self.fancy.zstd;
       }
     );
+    cargo-depgraph = fancy.rustOverrides super.cargo-depgraph;
     cargo-llvm-cov = fancy.rustOverrides super.cargo-llvm-cov;
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
@@ -539,6 +540,7 @@ rec {
     cacert
     cargo-bolero
     cargo-deny
+    cargo-depgraph
     cargo-llvm-cov
     cargo-nextest
     coreutils
@@ -552,6 +554,7 @@ rec {
     glibc.dev
     glibc.out
     gnugrep
+    graphviz
     just
     libcap
     libgcc.libgcc
