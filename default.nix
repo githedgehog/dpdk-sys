@@ -703,6 +703,7 @@ rec {
           nano
           procps
           tcpdump
+          valgrind
           vim
           zstd
         ])
