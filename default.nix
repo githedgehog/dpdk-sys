@@ -561,6 +561,7 @@ rec {
     libgcc.libgcc
     libgccjit
     libz
+    openssl
     pam
     patchelf
     pkg-config # for hwloc build in dataplane
