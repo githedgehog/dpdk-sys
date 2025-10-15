@@ -101,10 +101,10 @@ stdenv.mkDerivation rec {
     "sched"
     "security"
     "table"
-    "timer"
   ];
 
   enabledLibs = [
+    "timer" # needed for i40e
     "cryptodev" # required for vhost
     "dmadev" # required by vhost
     "vhost" # enabled to facilitate testing with vm runner
