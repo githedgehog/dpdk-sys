@@ -56,7 +56,7 @@
 
   # BGP options
   bgpAnnounce ? true,
-  bgpBmp ? false,
+  bgpBmp ? true,
   bgpVnc ? false,
 
   # OSPF options
