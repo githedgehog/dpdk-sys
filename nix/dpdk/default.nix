@@ -72,7 +72,6 @@ stdenv.mkDerivation rec {
     "dispatcher"
     "distributor"
     "efd"
-    "eventdev"
     "fib"
     "gpudev"
     "graph"
@@ -105,6 +104,7 @@ stdenv.mkDerivation rec {
 
   enabledLibs = [
     "timer" # needed for i40e
+    "eventdev" # needed for i40e
     "cryptodev" # required for vhost
     "dmadev" # required by vhost
     "vhost" # enabled to facilitate testing with vm runner
