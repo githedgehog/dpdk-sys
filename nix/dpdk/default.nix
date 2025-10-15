@@ -231,7 +231,6 @@ stdenv.mkDerivation rec {
     "regex/mlx5"
     "vdpa/*"
     "vdpa/ifc"
-    "vdpa/mlx5"
   ];
 
   enabledDrivers = [
@@ -248,6 +247,7 @@ stdenv.mkDerivation rec {
     "net/ring"
     "net/vhost"
     "net/virtio"
+    "vdpa/mlx5"
   ];
 
   mesonFlags = [
