@@ -116,6 +116,10 @@ stdenv.mkDerivation (finalAttrs: {
     "--enable-python-runtime"
     "--enable-fpm=netlink" # try to disable later
     "--with-moduledir=/lib/frr/modules"
+    # rpath causes confusion in module linking where bmp gets linked to /build (which is broken).
+    # dontPatchElf and dontFixup are both set to false, so nix will adjust to rpath correctly for us after
+    # the initial linking step.
+    "--enable-rpath=no"
 
     "--enable-configfile-mask=0640"
     "--enable-logfile-mask=0640"
