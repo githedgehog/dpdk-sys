@@ -319,11 +319,21 @@ rec {
       fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
       fancy.libgccjit = optimizedBuild super.libgccjit;
+      fancy.c-ares = optimizedBuild (
+        super.c-ares.overrideAttrs (orig: {
+          cmakeFlags = (orig.cmakeFlags or [ ]) ++ [
+            "-DCARES_SHARED=OFF"
+            "-DCARES_STATIC=ON"
+          ];
+        })
+      );
       frr =
         (optimizedBuild (
           self.callPackage ./nix/frr {
             rev = versions.frr.rev;
             hash = versions.frr.hash;
+
+            c-ares = fancy.c-ares;
             json_c = fancy.json_c.dev;
             libcap = fancy.libcap;
             libgccjit = fancy.libgccjit;
@@ -337,6 +347,7 @@ rec {
           (orig: {
             LDFLAGS =
               (orig.LDFLAGS or "")
+              + " -L${self.fancy.c-ares}/lib -lcares "
               + " -L${self.libyang-static}/lib -lyang "
               + " -L${fancy.xxHash}/lib -lxxhash "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
