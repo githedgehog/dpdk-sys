@@ -138,7 +138,7 @@ jobs:
               [ -h "$f" ] && sudo rm "$f"
           done
 
-      - uses: "actions/upload-artifact@v4"
+      - uses: "actions/upload-artifact@v5"
         with:
           name: "builds-${{ matrix.toolchain.key }}"
           path: "/tmp/dpdk-sys/builds"
