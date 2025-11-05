@@ -478,6 +478,8 @@ rec {
       perftest = (
         optimizedBuild (self.callPackage ./nix/perftest { inherit (versions.perftest) rev hash; })
       );
+
+      base-image = self.callPackage ./nix/base-image {};
     };
 
   pkgs.debug =
@@ -720,6 +722,7 @@ rec {
           zstd
         ])
         ++ (with pkgs.${profile}.gnu64; [
+          base-image
           glibc.out
           glibc.bin
           libgcc.libgcc
@@ -731,6 +734,7 @@ rec {
       name = "${container-repo}/libc-env";
       tag = "${image-tag}";
       contents = with pkgs.${profile}.gnu64; [
+        base-image
         glibc.out
         libgcc.libgcc
       ];
