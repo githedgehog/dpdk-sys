@@ -712,6 +712,7 @@ rec {
           gnused
           iproute2
           iptables
+          iputils
           jq
           less
           nano
