@@ -736,6 +736,7 @@ rec {
       tag = "${image-tag}";
       contents = with pkgs.${profile}.gnu64; [
         base-image
+        fancy.busybox
         glibc.out
         libgcc.libgcc
       ];
