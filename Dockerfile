@@ -12,9 +12,11 @@ RUN ln -s / /usr
 RUN chown -R frr:frr /var/run/frr
 FROM scratch AS frr-release
 COPY --from=frr-base / /
+ENTRYPOINT ["/bin/tini", "--"]
 CMD ["/libexec/frr/docker-start"]
 FROM scratch AS frr-debug
 COPY --from=frr-base / /
+ENTRYPOINT ["/bin/tini", "--"]
 CMD ["/libexec/frr/docker-start"]
 FROM ${IMAGE} AS doc-env
 FROM ${IMAGE} AS libc-env

@@ -3,6 +3,8 @@
 # this set -x can be reverted when frr 10.4.1 is validated
 set -x
 
+trap 'echo "Stopping FRR"; kill 0; exit 0' SIGINT SIGTERM
+
 . /libexec/frr/frrcommon.sh
 
 ip -j -d nexthop show | \
