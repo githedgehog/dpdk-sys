@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# this set -x can be reverted when frr 10.4.1 is validated
-set -x
-
 . /libexec/frr/frrcommon.sh
 
 ip -j -d nexthop show | \

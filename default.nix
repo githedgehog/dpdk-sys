@@ -691,6 +691,7 @@ rec {
           pkgs.${profile}.gnu64.frr
           prometheus-frr-exporter
           python3Minimal
+          tini
           tmpdir
         ];
       };
@@ -718,6 +719,7 @@ rec {
           nano
           procps
           tcpdump
+          tini
           valgrind
           vim
           zstd
