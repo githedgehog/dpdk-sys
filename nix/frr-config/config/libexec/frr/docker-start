@@ -1,6 +1,17 @@
 #!/bin/sh
 
+shutdown() {
+  echo "Shutting down FRR on signal..."
+  pkill -u frr
+  pkill -f watchfrr
+  pkill -f frr-agent
+  exit 0
+}
+
+trap shutdown TERM INT
+
 . /libexec/frr/frrcommon.sh
+
 
 ip -j -d nexthop show | \
   jq --raw-output '.[] | select(.protocol="zebra").id' | \

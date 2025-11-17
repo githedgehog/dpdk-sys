@@ -691,6 +691,7 @@ rec {
           pkgs.${profile}.gnu64.frr
           prometheus-frr-exporter
           python3Minimal
+          procps
           tini
           tmpdir
         ];
