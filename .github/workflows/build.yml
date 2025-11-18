@@ -206,13 +206,35 @@ jobs:
     needs:
       - run
 
-    name: "${{ matrix.hybrid && 'hlab' || 'vlab' }}-${{ matrix.fabricmode == 'spine-leaf' && 'sl' || 'cc' }}-${{ matrix.gateway && 'gw-' || '' }}${{ matrix.includeonie && 'onie-' || '' }}${{ matrix.buildmode }}-${{ matrix.vpcmode }}"
+    name: "${{ matrix.hybrid && 'h' || 'v' }}-${{ matrix.upgradefrom && 'up' || '' }}${{ matrix.upgradefrom }}${{ matrix.upgradefrom && '-' || '' }}${{ matrix.mesh && 'mesh-' || '' }}${{ matrix.gateway && 'gw-' || '' }}${{ matrix.includeonie && 'onie-' || '' }}${{ matrix.buildmode }}-${{ matrix.vpcmode }}"
 
     uses: githedgehog/fabricator/.github/workflows/run-vlab.yaml@master
     with:
-      skip: ${{ matrix.hybrid && !contains(github.event.pull_request.labels.*.name, 'ci:+hlab') || !matrix.hybrid && !contains(github.event.pull_request.labels.*.name, 'ci:+vlab') }}
+      # ci:+hlab is required to enable hybrid lab tests on PR
+      # ci:-vlab disables virtual lab tests on PR
+      # ci:-upgrade disables upgrade tests on PR
+      # hlab is disabled for main and merge_queue till we have gateway tests for it
+      skip: >-
+        ${{
+          github.event_name == 'pull_request'
+          && (
+            matrix.hybrid && !contains(github.event.pull_request.labels.*.name, 'ci:+hlab')
+            || !matrix.hybrid && contains(github.event.pull_request.labels.*.name, 'ci:-vlab')
+          ) && (
+            matrix.upgradefrom == '' || contains(github.event.pull_request.labels.*.name, 'ci:-upgrade')
+          )
+
+          || github.event_name == 'workflow_dispatch'
+          && (
+            matrix.hybrid && inputs.run_hlab_tests != true
+            || !matrix.hybrid && inputs.skip_vlab_tests == true
+          )
+
+          || (github.event_name == 'push' || github.event_name == 'merge_group')
+          && matrix.hybrid
+        }}
       fabricatorref: master
-      prebuild: "just bump frr ${{ github.event.pull_request.head.sha }}.debug"
+      prebuild: "just bump frr ${{ github.sha }}.release"
       fabricmode: ${{ matrix.fabricmode }}
       gateway: ${{ matrix.gateway }}
       includeonie: ${{ matrix.includeonie }}
