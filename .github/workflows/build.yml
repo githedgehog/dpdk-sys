@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v5"
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
       - uses: "dtolnay/rust-toolchain@stable"
       - uses: "cargo-bins/cargo-binstall@main"
       - name: "install whyq"
@@ -81,8 +81,7 @@ jobs:
 
       - uses: "actions/checkout@v5"
         with:
-          # make sure to update the vlab prebuild script if changing it
-          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
 
       - name: "install nix"
         uses: "cachix/install-nix-action@v31"
