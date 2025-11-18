@@ -206,6 +206,14 @@ push-frr-container: build-frr-container
     {{ _just_debug_ }}
     docker push "{{ _frr_container_name }}:{{ _slug }}"
 
+# push the frr release container
+[script]
+push-frr-release-container:
+    {{ _just_debug_ }}
+    docker pull "{{ _frr_container_name }}:{{ _commit }}.release"
+    docker tag "{{ _frr_container_name }}:{{ _commit }}.release" "{{ _frr_container_name }}:{{ version }}"
+    docker push "{{ _frr_container_name }}:{{ version }}"
+
 # Build and tag the libc container
 build-libc-container: (_build-container "libc-env" _libc_container_name)
 
