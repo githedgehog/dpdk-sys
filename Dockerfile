@@ -1,4 +1,5 @@
 ARG IMAGE=scratch
+
 FROM ${IMAGE} AS frr-base
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN find / -name '*.a' -exec rm -f {} \;
@@ -10,19 +11,28 @@ RUN mkdir -p /var
 RUN ln -s /run /var/run
 RUN ln -s / /usr
 RUN chown -R frr:frr /var/run/frr
+COPY --chown=0:0 ./version /version
+
 FROM scratch AS frr-release
 COPY --from=frr-base / /
 ENTRYPOINT ["/bin/tini", "--"]
 CMD ["/libexec/frr/docker-start"]
+
 FROM scratch AS frr-debug
 COPY --from=frr-base / /
 ENTRYPOINT ["/bin/tini", "--"]
 CMD ["/libexec/frr/docker-start"]
+
 FROM ${IMAGE} AS doc-env
+
 FROM ${IMAGE} AS libc-env
+
 FROM ${IMAGE} AS debug-env
+
 FROM ${IMAGE} AS mstflint-release
+
 FROM ${IMAGE} AS mstflint-debug
+
 FROM ${IMAGE} AS compile-env
 # This sets up sudo to work in the compile env container
 RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dangerous \

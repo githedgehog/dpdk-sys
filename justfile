@@ -14,6 +14,13 @@ rust := "stable"
 container_repo := "ghcr.io/githedgehog/dpdk-sys"
 profile := "debug"
 
+version_extra := ""
+version := `git describe --tags --dirty --always` + version_extra
+
+# Print version that will be used in the build
+version:
+  @echo "Using version: {{version}}"
+
 # This is the maximum number of builds nix will start at a time.
 # You can jump this up to 8 or 16 if you have a really powerful machine.
 # Be careful tho, LLVM is a memory hog of a build.
@@ -127,10 +134,16 @@ build-sysroot: (_nix_build "sysroots") (_nix_build "env.sysroot.gnu64.debug") (_
 # Build doc env packages
 build-docEnvPackageList: (_nix_build "docEnvPackageList")
 
+# generate version file that'll be injected into containers
+[private]
+[script]
+_gen_version_file:
+    echo "{{ version }}" > ./version
+
 # Builds and post processes a container from the nix build
 [private]
 [script]
-_build-container target container-name: (_nix_build ("container." + target))
+_build-container target container-name: _gen_version_file (_nix_build ("container." + target))
     {{ _just_debug_ }}
     declare build_date
     build_date="$(date --utc --iso-8601=date --date="{{ _build_time }}")"
