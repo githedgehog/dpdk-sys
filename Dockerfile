@@ -15,12 +15,12 @@ COPY --chown=0:0 ./version /version
 
 FROM scratch AS frr-release
 COPY --from=frr-base / /
-ENTRYPOINT ["/bin/tini", "--"]
+ENTRYPOINT ["/bin/tini", "-g", "-p", "SIGTERM", "--"]
 CMD ["/libexec/frr/docker-start"]
 
 FROM scratch AS frr-debug
 COPY --from=frr-base / /
-ENTRYPOINT ["/bin/tini", "--"]
+ENTRYPOINT ["/bin/tini", "-g", "-p", "SIGTERM", "--"]
 CMD ["/libexec/frr/docker-start"]
 
 FROM ${IMAGE} AS doc-env
