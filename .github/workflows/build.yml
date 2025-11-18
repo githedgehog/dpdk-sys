@@ -14,6 +14,8 @@ on:
   push:
     branches:
       - "main"
+    tags:
+      - "v*"
 
 concurrency:
   group: "${{ github.workflow }}:${{ github.ref }}"
@@ -168,7 +170,6 @@ jobs:
               body: body
             });
 
-
       - name: "Vulnerable packages (gnu64)"
         uses: "actions/github-script@v8"
         if: ${{ github.event_name == 'pull_request' }}
@@ -263,3 +264,30 @@ jobs:
         run: |
           >&2 echo "A critical step failed!"
           exit 1
+
+  publish:
+    runs-on: lab
+    if: startsWith(github.event.ref, 'refs/tags/v') && github.event_name == 'push'
+    needs:
+      - run
+      - vlab
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release container
+        run: |
+          just push-frr-release-container
