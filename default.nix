@@ -574,6 +574,7 @@ rec {
     gnugrep
     graphviz
     just
+    kopium
     libcap
     libgcc.libgcc
     libgccjit
