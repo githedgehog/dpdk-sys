@@ -48,6 +48,10 @@ rec {
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
     just = fancy.rustOverrides super.just;
+    kopium = fancy.rustOverrides (self.callPackage ./nix/kopium {
+       rev = "c4931d13043994813c9949d90bf3e0fbac949148"; # 0.22.5
+       hash = "sha256-zYmb+HxwEKEnzdqAzvki5M+NA2fGP174pRkU6B4WmZI=";
+    });
     frr-agent = fancy.rustOverrides (
       self.callPackage ./nix/frr-agent {
         rev = versions.frr-agent.rev;
