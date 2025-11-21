@@ -3,7 +3,7 @@ let
     compile = {
       machine = "-mcrc32 -mrtm -msse4 -mssse3 -march=x86-64-v3 -mtune=znver4";
       # note: debug is applied to all profiles: don't include performance compromising flags here.  Add those to the profiles.
-      debug = "-ggdb3 -gdwarf-5 -gembed-source -gz";
+      debug = "-ggdb3 -gdwarf-5 -gembed-source";
       security = "-fstack-protector-strong";
       errors = "-Werror=odr -Werror=strict-aliasing";
       profile = {
