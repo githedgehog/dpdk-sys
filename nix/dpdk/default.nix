@@ -105,6 +105,7 @@ stdenv.mkDerivation rec {
     "cryptodev" # required for vhost
     "dmadev" # required by vhost
     "eventdev" # needed for i40e
+    "pci"
     "security" # needed for i40e
     "timer" # needed for i40e
     "vhost" # enabled to facilitate testing with vm runner
