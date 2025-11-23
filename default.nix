@@ -333,11 +333,10 @@ rec {
           ];
         })
       );
-      frr =
-        (optimizedBuild (
-          self.callPackage ./nix/frr {
-            rev = versions.frr.rev;
-            hash = versions.frr.hash;
+      frr = optimizedBuild (
+        (self.callPackage ./nix/frr {
+          rev = versions.frr.rev;
+          hash = versions.frr.hash;
 
           c-ares = fancy.c-ares;
           json_c = fancy.json_c.dev;
