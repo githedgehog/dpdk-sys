@@ -268,7 +268,7 @@ stdenv.mkDerivation rec {
     "-Denable_docs=false"
     "-Denable_driver_sdk=false"
     "-Dibverbs_link=static"
-    "-Dmax_numa_nodes=4"
+    "-Dmax_numa_nodes=8"
     "-Dstrip=false" # We should strip binaries in a separate step to preserve detached debug info
     "-Dtests=false" # Running DPDK tests in CI is usually silly
     "-Duse_hpet=false"
