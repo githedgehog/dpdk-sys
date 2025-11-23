@@ -529,6 +529,24 @@ rec {
       ];
     }).pkgsCross;
 
+  pkgs.fuzz =
+    (import toolchainPkgs.path {
+      overlays = [
+        (self: prev: {
+          pkgsCross.gnu64 = import prev.path {
+            overlays = [
+              llvm-overlay
+              helpersOverlay
+              fenix-overlay
+              rust-overlay
+              (crossOverlay {
+                build-flags = build-flags.fuzz;
+              })
+            ];
+          };
+        })
+      ];
+    }).pkgsCross;
   sysrootPackageListFn =
     pkgs: with pkgs; [
       dpdk
@@ -604,6 +622,10 @@ rec {
       name = "${project-name}-env-release-sysroot-gnu64";
       paths = sysrootPackageListFn pkgs.release.gnu64;
     };
+    sysroot.gnu64.fuzz = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-release-sysroot-gnu64";
+      paths = sysrootPackageListFn pkgs.fuzz.gnu64;
+    };
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
@@ -632,9 +654,6 @@ rec {
         rsync -rLhP \
           "${env.sysroot.gnu64.${profile}}/include/" \
           "$out/sysroot/x86_64-unknown-linux-gnu/${profile}/include/"
-        if [ ${profile} = "release" ]; then
-          ln -rs $out/sysroot/x86_64-unknown-linux-gnu/release $out/sysroot/x86_64-unknown-linux-gnu/fuzz
-        fi
       '';
       postFixup =
         # libm.a file contains a GROUP instruction which contains absolute paths to /nix
@@ -659,10 +678,12 @@ rec {
 
   sysroot.gnu64.debug = sysrootFn "debug";
   sysroot.gnu64.release = sysrootFn "release";
+  sysroot.gnu64.fuzz = sysrootFn "fuzz";
 
   sysroots = with sysroot; [
     gnu64.debug
     gnu64.release
+    gnu64.fuzz
   ];
 
   compile-env = toolchainPkgs.symlinkJoin {
@@ -671,10 +692,13 @@ rec {
       env.compile
       pkgs.debug.gnu64.glibc.static
       pkgs.release.gnu64.glibc.static
+      pkgs.fuzz.gnu64.glibc.static
       pkgs.debug.gnu64.glibc.dev
       pkgs.release.gnu64.glibc.dev
+      pkgs.fuzz.gnu64.glibc.dev
       pkgs.debug.gnu64.glibc.out
       pkgs.release.gnu64.glibc.out
+      pkgs.fuzz.gnu64.glibc.out
     ]
     ++ sysroots;
   };

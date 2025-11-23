@@ -263,7 +263,6 @@ stdenv.mkDerivation rec {
     "-Db_pch=true"
     "-Db_pgo=off"
     "-Db_pie=true"
-    "-Db_sanitize=none"
     "-Dbackend=ninja"
     "-Ddefault_library=static"
     "-Denable_docs=false"

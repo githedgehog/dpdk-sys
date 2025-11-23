@@ -6,26 +6,38 @@ let
       debug = "-ggdb3 -gdwarf-5 -gembed-source";
       security = "-fstack-protector-strong";
       errors = "-Werror=odr -Werror=strict-aliasing";
-      profile = {
-        debug = "-Og -fno-inline -fno-omit-frame-pointer";
-        release = "-O3 -flto=thin";
-      };
+      profile =
+        let
+          release = "-O3 -flto=thin";
+          profile = "-fprofile-instr-generate -fcoverage-mapping -fno-omit-frame-pointer -fno-sanitize-merge";
+        in
+        {
+          debug = "-Og -fno-inline -fno-omit-frame-pointer";
+          inherit release;
+          fuzz = "${release} ${profile} -fsanitize=address,leak,undefined,local-bounds";
+        };
       end = "-Qunused-arguments";
     };
-    link = {
-      linker = "-fuse-ld=lld";
-      profile = {
-        debug = "";
+    link =
+      let
         release = "-flto=thin -Wl,-O3 -Wl,-z,relro,-z,now";
+      in
+      {
+        linker = "-fuse-ld=lld";
+        profile = {
+          debug = "";
+          inherit release;
+          fuzz = "${release} -shared-libasan -fsanitize=address,leak,undefined,local-bounds";
+        };
+        end = "-Qunused-arguments";
       };
-      end = "-Qunused-arguments";
-    };
   };
   cflags =
     type: with flags.compile; "${machine} ${debug} ${security} ${errors} ${profile.${type}} ${end}";
   cxxflags = type: cflags type;
   ldflags = type: with flags.link; "${linker} ${profile.${type}} ${end}";
   configuration = type: {
+    profile = type;
     CFLAGS = cflags type;
     CXXFLAGS = cxxflags type;
     LDFLAGS = ldflags type;
@@ -34,4 +46,5 @@ in
 {
   release = configuration "release";
   debug = configuration "debug";
+  fuzz = configuration "fuzz";
 }
