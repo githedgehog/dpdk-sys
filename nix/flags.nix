@@ -39,7 +39,6 @@ let
   cxxflags = type: cflags type;
   ldflags = type: with flags.link; "${linker} ${profile.${type}} ${end}";
   configuration = type: {
-    profile = type;
     CFLAGS = cflags type;
     CXXFLAGS = cxxflags type;
     LDFLAGS = ldflags type;
