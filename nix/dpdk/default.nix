@@ -259,7 +259,7 @@ stdenv.mkDerivation rec {
     "-Db_colorout=never"
     "-Db_coverage=false"
     "-Db_lto=true"
-    "-Db_lundef=true"
+    "-Db_lundef=false"
     "-Db_pch=true"
     "-Db_pgo=off"
     "-Db_pie=true"

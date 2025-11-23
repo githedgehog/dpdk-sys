@@ -170,6 +170,10 @@ rec {
           ];
           perl = null;
           cmakeFlags = orig.cmakeFlags ++ [
+            # this allows thread sanitizer to build (thread sanitizer does not like -Wl,-z,defs or -Wl,--no-undefined)
+            # Normally I would say that disabling -Wl,--no-undefined is a bad idea, but we throw away all the shared
+            # libs and executables from this build anwyway, so it is quite harmless.
+            "-DSUPPORTS_NO_UNDEFINED=0" # todo: find a way to enable this for only fuzz_thread builds.
             "-DENABLE_STATIC=1"
             "-DNO_PYVERBS=1"
             "-DNO_MAN_PAGES=1"
@@ -547,6 +551,26 @@ rec {
         })
       ];
     }).pkgsCross;
+
+    pkgs.fuzz_thread =
+      (import toolchainPkgs.path {
+        overlays = [
+          (self: prev: {
+            pkgsCross.gnu64 = import prev.path {
+              overlays = [
+                llvm-overlay
+                helpersOverlay
+                fenix-overlay
+                rust-overlay
+                (crossOverlay {
+                  build-flags = build-flags.fuzz_thread;
+                })
+              ];
+            };
+          })
+        ];
+      }).pkgsCross;
+  
   sysrootPackageListFn =
     pkgs: with pkgs; [
       dpdk
@@ -627,6 +651,10 @@ rec {
       name = "${project-name}-env-release-sysroot-gnu64";
       paths = sysrootPackageListFn pkgs.fuzz.gnu64;
     };
+    sysroot.gnu64.fuzz_thread = toolchainPkgs.symlinkJoin {
+      name = "${project-name}-env-release-sysroot-gnu64";
+      paths = sysrootPackageListFn pkgs.fuzz_thread.gnu64;
+    };
     compile = toolchainPkgs.symlinkJoin {
       name = "${project-name}-env-compile";
       paths = compileEnvPackageList;
@@ -680,11 +708,13 @@ rec {
   sysroot.gnu64.debug = sysrootFn "debug";
   sysroot.gnu64.release = sysrootFn "release";
   sysroot.gnu64.fuzz = sysrootFn "fuzz";
+  sysroot.gnu64.fuzz_thread = sysrootFn "fuzz_thread";
 
   sysroots = with sysroot; [
     gnu64.debug
     gnu64.release
     gnu64.fuzz
+    gnu64.fuzz_thread
   ];
 
   compile-env = toolchainPkgs.symlinkJoin {
@@ -694,12 +724,15 @@ rec {
       pkgs.debug.gnu64.glibc.static
       pkgs.release.gnu64.glibc.static
       pkgs.fuzz.gnu64.glibc.static
+      pkgs.fuzz_thread.gnu64.glibc.static
       pkgs.debug.gnu64.glibc.dev
       pkgs.release.gnu64.glibc.dev
       pkgs.fuzz.gnu64.glibc.dev
+      pkgs.fuzz_thread.gnu64.glibc.dev
       pkgs.debug.gnu64.glibc.out
       pkgs.release.gnu64.glibc.out
       pkgs.fuzz.gnu64.glibc.out
+      pkgs.fuzz_thread.gnu64.glibc.out
     ]
     ++ sysroots;
   };

@@ -15,6 +15,7 @@ let
           debug = "-Og -fno-inline -fno-omit-frame-pointer";
           inherit release;
           fuzz = "${release} ${profile} -fsanitize=address,leak,undefined,local-bounds";
+          fuzz_thread = "${release} ${profile} -fsanitize=thread";
         };
       end = "-Qunused-arguments";
     };
@@ -28,6 +29,7 @@ let
           debug = "";
           inherit release;
           fuzz = "${release} -shared-libasan -fsanitize=address,leak,undefined,local-bounds";
+          fuzz_thread = "${release} -fsanitize=thread -Wl,--allow-shlib-undefined";
         };
         end = "-Qunused-arguments";
       };
@@ -47,4 +49,5 @@ in
   release = configuration "release";
   debug = configuration "debug";
   fuzz = configuration "fuzz";
+  fuzz_thread = configuration "fuzz_thread";
 }
