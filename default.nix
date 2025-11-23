@@ -155,27 +155,28 @@ rec {
       tinysparql = null;
       pandoc = null;
       util-linux = super.util-linux.override { systemdSupport = false; };
-      rdma-core = (optimizedBuild super.rdma-core).overrideAttrs (orig: {
-        version = "60.0";
-        src = self.fetchFromGitHub {
-          owner = "githedgehog";
-          repo = "rdma-core";
-          rev = "fix-lto-60.0";
-          hash = "sha256-JAf7r0I+MuppH/cbBd0ZrXVAjPPeWo/oFcDFpJ7TTbY=";
-        };
-        outputs = [
-          "out"
-          "dev"
-        ];
-        perl = null;
-        cmakeFlags = orig.cmakeFlags ++ [
-          "-DENABLE_STATIC=1"
-          "-DNO_PYVERBS=1"
-          "-DNO_MAN_PAGES=1"
-          "-DIOCTL_MODE=write"
-          "-DNO_COMPAT_SYMS=1"
-        ];
-      });
+      rdma-core = optimizedBuild (
+        super.rdma-core.overrideAttrs (orig: {
+          version = "60.0";
+          src = self.fetchFromGitHub {
+            owner = "githedgehog";
+            repo = "rdma-core";
+            rev = "fix-lto-60.0";
+            hash = "sha256-JAf7r0I+MuppH/cbBd0ZrXVAjPPeWo/oFcDFpJ7TTbY=";
+          };
+          outputs = [
+            "out"
+            "dev"
+          ];
+          perl = null;
+          cmakeFlags = orig.cmakeFlags ++ [
+            "-DENABLE_STATIC=1"
+            "-DNO_PYVERBS=1"
+            "-DNO_MAN_PAGES=1"
+            "-DNO_COMPAT_SYMS=1"
+          ];
+        })
+      );
       iptables = null;
       ethtool = null;
       iproute2 = null;
