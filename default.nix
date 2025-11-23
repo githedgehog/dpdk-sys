@@ -48,10 +48,12 @@ rec {
     cargo-nextest = fancy.rustOverrides super.cargo-nextest;
     csview = fancy.rustOverrides super.csview;
     just = fancy.rustOverrides super.just;
-    kopium = fancy.rustOverrides (self.callPackage ./nix/kopium {
-       rev = "c4931d13043994813c9949d90bf3e0fbac949148"; # 0.22.5
-       hash = "sha256-zYmb+HxwEKEnzdqAzvki5M+NA2fGP174pRkU6B4WmZI=";
-    });
+    kopium = fancy.rustOverrides (
+      self.callPackage ./nix/kopium {
+        rev = "c4931d13043994813c9949d90bf3e0fbac949148"; # 0.22.5
+        hash = "sha256-zYmb+HxwEKEnzdqAzvki5M+NA2fGP174pRkU6B4WmZI=";
+      }
+    );
     frr-agent = fancy.rustOverrides (
       self.callPackage ./nix/frr-agent {
         rev = versions.frr-agent.rev;
@@ -108,24 +110,28 @@ rec {
       buildWithMyFlags = pkg: (buildWithFlags build-flags pkg);
       optimizedBuild =
         pkg:
-        (buildWithMyFlags (pkg.override { stdenv = fancy.stdenv; })).overrideAttrs (orig: {
-          nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ super.fancy.llvmPackages.bintools ];
-          LD = "lld";
-          withDoc = false;
-          doCheck = false;
-        });
-      fancy.libmd = (optimizedBuild super.libmd).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-        postFixup = (orig.postFixup or "") + ''
-          rm $out/lib/*.la
-        '';
-      });
+        buildWithMyFlags (
+          (pkg.override { stdenv = fancy.stdenv; }).overrideAttrs (orig: {
+            nativeBuildInputs = (orig.nativeBuildInputs or [ ]) ++ [ super.fancy.llvmPackages.bintools ];
+            LD = "lld";
+            withDoc = false;
+            doCheck = false;
+          })
+        );
+      fancy.libmd = optimizedBuild (
+        super.libmd.overrideAttrs (orig: {
+          configureFlags = orig.configureFlags ++ [
+            "--enable-static"
+            "--disable-shared"
+          ];
+          postFixup = (orig.postFixup or "") + ''
+            rm $out/lib/*.la
+          '';
+        })
+      );
 
-      fancy.libbsd =
-        ((optimizedBuild super.libbsd).override {
+      fancy.libbsd = optimizedBuild (
+        (super.libbsd.override {
           libmd = fancy.libmd;
         }).overrideAttrs
           (orig: {
@@ -137,7 +143,8 @@ rec {
             postFixup = (orig.postFixup or "") + ''
               rm $out/lib/*.la
             '';
-          });
+          })
+      );
       at-spi2-atk = null; # no users in container
       at-spi2-core = null; # no users in container
       bluez = null;
@@ -173,18 +180,22 @@ rec {
       ethtool = null;
       iproute2 = null;
       fancy.iproute2 = optimizedBuild super.iproute2;
-      libnl = (optimizedBuild super.libnl).overrideAttrs (orig: {
-        configureFlags = orig.configureFlags ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-        postFixup = (orig.postFixup or "") + ''
-          rm $out/lib/*.la
-        '';
-      });
-      jansson = (optimizedBuild super.jansson).overrideAttrs (orig: {
-        cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ];
-      });
+      libnl = optimizedBuild (
+        super.libnl.overrideAttrs (orig: {
+          configureFlags = orig.configureFlags ++ [
+            "--enable-static"
+            "--disable-shared"
+          ];
+          postFixup = (orig.postFixup or "") + ''
+            rm $out/lib/*.la
+          '';
+        })
+      );
+      jansson = optimizedBuild (
+        super.jansson.overrideAttrs (orig: {
+          cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ];
+        })
+      );
       libmnl = optimizedBuild super.libmnl;
       libnetfilter_conntrack = optimizedBuild super.libnetfilter_conntrack;
       libnftnl = optimizedBuild super.libnftnl;
@@ -197,30 +208,30 @@ rec {
             outputChecks.lib.disallowedRequisites = [ ];
           })
       );
-      numactl = (optimizedBuild super.numactl).overrideAttrs (orig: {
-        outputs = super.lib.lists.remove "man" orig.outputs;
-        configurePhase = ''
-          set -euxo pipefail;
-          ./configure \
-            --prefix=$out \
-            --libdir=$out/lib \
-            --includedir=$out/include \
-            --enable-static \
-            --enable-shared;
-        '';
-        buildPhase = ''
-          set -euxo pipefail;
-          make;
-          rm ./.libs/*.la;
-        '';
-      });
-      dpdk = (
-        optimizedBuild (
-          self.callPackage ./nix/dpdk {
-            libbsd = fancy.libbsd;
-            libmd = fancy.libmd;
-          }
-        )
+      numactl = optimizedBuild (
+        super.numactl.overrideAttrs (orig: {
+          outputs = super.lib.lists.remove "man" orig.outputs;
+          configurePhase = ''
+            set -euxo pipefail;
+            ./configure \
+              --prefix=$out \
+              --libdir=$out/lib \
+              --includedir=$out/include \
+              --enable-static \
+              --enable-shared;
+          '';
+          buildPhase = ''
+            set -euxo pipefail;
+            make;
+            rm ./.libs/*.la;
+          '';
+        })
+      );
+      dpdk = optimizedBuild (
+        self.callPackage ./nix/dpdk {
+          libbsd = fancy.libbsd;
+          libmd = fancy.libmd;
+        }
       );
       dpdk-wrapper = (
         optimizedBuild (
@@ -232,34 +243,17 @@ rec {
         )
       );
       fancy.xxHash = optimizedBuild super.xxHash;
-      libyang-dynamic =
-        ((optimizedBuild super.libyang).override {
-          pcre2 = self.fancy.pcre2;
-          xxHash = self.fancy.xxHash;
-        }).overrideAttrs
-          (orig: {
-            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=ON" ];
-          });
-      libyang-static =
-        ((optimizedBuild super.libyang).override {
+      libyang = optimizedBuild (
+        (super.libyang.override {
           pcre2 = self.fancy.pcre2;
           xxHash = self.fancy.xxHash;
         }).overrideAttrs
           (orig: {
             cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DBUILD_SHARED_LIBS=OFF" ];
-          });
-      libyang = self.fancy.stdenv.mkDerivation {
-        name = "libyang";
-        src = null;
-        dontUnpack = true;
-        installPhase = ''
-          mkdir -p $out/lib;
-          cp -r ${self.libyang-static}/lib/libyang.a $out/lib/
-          cp -r ${self.libyang-dynamic}/* $out
-        '';
-      };
-      fancy.libcap =
-        ((optimizedBuild super.libcap).override {
+          })
+      );
+      fancy.libcap = optimizedBuild (
+        (super.libcap.override {
           stdenv = fancy.stdenv;
           usePam = false;
         }).overrideAttrs
@@ -278,47 +272,55 @@ rec {
               # extant postInstall removes .a files for no reason
               cp ./libcap/*.a $lib/lib;
             '';
-          });
-      fancy.json_c = (optimizedBuild super.json_c).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
-        postInstall = (orig.postInstall or "") + ''
-          mkdir -p $dev/lib
-          $RANLIB libjson-c.a;
-          cp libjson-c.a $dev/lib;
-        '';
-      });
-      rtrlib = (optimizedBuild super.rtrlib).overrideAttrs (orig: {
-        cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
-      });
-      abseil-cpp = (optimizedBuild super.abseil-cpp);
-      protobuf =
-        (optimizedBuild (super.protobuf.override { enableShared = false; })).overrideAttrs
-          (orig: {
-            cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
-          });
-      fancy.zlib = (optimizedBuild super.zlib).override {
-        static = true;
-        shared = false;
-      };
-      protobufc =
-        (optimizedBuild (
-          self.callPackage ./nix/protobufc {
-            stdenv = fancy.stdenv;
-            zlib = fancy.zlib;
-          }
-        )).overrideAttrs
+          })
+      );
+      fancy.json_c = optimizedBuild (
+        super.json_c.overrideAttrs (orig: {
+          cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
+          postInstall = (orig.postInstall or "") + ''
+            mkdir -p $dev/lib
+            $RANLIB libjson-c.a;
+            cp libjson-c.a $dev/lib;
+          '';
+        })
+      );
+      rtrlib = optimizedBuild (
+        super.rtrlib.overrideAttrs (orig: {
+          cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
+        })
+      );
+      abseil-cpp = optimizedBuild super.abseil-cpp;
+      protobuf = optimizedBuild (
+        (super.protobuf.override { enableShared = false; }).overrideAttrs (orig: {
+          cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-Dprotobuf_BUILD_SHARED_LIBS=OFF" ];
+        })
+      );
+      fancy.zlib = optimizedBuild (
+        super.zlib.override {
+          static = true;
+          shared = false;
+        }
+      );
+      protobufc = optimizedBuild (
+        (self.callPackage ./nix/protobufc {
+          stdenv = fancy.stdenv;
+          zlib = fancy.zlib;
+        }).overrideAttrs
           (orig: {
             configureFlags = (orig.configureFlags or [ ]) ++ [
               "--enable-static"
               "--disable-shared"
             ];
-          });
-      fancy.pcre2 = (optimizedBuild super.pcre2).overrideAttrs (orig: {
-        configureFlags = (orig.configureFlags or [ ]) ++ [
-          "--enable-static"
-          "--disable-shared"
-        ];
-      });
+          })
+      );
+      fancy.pcre2 = optimizedBuild (
+        super.pcre2.overrideAttrs (orig: {
+          configureFlags = (orig.configureFlags or [ ]) ++ [
+            "--enable-static"
+            "--disable-shared"
+          ];
+        })
+      );
       fancy.ncurses = optimizedBuild (super.ncurses.override { enableStatic = true; });
       fancy.readline = optimizedBuild (super.readline.override { ncurses = fancy.ncurses; });
       fancy.libxcrypt = optimizedBuild super.libxcrypt;
@@ -337,22 +339,21 @@ rec {
             rev = versions.frr.rev;
             hash = versions.frr.hash;
 
-            c-ares = fancy.c-ares;
-            json_c = fancy.json_c.dev;
-            libcap = fancy.libcap;
-            libgccjit = fancy.libgccjit;
-            libxcrypt = fancy.libxcrypt;
-            libyang = self.libyang-static;
-            pcre2 = fancy.pcre2;
-            readline = fancy.readline;
-            stdenv = fancy.stdenv;
-          }
-        )).overrideAttrs
+          c-ares = fancy.c-ares;
+          json_c = fancy.json_c.dev;
+          libcap = fancy.libcap;
+          libgccjit = fancy.libgccjit;
+          libxcrypt = fancy.libxcrypt;
+          libyang = self.libyang;
+          pcre2 = fancy.pcre2;
+          readline = fancy.readline;
+          stdenv = fancy.stdenv;
+        }).overrideAttrs
           (orig: {
             LDFLAGS =
               (orig.LDFLAGS or "")
               + " -L${self.fancy.c-ares}/lib -lcares "
-              + " -L${self.libyang-static}/lib -lyang "
+              + " -L${self.libyang}/lib -lyang "
               + " -L${fancy.xxHash}/lib -lxxhash "
               + " -L${fancy.libxcrypt}/lib -lcrypt "
               + " -L${protobufc}/lib -lprotobuf-c "
@@ -363,7 +364,8 @@ rec {
               "--enable-static"
               "--enable-static-bin"
             ];
-          });
+          })
+      );
       dplane-rpc = optimizedBuild (
         self.callPackage ./nix/dplane-rpc {
           rev = versions.dplane-rpc.rev;
@@ -376,11 +378,11 @@ rec {
           hash = versions.dplane-plugin.hash;
           commit_date = versions.dplane-plugin.commit_date;
           stdenv = fancy.stdenv;
-          libyang = libyang-static;
+          inherit libyang;
           pcre2 = fancy.pcre2;
         }
       );
-      frr-config = (optimizedBuild (self.callPackage ./nix/frr-config { }));
+      frr-config = optimizedBuild (self.callPackage ./nix/frr-config { });
       frr-with-dplane-plugin = self.symlinkJoin {
         name = "frr-with-dplane-plugin";
         paths = [
@@ -395,40 +397,42 @@ rec {
       fancy.xz = optimizedBuild super.xz;
       fancy.libxml2 = optimizedBuild super.libxml2;
       fancy.busybox = super.busybox.override { enableStatic = true; };
-      fancy.boost = (optimizedBuild super.boost).override {
-        enableShared = false;
-        enableStatic = true;
-      };
+      fancy.boost = optimizedBuild (
+        super.boost.override {
+          enableShared = false;
+          enableStatic = true;
+        }
+      );
       fancy.expat = optimizedBuild super.expat;
       fancy.openssl = optimizedBuild (
         (super.openssl.override { static = true; }).overrideAttrs (final: {
           doCheck = false;
         })
       );
-      fancy.curl = (optimizedBuild super.curlMinimal).override { zlib = fancy.zlib; };
+      fancy.curl = optimizedBuild (super.curlMinimal.override { zlib = fancy.zlib; });
       hwdata = optimizedBuild super.hwdata;
       hwloc = optimizedBuild super.hwloc;
-      pciutils = (optimizedBuild super.pciutils).override {
-        zlib = fancy.zlib;
-        static = true;
-      };
+      pciutils = optimizedBuild (
+        super.pciutils.override {
+          zlib = fancy.zlib;
+          static = true;
+        }
+      );
 
-      mstflint =
-        (optimizedBuild (
-          super.mstflint.override {
-            openssl = self.fancy.openssl;
-            zlib = self.fancy.zlib;
-            xz = self.fancy.xz;
-            expat = self.fancy.expat;
-            boost = self.fancy.boost;
-            curl = self.fancy.curl;
-            libxml2 = self.fancy.libxml2;
-            busybox = self.fancy.busybox;
-            onlyFirmwareUpdater = false;
-            enableDPA = false;
-            python3 = self.python3Minimal;
-          }
-        )).overrideAttrs
+      mstflint = optimizedBuild (
+        (super.mstflint.override {
+          openssl = self.fancy.openssl;
+          zlib = self.fancy.zlib;
+          xz = self.fancy.xz;
+          expat = self.fancy.expat;
+          boost = self.fancy.boost;
+          curl = self.fancy.curl;
+          libxml2 = self.fancy.libxml2;
+          busybox = self.fancy.busybox;
+          onlyFirmwareUpdater = false;
+          enableDPA = false;
+          python3 = self.python3Minimal;
+        }).overrideAttrs
           (orig: {
             configureFlags = [
               "--datarootdir=${placeholder "out"}/share"
@@ -477,13 +481,14 @@ rec {
                   -e ${stdenv.cc.libc} \
                   '{}' +;
               '');
-          });
-
-      perftest = (
-        optimizedBuild (self.callPackage ./nix/perftest { inherit (versions.perftest) rev hash; })
+          })
       );
 
-      base-image = self.callPackage ./nix/base-image {};
+      perftest = optimizedBuild (
+        self.callPackage ./nix/perftest { inherit (versions.perftest) rev hash; }
+      );
+
+      base-image = optimizedBuild (self.callPackage ./nix/base-image { });
     };
 
   pkgs.debug =
