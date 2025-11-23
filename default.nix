@@ -590,6 +590,7 @@ rec {
     fancy.llvmPackages.clang
     fancy.llvmPackages.compiler-rt
     fancy.llvmPackages.libclang.lib
+    fancy.llvmPackages.libllvm
     fancy.llvmPackages.lld
     getent
     glibc.dev
