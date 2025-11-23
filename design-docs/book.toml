@@ -1,6 +1,0 @@
-[book]
-authors = ["Daniel Noland"]
-language = "en"
-multilingual = false
-src = "src"
-title = "dpdk-sys design docs"
