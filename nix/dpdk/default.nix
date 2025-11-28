@@ -105,11 +105,11 @@ stdenv.mkDerivation rec {
     "cryptodev" # required for vhost
     "dmadev" # required by vhost
     "ethdev"
-    "eventdev" # needed for i40e
+    "eventdev"
     "pci"
-    "security" # needed for i40e
-    "timer" # needed for i40e
-    "vhost" # enabled to facilitate testing with vm runner
+    "security"
+    "timer"
+    "vhost"
   ];
 
   disabledDrivers = [
@@ -259,17 +259,16 @@ stdenv.mkDerivation rec {
     "-Db_colorout=never"
     "-Db_coverage=false"
     "-Db_lto=true"
-    "-Db_lundef=true"
+    "-Db_lundef=false"
     "-Db_pch=true"
     "-Db_pgo=off"
     "-Db_pie=true"
-    "-Db_sanitize=none"
     "-Dbackend=ninja"
     "-Ddefault_library=static"
     "-Denable_docs=false"
     "-Denable_driver_sdk=false"
     "-Dibverbs_link=static"
-    "-Dmax_numa_nodes=4"
+    "-Dmax_numa_nodes=8"
     "-Dstrip=false" # We should strip binaries in a separate step to preserve detached debug info
     "-Dtests=false" # Running DPDK tests in CI is usually silly
     "-Duse_hpet=false"
