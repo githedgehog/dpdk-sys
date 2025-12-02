@@ -102,11 +102,11 @@ stdenv.mkDerivation rec {
   ];
 
   enabledLibs = [
-    "cryptodev" # required for vhost
-    "dmadev" # required by vhost
+    "timer" # needed for i40e
     "eventdev" # needed for i40e
     "security" # needed for i40e
-    "timer" # needed for i40e
+    "cryptodev" # required for vhost
+    "dmadev" # required by vhost
     "vhost" # enabled to facilitate testing with vm runner
   ];
 
