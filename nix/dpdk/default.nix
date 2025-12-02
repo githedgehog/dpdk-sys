@@ -104,7 +104,6 @@ stdenv.mkDerivation rec {
   enabledLibs = [
     "cryptodev" # required for vhost
     "dmadev" # required by vhost
-    "ethdev"
     "eventdev" # needed for i40e
     "pci"
     "security" # needed for i40e
