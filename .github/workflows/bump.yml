@@ -51,7 +51,7 @@ jobs:
         run: |
           just bump "${{ env.dpdk_sys_branch }}"
       - name: "Create Pull Request"
-        uses: "peter-evans/create-pull-request@v7"
+        uses: "peter-evans/create-pull-request@v8"
         with:
           branch: "bump/${{ env.dpdk_sys_branch }}"
           title: "bump/${{ env.dpdk_sys_branch }}"

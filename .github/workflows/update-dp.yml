@@ -58,7 +58,7 @@ jobs:
           repositories: "dataplane"
 
       - name: "Create Pull Request in dataplane repository"
-        uses: "peter-evans/create-pull-request@v7"
+        uses: "peter-evans/create-pull-request@v8"
         with:
           token: "${{ steps.app-token.outputs.token }}"
           branch: "bump/dpdk-sys"
