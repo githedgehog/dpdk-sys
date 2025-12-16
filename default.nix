@@ -724,7 +724,6 @@ rec {
           nano
           procps
           tcpdump
-          tini
           valgrind
           vim
           zstd
