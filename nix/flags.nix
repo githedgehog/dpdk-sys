@@ -6,20 +6,33 @@ let
       debug = "-ggdb3 -gdwarf-5 -gembed-source";
       security = "-fstack-protector-strong";
       errors = "-Werror=odr -Werror=strict-aliasing";
-      profile = {
-        debug = "-Og -fno-inline -fno-omit-frame-pointer";
-        release = "-O3 -flto=thin";
-      };
+      profile =
+        let
+          release = "-O3 -flto=thin";
+          profile = "-fprofile-instr-generate -fcoverage-mapping -fno-omit-frame-pointer -fno-sanitize-merge";
+        in
+        {
+          debug = "-Og -fno-inline -fno-omit-frame-pointer";
+          inherit release;
+          fuzz = "${release} ${profile} -fsanitize=address,leak,undefined,local-bounds";
+          fuzz_thread = "${release} ${profile} -fsanitize=thread";
+        };
       end = "-Qunused-arguments";
     };
-    link = {
-      linker = "-fuse-ld=lld";
-      profile = {
-        debug = "";
+    link =
+      let
         release = "-flto=thin -Wl,-O3 -Wl,-z,relro,-z,now";
+      in
+      {
+        linker = "-fuse-ld=lld";
+        profile = {
+          debug = "";
+          inherit release;
+          fuzz = "${release} -shared-libasan -fsanitize=address,leak,undefined,local-bounds";
+          fuzz_thread = "${release} -fsanitize=thread -Wl,--allow-shlib-undefined";
+        };
+        end = "-Qunused-arguments";
       };
-      end = "-Qunused-arguments";
-    };
   };
   cflags =
     type: with flags.compile; "${machine} ${debug} ${security} ${errors} ${profile.${type}} ${end}";
@@ -34,4 +47,6 @@ in
 {
   release = configuration "release";
   debug = configuration "debug";
+  fuzz = configuration "fuzz";
+  fuzz_thread = configuration "fuzz_thread";
 }
