@@ -8,9 +8,9 @@ env:
   llvm_for_rust_pins:
     stable: &llvm_stable "21"
   nixpkgs:
-    unstable: &nixpkgs_unstable "ac9a217389ee622d4e1e727c4efcc9c4bc9089ba"
+    unstable: &nixpkgs_unstable "3edc4a30ed3903fdf6f90c837f961fa6b49582d1"
   just:
-    version: &just_version "1.43.1"
+    version: &just_version "1.45.0"
 # matrix describes the test structure which I expect to be relatively stable.
 matrix:
   toolchain:
