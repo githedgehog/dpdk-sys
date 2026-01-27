@@ -65,7 +65,7 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "frr";
-  version = "10.4.1";
+  version = "10.5.0";
   dontPatchShebangs = false;
   dontFixup = false;
   dontPatchElf = false;
@@ -120,7 +120,19 @@ stdenv.mkDerivation (finalAttrs: {
     # dontPatchElf and dontFixup are both set to false, so nix will adjust to rpath correctly for us after
     # the initial linking step.
     "--enable-rpath=no"
-
+    "--disable-bgp-vnc"
+    "--disable-pathd"
+    "--disable-ripd"
+    "--disable-ripngd"
+    "--disable-ldpd"
+    "--disable-ospf6d"
+    "--disable-babeld"
+    "--disable-eigrpd"
+    "--disable-pim6d"
+    "--disable-pimd"
+    "--disable-fabricd"
+    "--disable-ospfapi"
+    "--disable-protobuf"
     "--enable-configfile-mask=0640"
     "--enable-logfile-mask=0640"
     "--enable-user=frr"
