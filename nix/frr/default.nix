@@ -202,7 +202,6 @@ stdenv.mkDerivation (finalAttrs: {
   patches = [
     ./patches/yang-hack.patch
     ./patches/xrelifo.py.fix.patch
-    ./patches/vtysh-extensions.h.patch
   ];
 
   buildPhase = ''
