@@ -10,6 +10,9 @@ on:
       debug_enabled:
         type: "boolean"
         description: "Run the build with tmate debugging enabled"
+      bump_dataplane:
+        type: "boolean"
+        description: "Run the dataplane bump job after build (only on main branch)"
   merge_group:
   push:
     branches:
@@ -374,3 +377,73 @@ jobs:
           body: |
             This is an automated Pull Request created by GitHub Actions workflow,
             in the frr repository.
+
+  # Automatically open a Pull Request in dataplane repository on dpdk-sys updates
+  bump-dp:
+    name: "Bump dpdk-sys reference in dataplane repository"
+    runs-on: "ubuntu-latest"
+    # Run only when pushing to main branch (or on manual dispatch using the main branch)
+    if: >-
+      (
+        github.event_name == 'push'
+        ||  github.event_name == 'workflow_dispatch' && inputs.bump_dataplane
+      ) && github.ref == 'refs/heads/main'
+    needs:
+      - run
+    permissions:
+      contents: "read"
+      packages: "read"
+      id-token: "write"
+
+    steps:
+      - name: "Install dependencies"
+        run: |
+          sudo apt-get update
+          # Install 'envsubst', used in bump.sh
+          sudo apt-get install --yes --no-install-recommends gettext
+
+      - name: "Checkout dataplane repository"
+        uses: "actions/checkout@v6"
+        with:
+          repository: "githedgehog/dataplane"
+
+      - name: "Bump dpdk-sys reference"
+        run: |
+          ./scripts/bump.sh
+
+      - name: "Generate GitHub App token for the dataplane repository"
+        id: "app-token"
+        uses: "actions/create-github-app-token@v2"
+        with:
+          app-id: "${{ secrets.DP_APP_ID }}"
+          private-key: "${{ secrets.DP_PRIVATE_KEY }}"
+          repositories: "dataplane"
+
+      - name: "Create Pull Request in dataplane repository"
+        uses: "peter-evans/create-pull-request@v8"
+        with:
+          token: "${{ steps.app-token.outputs.token }}"
+          branch: "bump/dpdk-sys"
+          title: "bump(dpdk-sys): new-version"
+          labels: |
+            automated
+            dependencies
+          signoff: "true"
+          commit-message: |
+            bump(dpdk-sys): automated bump of dpdk-sys
+
+            Automated bump from dpdk-sys,
+            triggered by push to 'main' in source repository.
+
+            Commit: githedgehog/dpdk-sys@${{ github.sha }}
+          sign-commits: "true"
+          body: |
+            Automated bump from dpdk-sys
+            Commit: githedgehog/dpdk-sys@${{ github.sha }}
+
+      - name: "Setup tmate session for debug"
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: "mxschmitt/action-tmate@v3"
+        timeout-minutes: 60
+        with:
+          limit-access-to-actor: true
