@@ -290,7 +290,7 @@ rec {
       rtrlib = (optimizedBuild super.rtrlib).overrideAttrs (orig: {
         cmakeFlags = (orig.cmakeFlags or [ ]) ++ [ "-DENABLE_STATIC=1" ];
       });
-      abseil-cpp = (optimizedBuild super.abseil-cpp);
+
       protobuf =
         (optimizedBuild (super.protobuf.override { enableShared = false; })).overrideAttrs
           (orig: {
