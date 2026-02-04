@@ -50,7 +50,6 @@ jobs:
       - name: "bump"
         run: |
           just bump "${{ env.dpdk_sys_branch }}"
-          git commit -sam "chore: Automatic update from bump workflow with ./scripts/bump.sh"
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v8"
         with:
