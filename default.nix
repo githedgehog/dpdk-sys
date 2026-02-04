@@ -689,6 +689,7 @@ rec {
           dplane-rpc
           fancy.iproute2
           findutils
+          debianutils
           frr-agent
           frr-config
           gnugrep
