@@ -140,7 +140,7 @@ DPLANE_RPC_COMMIT="$(git rev-parse HEAD)"
 declare -rx DPLANE_RPC_COMMIT
 
 declare DPLANE_RPC_DATA
-DPLANE_RPC_DATA="$(nix-prefetch-git --rev "${DPLANE_RPC_COMMIT}" https://github.com/githedgehog/dplane-rpc)"
+DPLANE_RPC_DATA="$(nix-prefetch-git-26.05pre942779.d6c719321308 --rev "${DPLANE_RPC_COMMIT}" https://github.com/githedgehog/dplane-rpc)"
 declare -r DPLANE_RPC_DATA
 
 declare DPLANE_RPC_REV
@@ -177,7 +177,7 @@ DPLANE_PLUGIN_COMMIT="$(git rev-parse HEAD)"
 declare -rx DPLANE_PLUGIN_COMMIT
 
 declare DPLANE_PLUGIN_DATA
-DPLANE_PLUGIN_DATA="$(nix-prefetch-git --rev "${DPLANE_PLUGIN_COMMIT}" https://github.com/githedgehog/dplane-plugin)"
+DPLANE_PLUGIN_DATA="$(nix-prefetch-git-26.05pre942779.d6c719321308 --rev "${DPLANE_PLUGIN_COMMIT}" https://github.com/githedgehog/dplane-plugin)"
 declare -r DPLANE_PLUGIN_DATA
 
 declare DPLANE_PLUGIN_REV
@@ -214,7 +214,7 @@ FRR_COMMIT="$(git rev-parse HEAD)"
 declare -rx FRR_COMMIT
 
 declare FRR_DATA
-FRR_DATA="$(nix-prefetch-git --rev "${FRR_COMMIT}" https://github.com/githedgehog/frr)"
+FRR_DATA="$(nix-prefetch-git-26.05pre942779.d6c719321308 --rev "${FRR_COMMIT}" https://github.com/githedgehog/frr)"
 declare -r FRR_DATA
 
 declare FRR_REV
@@ -249,7 +249,7 @@ FRR_AGENT_COMMIT="$(git rev-parse HEAD)"
 declare -rx FRR_AGENT_COMMIT
 
 declare FRR_AGENT_DATA
-FRR_AGENT_DATA="$(nix-prefetch-git --rev "${FRR_AGENT_COMMIT}" "https://github.com/githedgehog/frr-agent")"
+FRR_AGENT_DATA="$(nix-prefetch-git-26.05pre942779.d6c719321308 --rev "${FRR_AGENT_COMMIT}" "https://github.com/githedgehog/frr-agent")"
 declare -r FRR_AGENT_DATA
 
 declare FRR_AGENT_REV
@@ -284,7 +284,7 @@ PERFTEST_COMMIT="$(git rev-parse HEAD)"
 declare -rx PERFTEST_COMMIT
 
 declare PERFTEST_DATA
-PERFTEST_DATA="$(nix-prefetch-git --rev "${PERFTEST_COMMIT}" "https://github.com/linux-rdma/perftest")"
+PERFTEST_DATA="$(nix-prefetch-git-26.05pre942779.d6c719321308 --rev "${PERFTEST_COMMIT}" "https://github.com/linux-rdma/perftest")"
 declare -r PERFTEST_DATA
 
 declare PERFTEST_REV
