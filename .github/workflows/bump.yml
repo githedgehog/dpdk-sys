@@ -39,17 +39,26 @@ jobs:
       - uses: "cargo-bins/cargo-binstall@main"
       - run: |
           cargo binstall --no-confirm just
-      - name: "install nix"
+      - name: "Install nix"
         uses: "cachix/install-nix-action@v31"
-      - name: "install nix-prefetch-git"
+      - name: "Install nix-prefetch-git"
         run: |
           sudo chown -R $(id -u):$(id -g) /nix
           nix-channel --add https://nixos.org/channels/nixos-unstable nixpkgs
           nix-channel --update
           nix-env -i nix-prefetch-git -f '<nixpkgs>'
-      - name: "bump"
+      - name: "Bump"
         run: |
           just bump "${{ env.dpdk_sys_branch }}"
+      - name: "Commit changes"
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '<41898282+github-actions[bot]@users.noreply.github.com>'
+          git commit -sam "bump: Automatic update from bump.yml workflow"
       - name: "Create Pull Request"
         uses: "peter-evans/create-pull-request@v8"
         with:
