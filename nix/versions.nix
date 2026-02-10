@@ -74,9 +74,9 @@
   };
   frr-agent = {
     branch = "master";
-    rev = "d38eec93b8abc2934b397d87dde4a2cbc5dad848";
-    hash = "sha256-bgoQ5JbSdOSaTNGFPQn3gfRZEF2liLgvdbjF0+R52Hc=";
-    commit_date = "2025-11-25T13:01:23+00:00";
+    rev = "16fc0c715d6c83125e51ef68959a6dfe8e8fd847";
+    hash = "sha256-h32eJSnLB2U3tKGp/Uk30XeOVvHelR7n9EN3stOoYGE=";
+    commit_date = "2026-02-10T17:40:12+00:00";
   };
   perftest = {
     branch = "master";
