@@ -1,3 +1,8 @@
+> [!WARNING]
+> ### DPDK-SYS DECOMMISSION
+>
+> This repository is deprecated now that the dataplane repository has switched to its new build framework (https://github.com/githedgehog/dataplane/pull/1304).
+
 # dpdk-sys
 
 [Nix][`nix`] build suite for a rust + dpdk toolchain.
